@@ -56,8 +56,8 @@ Credentials are loaded from environment variables at pipeline runtime via
 
 ```mermaid
 flowchart LR
-    pubs_funder_cdwr   --> pubs_funder_cdwr_reviewed
-    pubs_funder_cdwr_reviewed --> pubs_combined
+    pubs_funding   --> pubs_funding_reviewed
+    pubs_funding_reviewed --> pubs_combined
     pubs_affiliation --> pubs_combined
     pubs_combined    --> pubs_flagged
     pubs_flagged     --> pubs_classified
@@ -89,14 +89,14 @@ tar_target(
 
 ---
 
-#### `pubs_funder_cdwr`
+#### `pubs_funding`
 
 Search Scopus for publications acknowledging DWR as a funder using the precise
 California-specific query.
 
 ```r
 tar_target(
-  pubs_funder_cdwr,
+  pubs_funding,
   pc_search_scopus(
     query      = "California Department of Water Resources",
     field      = "funder",
@@ -110,7 +110,7 @@ tar_target(
 
 #### Manual funder review (`shiny/funder_review_app.R`)
 
-After `pubs_funder_cdwr` is built, a Shiny app is available for manually
+After `pubs_funding` is built, a Shiny app is available for manually
 reviewing each publication to confirm it is genuinely a California DWR-funded
 record. Launch it from the project root with:
 
@@ -118,7 +118,7 @@ record. Launch it from the project root with:
 shiny::runApp("shiny/funder_review_app.R")
 ```
 
-The app loads `pubs_funder_cdwr` from the targets store, scores every record
+The app loads `pubs_funding` from the targets store, scores every record
 with `score_cdwr_relevance()` (see below), and presents them in descending
 suspicion order so the most likely false positives are reviewed first. For each
 publication the reviewer sees the title, suspicion score, DOI, year/journal,
@@ -152,7 +152,7 @@ resumes from the first unreviewed record on restart.
 #### `review_decisions_file`
 
 Tracks `data/review_decisions.csv` as a file dependency so that any edits
-saved by the review app automatically invalidate `pubs_funder_cdwr_reviewed`
+saved by the review app automatically invalidate `pubs_funding_reviewed`
 and all downstream targets.
 
 ```r
@@ -161,16 +161,16 @@ tar_target(review_decisions_file, "data/review_decisions.csv", format = "file")
 
 ---
 
-#### `pubs_funder_cdwr_reviewed`
+#### `pubs_funding_reviewed`
 
-Applies the manual review decisions to `pubs_funder_cdwr`, dropping records
+Applies the manual review decisions to `pubs_funding`, dropping records
 marked `"drop"` and passing `"keep"` and `"unsure"` records through. This is
 implemented by `apply_review_decisions()` in `R/`.
 
 ```r
 tar_target(
-  pubs_funder_cdwr_reviewed,
-  apply_review_decisions(pubs_funder_cdwr, review_decisions_file)
+  pubs_funding_reviewed,
+  apply_review_decisions(pubs_funding, review_decisions_file)
 )
 ```
 
@@ -199,7 +199,7 @@ tar_target(
 
 #### `pubs_combined`
 
-Combine `pubs_funder_cdwr_reviewed` and `pubs_affiliation` into a single deduplicated
+Combine `pubs_funding_reviewed` and `pubs_affiliation` into a single deduplicated
 tibble, tracking which search(es) each DOI came from before deduplication.
 The source provenance columns (`from_funder`, `from_affiliation`) are used in
 the next step to compute DWR contribution flags.
@@ -358,7 +358,7 @@ added by this pipeline:
   reviewer can paste the raw acknowledgments section from the paper would give
   a more reliable signal for confirming CA DWR funding. The pasted text could
   be saved alongside the keep/drop/unsure decision in `review_decisions.csv`
-  and used to inform the `pubs_funder_cdwr_reviewed` filter or a separate
+  and used to inform the `pubs_funding_reviewed` filter or a separate
   manual annotation column.
 
 - **LLM model name** — the specific model to pass to `pc_classify()` via the

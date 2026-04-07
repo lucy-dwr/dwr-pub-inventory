@@ -19,7 +19,7 @@ DECISIONS_PATH <- file.path(.ROOT, "data", "review_decisions.csv")
 
 # ── Data (loaded once at startup) ─────────────────────────────────────────────
 
-pubs <- tar_read(pubs_funder_cdwr) |>
+pubs <- tar_read(pubs_funding) |>
   score_cdwr_relevance() |>
   arrange(desc(cdwr_score), doi)
 

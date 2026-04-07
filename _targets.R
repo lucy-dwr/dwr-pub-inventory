@@ -18,7 +18,7 @@ list(
   # ── Funder searches ─────────────────────────────────────────────────────────
 
   tar_target(
-    pubs_funder_cdwr,
+    pubs_funding,
     pc_search_scopus(
       query      = "California Department of Water Resources",
       field      = "funder",
@@ -33,10 +33,10 @@ list(
   # Launch the review app with: shiny::runApp("shiny/funder_review_app.R")
   tar_target(review_decisions_file, "data/review_decisions.csv", format = "file"),
 
-  # Filter pubs_funder_cdwr to remove records manually marked "drop".
+  # Filter pubs_funding to remove records manually marked "drop".
   tar_target(
-    pubs_funder_cdwr_reviewed,
-    apply_review_decisions(pubs_funder_cdwr, review_decisions_file)
+    pubs_funding_reviewed,
+    apply_review_decisions(pubs_funding, review_decisions_file)
   ),
 
   # ── Affiliation search ──────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ list(
   # from_funder / from_affiliation provenance columns.
   tar_target(
     pubs_combined,
-    pc_deduplicate(pubs_funder_cdwr_reviewed, pubs_affiliation)
+    pc_deduplicate(pubs_funding_reviewed, pubs_affiliation)
   ),
 
   # Add boolean DWR contribution flags: is_funder, is_author, is_lead_author,
