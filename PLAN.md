@@ -17,12 +17,16 @@ retrieval and LLM classification is handled by the
 ## Repository Structure
 
 ```
-_targets.R              # Pipeline declaration (targets DAG only)
-setup.R                 # One-time dev setup (load pubclassify from local path)
-R/                      # Custom functions, sourced by tar_source("R/")
+_targets.R                 # Pipeline declaration (targets DAG only)
+setup.R                    # One-time dev setup (load pubclassify from local path)
+R/                         # Custom functions, sourced by tar_source("R/")
+  score_cdwr_relevance.R   # Heuristic scoring for funder review prioritisation
+shiny/
+  funder_review_app.R      # Shiny app for manual funder review
 taxonomy/
-  dwr_taxonomy.csv      # Field taxonomy (columns: field, definition)
+  dwr_taxonomy.csv         # Field taxonomy (columns: field, definition)
 data/
+  review_decisions.csv     # Manual keep/drop/unsure decisions from review app
   dwr_publications.csv     # Flat output with list columns as semicolon strings
   dwr_publications.parquet # Full-fidelity output with native list columns
 ```
@@ -52,9 +56,8 @@ Credentials are loaded from environment variables at pipeline runtime via
 
 ```mermaid
 flowchart LR
-    pubs_funder_cdwr   --> pubs_funder
-    pubs_funder_dwr  --> pubs_funder
-    pubs_funder      --> pubs_combined
+    pubs_funder_cdwr   --> pubs_funder_cdwr_reviewed
+    pubs_funder_cdwr_reviewed --> pubs_combined
     pubs_affiliation --> pubs_combined
     pubs_combined    --> pubs_flagged
     pubs_flagged     --> pubs_classified
@@ -105,46 +108,71 @@ tar_target(
 
 ---
 
-#### `pubs_funder_dwr`
+#### Manual funder review (`shiny/funder_review_app.R`)
 
-Search Scopus using the shorter query to catch publications that acknowledge
-DWR without the "California" prefix. Results will require disambiguation (see
-Step `pubs_funder`).
+After `pubs_funder_cdwr` is built, a Shiny app is available for manually
+reviewing each publication to confirm it is genuinely a California DWR-funded
+record. Launch it from the project root with:
 
 ```r
-tar_target(
-  pubs_funder_dwr,
-  pc_search_scopus(
-    query      = "Department of Water Resources",
-    field      = "funder",
-    doc_type   = c("article", "review"),
-    auto_fetch = FALSE
-  )
-)
+shiny::runApp("shiny/funder_review_app.R")
+```
+
+The app loads `pubs_funder_cdwr` from the targets store, scores every record
+with `score_cdwr_relevance()` (see below), and presents them in descending
+suspicion order so the most likely false positives are reviewed first. For each
+publication the reviewer sees the title, suspicion score, DOI, year/journal,
+author affiliations, funders, grant numbers, and an embedded view of the paper.
+
+**Suspicion scoring (`R/score_cdwr_relevance.R`)** adds points for signals that
+suggest a record is *not* a genuine CA DWR publication:
+
+| Signal | Points |
+|--------|--------|
+| No California geographic mention across all text fields | +4 |
+| No water-related topic in title or abstract | +4 |
+| Domain keywords indicate an unrelated field (medicine, physics, etc.) | +3 |
+| No US institution detected in author affiliations | +2 |
+
+Maximum score: 13. High suspicion ≥ 7, medium ≥ 4, low < 4.
+
+The reviewer assigns one of three decisions to each record:
+
+| Decision | Meaning |
+|----------|---------|
+| `keep`   | Confirmed as a CA DWR-funded publication |
+| `drop`   | Not a CA DWR publication — exclude from pipeline |
+| `unsure` | Ambiguous — flagged for further review |
+
+Decisions are written to `data/review_decisions.csv` in real time. The app
+resumes from the first unreviewed record on restart.
+
+---
+
+#### `review_decisions_file`
+
+Tracks `data/review_decisions.csv` as a file dependency so that any edits
+saved by the review app automatically invalidate `pubs_funder_cdwr_reviewed`
+and all downstream targets.
+
+```r
+tar_target(review_decisions_file, "data/review_decisions.csv", format = "file")
 ```
 
 ---
 
-#### `pubs_funder`
+#### `pubs_funder_cdwr_reviewed`
 
-Combine `pubs_funder_cdwr` and `pubs_funder_dwr`, deduplicate by DOI, and apply
-a post-hoc filter to remove non-California DWR results introduced by the
-broader query.
+Applies the manual review decisions to `pubs_funder_cdwr`, dropping records
+marked `"drop"` and passing `"keep"` and `"unsure"` records through. This is
+implemented by `apply_review_decisions()` in `R/`.
 
-**Disambiguation strategy — to be refined.** Candidate approaches:
-
-- Drop any record that also appears in `pubs_funder_cdwr` (already covered by the
-  precise query).
-- Inspect the `funders` and `grant_numbers` columns for geographic indicators:
-  - DWR contract numbers often begin with `4600`; `pc_search_scopus()`'s
-    `award_pattern = "^4600"` argument can flag these automatically.
-  - Retain records from `pubs_funder_dwr` only if they contain a `4600`-prefix
-    grant number or a California-affiliated author.
-- Any remaining ambiguous records that cannot be resolved programmatically are
-  flagged for manual review.
-
-The final disambiguation logic will be implemented as a custom function in
-`R/` and documented here once the approach is confirmed.
+```r
+tar_target(
+  pubs_funder_cdwr_reviewed,
+  apply_review_decisions(pubs_funder_cdwr, review_decisions_file)
+)
+```
 
 ---
 
@@ -171,7 +199,7 @@ tar_target(
 
 #### `pubs_combined`
 
-Combine `pubs_funder` and `pubs_affiliation` into a single deduplicated
+Combine `pubs_funder_cdwr_reviewed` and `pubs_affiliation` into a single deduplicated
 tibble, tracking which search(es) each DOI came from before deduplication.
 The source provenance columns (`from_funder`, `from_affiliation`) are used in
 the next step to compute DWR contribution flags.
@@ -324,10 +352,14 @@ added by this pipeline:
 
 ## Open Questions / Deferred Decisions
 
-- **Funder disambiguation logic** — the precise programmatic filter for
-  removing non-California DWR results from `pubs_funder_dwr` is TBD. The
-  `award_pattern = "^4600"` approach (DWR contract numbers) is a leading
-  candidate and should be explored against real search results.
+- **Acknowledgments text in funder review app** — the review app currently
+  relies on Scopus-provided funder and grant number fields, which are
+  inconsistently populated. Adding a free-text input to the app where the
+  reviewer can paste the raw acknowledgments section from the paper would give
+  a more reliable signal for confirming CA DWR funding. The pasted text could
+  be saved alongside the keep/drop/unsure decision in `review_decisions.csv`
+  and used to inform the `pubs_funder_cdwr_reviewed` filter or a separate
+  manual annotation column.
 
 - **LLM model name** — the specific model to pass to `pc_classify()` via the
   California Department of Technology gateway is TBD.

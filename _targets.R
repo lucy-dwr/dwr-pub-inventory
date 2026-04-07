@@ -23,30 +23,23 @@ list(
       query      = "California Department of Water Resources",
       field      = "funder",
       doc_type   = c("article", "review"),
-      auto_fetch = FALSE
+      auto_fetch = TRUE,
+      max_results = Inf
     )
   ),
 
+  # Manual review: track the decisions CSV as a file dependency so that any
+  # edits (via the Shiny app) trigger re-evaluation of downstream targets.
+  # Launch the review app with: shiny::runApp("shiny/funder_review_app.R")
+  tar_target(review_decisions_file, "data/review_decisions.csv", format = "file"),
+
+  # Filter pubs_funder_cdwr to remove records manually marked "drop".
   tar_target(
-    pubs_funder_dwr,
-    pc_search_scopus(
-      query      = "Department of Water Resources",
-      field      = "funder",
-      doc_type   = c("article", "review"),
-      auto_fetch = FALSE
-    )
+    pubs_funder_cdwr_reviewed,
+    apply_review_decisions(pubs_funder_cdwr, review_decisions_file)
   ),
 
-  # Combine, deduplicate, and disambiguate funder results.
-  # Retains records from pubs_funder_dwr only when they have a 4600-prefix
-  # DWR contract number or a California-affiliated author; ambiguous records
-  # are flagged for manual review.
-  tar_target(
-    pubs_funder,
-    disambiguate_funder_pubs(pubs_funder_cdwr, pubs_funder_dwr)
-  ),
-
-  # ── Affiliation search ───────────────────────────────────────────────────────
+  # ── Affiliation search ──────────────────────────────────────────────────────
 
   tar_target(
     pubs_affiliation,
@@ -54,27 +47,28 @@ list(
       query      = "California Department of Water Resources",
       field      = "affiliation",
       doc_type   = c("article", "review"),
-      auto_fetch = FALSE
+      auto_fetch = TRUE,
+      max_results = Inf
     )
   ),
 
-  # ── Combine and flag ─────────────────────────────────────────────────────────
+  # ── Combine and flag ────────────────────────────────────────────────────────
 
   # Merge funder and affiliation results, deduplicating by DOI and preserving
   # from_funder / from_affiliation provenance columns.
   tar_target(
     pubs_combined,
-    pc_deduplicate(pubs_funder, pubs_affiliation)
+    pc_deduplicate(pubs_funder_cdwr_reviewed, pubs_affiliation)
   ),
 
-  # Add boolean DWR contribution flags: is_funder, is_author,
-  # is_lead_author, is_sole_author.
+  # Add boolean DWR contribution flags: is_funder, is_author, is_lead_author,
+  # is_sole_author.
   tar_target(
     pubs_flagged,
     flag_dwr_contributions(pubs_combined)
   ),
 
-  # ── Classification ───────────────────────────────────────────────────────────
+  # ── Classification ──────────────────────────────────────────────────────────
 
   tar_target(
     pubs_classified,
@@ -88,7 +82,7 @@ list(
     )
   ),
 
-  # ── Outputs ──────────────────────────────────────────────────────────────────
+  # ── Outputs ─────────────────────────────────────────────────────────────────
 
   # Flat CSV with list columns collapsed to semicolon-delimited strings
   tar_target(
