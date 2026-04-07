@@ -17,18 +17,18 @@ retrieval and LLM classification is handled by the
 ## Repository Structure
 
 ```
-_targets.R                 # Pipeline declaration (targets DAG only)
-setup.R                    # One-time dev setup (load pubclassify from local path)
-R/                         # Custom functions, sourced by tar_source("R/")
-  score_cdwr_relevance.R   # Heuristic scoring for funder review prioritisation
+_targets.R                  # Pipeline declaration (targets DAG only)
+setup.R                     # One-time dev setup (load pubclassify from local path)
+R/                          # Custom functions, sourced by tar_source("R/")
+  score_cdwr_relevance.R    # Heuristic scoring for funder review prioritisation
 shiny/
-  funder_review_app.R      # Shiny app for manual funder review
+  funder_review_app.R       # Shiny app for manual funder review
 taxonomy/
-  dwr_taxonomy.csv         # Field taxonomy (columns: field, definition)
+  dwr_taxonomy.csv          # Field taxonomy (columns: field, definition)
 data/
-  review_decisions.csv     # Manual keep/drop/unsure decisions from review app
-  dwr_publications.csv     # Flat output with list columns as semicolon strings
-  dwr_publications.parquet # Full-fidelity output with native list columns
+  review_decisions.csv      # Manual keep/drop/unsure decisions from review app
+  dwr_publications.csv      # Flat output with list columns as semicolon strings
+  dwr_publications.parquet  # Full-fidelity output with native list columns
 ```
 
 ---
@@ -62,8 +62,11 @@ flowchart LR
     pubs_combined    --> pubs_flagged
     pubs_flagged     --> pubs_classified
     taxonomy         --> pubs_classified
-    pubs_classified  --> output_csv
-    pubs_classified  --> output_parquet
+    pubs_classified  --> affiliation_lookup_csv
+    affiliation_lookup_csv --> pubs_canonicalized
+    pubs_classified  --> pubs_canonicalized
+    pubs_canonicalized --> output_csv
+    pubs_canonicalized --> output_parquet
 ```
 
 ---
@@ -91,8 +94,8 @@ tar_target(
 
 #### `pubs_funding`
 
-Search Scopus for publications acknowledging DWR as a funder using the precise
-California-specific query.
+Search Scopus for publications acknowledging DWR as a funder the query string
+"California Department of Water Resources".
 
 ```r
 tar_target(
@@ -179,9 +182,7 @@ tar_target(
 #### `pubs_affiliation`
 
 Search Scopus for publications where at least one author is affiliated with
-DWR. The full name "California Department of Water Resources" is used since this
-is how DWR authors tend to report their affiliation; no disambiguation will be 
-needed.
+DWR using the query string "California Department of Water Resources".
 
 ```r
 tar_target(
@@ -265,6 +266,89 @@ taxonomy fields are finalized.
 
 ---
 
+#### Institution canonicalization (`R/build_affiliation_lookup.R`)
+
+After `pubs_classified` is built, a script is available to build a canonical
+institution lookup table from the raw affiliation strings. Run it once from the
+project root before building `pubs_canonicalized`:
+
+```r
+source("R/build_affiliation_lookup.R")
+build_affiliation_lookup()
+```
+
+The script proceeds in three stages:
+
+**Stage 1 — Extract unique raw strings.**  Flatten `pubs_classified$affiliations`
+(a list column where each element is a character vector of per-author
+affiliations) into a single character vector of unique raw strings. Each unique
+string is the unit of work for the remainder of the process.
+
+**Stage 2 — Cluster by string similarity.**  Compute pairwise string distances
+(`stringdist` package, method `"jw"` or `"cosine"` on token sets) and apply
+hierarchical clustering with a conservative threshold so that only near-certain
+variants are grouped automatically. The output is a data frame with columns
+`raw` and `cluster_id`. Cluster membership can be inspected and manually
+corrected before proceeding.
+
+**Stage 3 — LLM labels each cluster.**  For each cluster, send all member
+strings together to the LLM with a structured prompt asking for a single
+canonical institution name. The prompt includes:
+
+- A **reference list** of expected institutions (all UC campuses, CSU campuses,
+  major CA state agencies — DWR, DFW, SWRCB, etc. — and common federal agencies
+  — USGS, BOR, EPA, NOAA) so the LLM matches against known names rather than
+  generating freely.
+- A **naming convention rule**: always use the full official name; for UC
+  campuses use `"University of California, [City]"`.
+- An instruction to return the sentinel `"UNKNOWN"` rather than guess when
+  confidence is low. `UNKNOWN` entries are flagged for manual resolution.
+
+The result is written to `data/affiliation_lookup.csv` with columns:
+
+| Column      | Description                                      |
+|-------------|--------------------------------------------------|
+| `raw`       | Raw affiliation string as it appears in the data |
+| `canonical` | Canonical institution name (or `"UNKNOWN"`)      |
+
+The CSV should be reviewed before the pipeline proceeds. `UNKNOWN` entries and
+any suspect canonicalizations can be corrected by editing the file directly.
+Once approved, the file is tracked by the `affiliation_lookup_csv` target and
+triggers `pubs_canonicalized` when changed.
+
+---
+
+#### `affiliation_lookup_csv`
+
+Tracks `data/affiliation_lookup.csv` as a file dependency so that any manual
+edits to the lookup table automatically invalidate `pubs_canonicalized` and all
+downstream targets.
+
+```r
+tar_target(affiliation_lookup_csv, "data/affiliation_lookup.csv", format = "file")
+```
+
+---
+
+#### `pubs_canonicalized`
+
+Apply the approved affiliation lookup table to `pubs_classified`, replacing
+every raw affiliation string in the `affiliations` list column with its
+canonical institution name. Implemented by `apply_affiliation_lookup()` in `R/`.
+
+```r
+tar_target(
+  pubs_canonicalized,
+  apply_affiliation_lookup(pubs_classified, affiliation_lookup_csv)
+)
+```
+
+After canonicalization, `pubs_canonicalized$affiliations` contains only
+approved canonical institution names. The unique count of institutions across
+the dataset is computable directly from this column.
+
+---
+
 #### `output_csv`
 
 Write a flattened version of the classified tibble to
@@ -281,7 +365,7 @@ tar_target(
       vapply(x, function(v) paste(v, collapse = "; "), character(1L))
     }
     flat <- dplyr::mutate(
-      pubs_classified,
+      pubs_canonicalized,
       dplyr::across(c(authors, affiliations, funders, grant_numbers),
                     collapse_list_col)
     )
@@ -305,7 +389,7 @@ TypeScript/React via DuckDB-WASM) that need the full structured data.
 tar_target(
   output_parquet,
   {
-    arrow::write_parquet(pubs_classified, "data/dwr_publications.parquet")
+    arrow::write_parquet(pubs_canonicalized, "data/dwr_publications.parquet")
     "data/dwr_publications.parquet"
   },
   format = "file"
@@ -334,7 +418,7 @@ added by this pipeline:
 | `year`             | Publication year                                         |
 | `doc_type`         | Document type (article, review, etc.)                    |
 | `authors`          | Author display names (list column)                       |
-| `affiliations`     | Institutional affiliations per author (list column)      |
+| `affiliations`     | Canonical institution names per author (list column) — raw Scopus strings replaced by `pubs_canonicalized` |
 | `funders`          | Funder names (list column)                               |
 | `grant_numbers`    | Grant/contract numbers (list column)                     |
 | `journal`          | Journal name                                             |
@@ -372,3 +456,23 @@ added by this pipeline:
   refinement to improve LLM classification performance. Iteration on
   `taxonomy/dwr_taxonomy.csv` and re-running the `pubs_classified` target is
   the intended workflow.
+
+- **Affiliation lookup scale** — `pubs_classified$affiliations` contains
+  **1,183 unique raw strings**. This is manageable: clustering will likely
+  reduce it to a few hundred clusters, each LLM batch can cover ~50–100
+  clusters, and the full lookup can be built in a handful of API calls. Manual
+  review of the resulting CSV is feasible in one sitting. The reference
+  institution list in the prompt does not need to be exhaustive — covering UC
+  and CSU campuses, major CA agencies, and common federal agencies should
+  handle the majority of strings.
+
+- **Clustering threshold tuning** — the string-distance threshold for
+  auto-grouping variants needs empirical tuning on the actual affiliation
+  strings. Too loose and different institutions merge; too tight and the
+  clustering adds little value over manual review. Plan for a round of
+  threshold experimentation once the raw strings are in hand.
+
+- **`UNKNOWN` resolution workflow** — strings the LLM cannot confidently
+  canonicalize will be written as `"UNKNOWN"` in the lookup CSV. A process for
+  resolving these (web search, manual identification) should be established
+  before the lookup is considered complete.
