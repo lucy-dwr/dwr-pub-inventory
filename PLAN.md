@@ -23,7 +23,8 @@ R/                      # Custom functions, sourced by tar_source("R/")
 taxonomy/
   dwr_taxonomy.csv      # Field taxonomy (columns: field, definition)
 data/
-  dwr_publications.csv  # Final output (written by pipeline)
+  dwr_publications.csv     # Flat output with list columns as semicolon strings
+  dwr_publications.parquet # Full-fidelity output with native list columns
 ```
 
 ---
@@ -59,6 +60,7 @@ flowchart LR
     pubs_flagged     --> pubs_classified
     taxonomy         --> pubs_classified
     pubs_classified  --> output_csv
+    pubs_classified  --> output_parquet
 ```
 
 ---
@@ -237,15 +239,46 @@ taxonomy fields are finalized.
 
 #### `output_csv`
 
-Write the classified tibble to `data/dwr_publications.csv`, declared as a
-`format = "file"` target so `targets` tracks the output file.
+Write a flattened version of the classified tibble to
+`data/dwr_publications.csv`. List columns (`authors`, `affiliations`,
+`funders`, `grant_numbers`) are collapsed to semicolon-delimited strings so
+the file is readable in Excel and other tabular tools without any special
+handling.
 
 ```r
 tar_target(
   output_csv,
   {
-    readr::write_csv(pubs_classified, "data/dwr_publications.csv")
+    collapse_list_col <- function(x) {
+      vapply(x, function(v) paste(v, collapse = "; "), character(1L))
+    }
+    flat <- dplyr::mutate(
+      pubs_classified,
+      dplyr::across(c(authors, affiliations, funders, grant_numbers),
+                    collapse_list_col)
+    )
+    readr::write_csv(flat, "data/dwr_publications.csv")
     "data/dwr_publications.csv"
+  },
+  format = "file"
+)
+```
+
+---
+
+#### `output_parquet`
+
+Write the classified tibble to `data/dwr_publications.parquet` using the `arrow`
+package. List columns are preserved as Arrow list type, making this the
+preferred format for downstream applications (e.g., Shiny, Streamlit,
+TypeScript/React via DuckDB-WASM) that need the full structured data.
+
+```r
+tar_target(
+  output_parquet,
+  {
+    arrow::write_parquet(pubs_classified, "data/dwr_publications.parquet")
+    "data/dwr_publications.parquet"
   },
   format = "file"
 )
@@ -255,7 +288,14 @@ tar_target(
 
 ## Output Schema
 
-The final CSV contains the standard `pubclassify` columns plus the columns
+The pipeline produces two output files from the same underlying data:
+
+| File                          | List columns  | Best for                              |
+|-------------------------------|---------------|---------------------------------------|
+| `data/dwr_publications.csv`   | Semicolon-delimited strings | Excel, simple tabular tools |
+| `data/dwr_publications.parquet` | Native list type | Shiny, Streamlit, React/DuckDB  |
+
+Both files contain the standard `pubclassify` columns plus the columns
 added by this pipeline:
 
 | Column             | Description                                              |
