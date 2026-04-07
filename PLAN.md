@@ -49,12 +49,16 @@ Credentials are loaded from environment variables at pipeline runtime via
 
 ### Target DAG
 
-```
-taxonomy
-pubs_funder_ca ──┐
-                  ├─→ pubs_funder ──┐
-pubs_funder_dwr ─┘                  ├─→ pubs_combined ─→ pubs_flagged ─→ pubs_classified ─→ output_csv
-pubs_affiliation ───────────────────┘
+```mermaid
+flowchart LR
+    pubs_funder_cdwr   --> pubs_funder
+    pubs_funder_dwr  --> pubs_funder
+    pubs_funder      --> pubs_combined
+    pubs_affiliation --> pubs_combined
+    pubs_combined    --> pubs_flagged
+    pubs_flagged     --> pubs_classified
+    taxonomy         --> pubs_classified
+    pubs_classified  --> output_csv
 ```
 
 ---
@@ -80,14 +84,14 @@ tar_target(
 
 ---
 
-#### `pubs_funder_ca`
+#### `pubs_funder_cdwr`
 
 Search Scopus for publications acknowledging DWR as a funder using the precise
 California-specific query.
 
 ```r
 tar_target(
-  pubs_funder_ca,
+  pubs_funder_cdwr,
   pc_search_scopus(
     query      = "California Department of Water Resources",
     field      = "funder",
@@ -121,13 +125,13 @@ tar_target(
 
 #### `pubs_funder`
 
-Combine `pubs_funder_ca` and `pubs_funder_dwr`, deduplicate by DOI, and apply
+Combine `pubs_funder_cdwr` and `pubs_funder_dwr`, deduplicate by DOI, and apply
 a post-hoc filter to remove non-California DWR results introduced by the
 broader query.
 
 **Disambiguation strategy — to be refined.** Candidate approaches:
 
-- Drop any record that also appears in `pubs_funder_ca` (already covered by the
+- Drop any record that also appears in `pubs_funder_cdwr` (already covered by the
   precise query).
 - Inspect the `funders` and `grant_numbers` columns for geographic indicators:
   - DWR contract numbers often begin with `4600`; `pc_search_scopus()`'s
@@ -145,8 +149,9 @@ The final disambiguation logic will be implemented as a custom function in
 #### `pubs_affiliation`
 
 Search Scopus for publications where at least one author is affiliated with
-DWR. The full name "California Department of Water Resources" is used to
-avoid disambiguation issues that arise with the funder field.
+DWR. The full name "California Department of Water Resources" is used since this
+is how DWR authors tend to report their affiliation; no disambiguation will be 
+needed.
 
 ```r
 tar_target(
@@ -179,12 +184,12 @@ record when a DOI appears in both result sets.
 Add four boolean contribution columns to `pubs_combined`. These flags are not
 mutually exclusive — a publication can have any combination set.
 
-| Column           | Definition                                                  |
-|------------------|-------------------------------------------------------------|
-| `is_funder`      | DWR is acknowledged as a funder                            |
-| `is_author`      | At least one author is DWR-affiliated                      |
-| `is_lead_author` | The first-listed author is DWR-affiliated                  |
-| `is_sole_author` | All authors are DWR-affiliated                             |
+| Column           | Definition                                |
+|------------------|-------------------------------------------|
+| `is_funder`      | DWR is acknowledged as a funder           |
+| `is_author`      | At least one author is DWR-affiliated     |
+| `is_lead_author` | The first-listed author is DWR-affiliated |
+| `is_sole_author` | All authors are DWR-affiliated            |
 
 The flags are nested: `is_sole_author → is_lead_author → is_author`. A record
 can have `is_funder = TRUE` and any combination of authorship flags set
@@ -225,15 +230,14 @@ The LLM model name is to be confirmed. Because the taxonomy has fewer than 40
 fields, `use_embeddings = FALSE` (the default) is appropriate.
 
 A custom `system_prompt` and `classify_instructions` should be developed and
-passed to `pc_classify()` to guide the model — analogous to the prompts in the
-delta smelt vignette. This will be drafted once the taxonomy fields are
-finalised.
+passed to `pc_classify()` to guide the model. This will be drafted once the
+taxonomy fields are finalized.
 
 ---
 
 #### `output_csv`
 
-Write the classified tibble to `data/dwr_publications.csv`. Declared as a
+Write the classified tibble to `data/dwr_publications.csv`, declared as a
 `format = "file"` target so `targets` tracks the output file.
 
 ```r
