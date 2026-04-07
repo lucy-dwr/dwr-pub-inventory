@@ -2,7 +2,14 @@ library(targets)
 library(pubclassify)
 
 # Load credentials from environment variables
-pc_configure()
+pubclassify::pc_configure(
+  scopus_key       = Sys.getenv("SCOPUS_API_KEY"),
+  scopus_insttoken = Sys.getenv("SCOPUS_INSTTOKEN"),
+  email            = Sys.getenv("PUBCLASSIFY_EMAIL"),
+  llm_key          = Sys.getenv("PUBCLASSIFY_LLM_KEY"),
+  llm_base_url     = "https://customeruat.sda.state.ca.gov/api/v1",
+  llm_provider     = "openai-compatible"
+)
 
 # Source custom functions from R/
 tar_source("R/")
@@ -12,8 +19,18 @@ list(
   # ── Taxonomy ────────────────────────────────────────────────────────────────
 
   # Track the taxonomy CSV as a file dependency so edits trigger reclassification
-  tar_target(taxonomy_file, "taxonomy/dwr_taxonomy.csv", format = "file"),
-  tar_target(taxonomy, pc_taxonomy(taxonomy_file)),
+  tar_target(taxonomy_file, "taxonomy/dwr_disciplines_taxonomy.csv", format = "file"),
+
+  # Read with all three columns (category, field, definition); category is
+  # preserved here so it can be joined back onto classified output later.
+  tar_target(
+    taxonomy_raw,
+    readr::read_csv(taxonomy_file, show_col_types = FALSE)
+  ),
+
+  # pc_taxonomy() expects two columns (field, definition); drop category before
+  # passing so the shape matches what the function requires.
+  tar_target(taxonomy, pc_taxonomy(dplyr::select(taxonomy_raw, field, definition))),
 
   # ── Funder searches ─────────────────────────────────────────────────────────
 
@@ -58,7 +75,20 @@ list(
   # from_funder / from_affiliation provenance columns.
   tar_target(
     pubs_combined,
-    pc_deduplicate(pubs_funding_reviewed, pubs_affiliation)
+    {
+      funder_dois     <- unique(pubs_funding_reviewed$doi)
+      affiliation_dois <- unique(pubs_affiliation$doi)
+      deduped <- pc_deduplicate(dplyr::bind_rows(pubs_funding_reviewed, pubs_affiliation))
+      dplyr::mutate(
+        deduped,
+        query_source = dplyr::case_when(
+          doi %in% funder_dois & doi %in% affiliation_dois ~ "funder; affiliation",
+          doi %in% funder_dois                             ~ "funder",
+          doi %in% affiliation_dois                        ~ "affiliation",
+          TRUE                                             ~ NA_character_
+        )
+      )
+    }
   ),
 
   # Add boolean DWR contribution flags: is_funder, is_author, is_lead_author,
@@ -70,15 +100,22 @@ list(
 
   # ── Classification ──────────────────────────────────────────────────────────
 
+  # Track prompt files as dependencies so edits trigger reclassification
+  tar_target(system_prompt_file,  "prompts/system_prompt.txt",         format = "file"),
+  tar_target(classify_instr_file, "prompts/classify_instructions.txt", format = "file"),
+
+  tar_target(system_prompt,  readr::read_file(system_prompt_file)),
+  tar_target(classify_instr, readr::read_file(classify_instr_file)),
+
+  # Configuration was set at the top of this file (secret keys, LLM API endpoint, etc.)
   tar_target(
     pubs_classified,
     pc_classify(
-      pubs     = pubs_flagged,
-      taxonomy = taxonomy,
-      provider = "openai-compatible",
-      model    = Sys.getenv("PUBCLASSIFY_LLM_MODEL"),
-      api_key  = Sys.getenv("PUBCLASSIFY_LLM_KEY"),
-      base_url = Sys.getenv("PUBCLASSIFY_LLM_BASE_URL")
+      pubs                  = pubs_flagged,
+      taxonomy              = taxonomy,
+      model                 = "Anthropic Claude Sonnet 4.5",
+      system_prompt         = system_prompt,
+      classify_instructions = classify_instr
     )
   ),
 

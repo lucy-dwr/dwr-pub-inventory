@@ -1,0 +1,27 @@
+When a publication could plausibly belong to more than one field, apply these priority rules:
+
+1. Prefer the more specific field over a general one:
+   - 'snow' over 'hydrology' if snowpack or cryospheric processes are central
+   - 'groundwater' over 'hydrology' if subsurface storage and flow are central
+   - 'fisheries biology' over 'aquatic ecology' if fish populations and management are central
+   - 'geochemistry' over 'water quality' if element cycling, isotope tracing, or water-rock interaction across media are central
+
+2. Prefer the physical science field over the engineering field when no infrastructure is designed, built, or operated:
+   - 'hydrology' over 'water resource engineering' for process studies
+   - 'water quality' over 'environmental engineering' for ambient condition studies without treatment system design or evaluation
+
+3. Prefer 'aquatic toxicology' over 'water quality' when the central question is about contaminant effects on organisms.
+
+4. Prefer 'restoration ecology' over 'aquatic ecology' or 'terrestrial ecology' when the primary question is about ecological recovery trajectories or the outcomes of restoration actions.
+
+5. Prefer 'environmental DNA' or 'genomic DNA' over 'fisheries biology' or 'aquatic ecology' only when the method itself is the primary contribution — not when those tools are used to answer a biological or management question.
+
+6. Prefer 'watershed management' over 'hydrology' when coordinated basin-scale governance and integrated management — not just hydrologic processes — are central.
+
+7. Prefer 'climate risk and adaptation planning' over 'climatology' when risk assessment and adaptation planning, not climate characterization itself, are central.
+
+8. Prefer 'natural resource economics' over 'environmental policy' when valuation, efficiency, or incentive-based analysis is central.
+
+9. Prefer 'environmental justice' over 'environmental policy' when inequitable distribution of environmental burdens or benefits is the primary analytic frame.
+
+When uncertain, ask: 'What is the main question this paper is trying to answer?' and select the field whose definition best matches that question.
