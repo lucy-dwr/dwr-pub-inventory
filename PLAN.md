@@ -10,7 +10,7 @@ using a large language model.
 The pipeline is orchestrated with the
 [`targets`](https://docs.ropensci.org/targets/) package. All bibliometric
 retrieval and LLM classification is handled by the
-[`pubclassify`](https://github.com/lucyandrews/pubclassify) package.
+[`pubclassify`](https://github.com/lucy-dwr/pubclassify) package.
 
 ---
 
