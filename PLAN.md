@@ -65,8 +65,10 @@ flowchart LR
     pubs_classified  --> affiliation_lookup_csv
     affiliation_lookup_csv --> pubs_canonicalized
     pubs_classified  --> pubs_canonicalized
-    pubs_canonicalized --> output_csv
-    pubs_canonicalized --> output_parquet
+    pubs_canonicalized --> pubs_enriched
+    taxonomy_raw       --> pubs_enriched
+    pubs_enriched --> output_csv
+    pubs_enriched --> output_parquet
 ```
 
 ---
@@ -349,9 +351,32 @@ the dataset is computable directly from this column.
 
 ---
 
+#### `pubs_enriched`
+
+Join the top-level science category from `taxonomy_raw` onto
+`pubs_canonicalized` so that both the broad category and the detailed field are available as first-class columns in every downstream output. The new column `pc_category` is placed immediately before `pc_field` to keep the two
+classification columns adjacent.
+
+```r
+tar_target(
+  pubs_enriched,
+  {
+    category_lookup <- dplyr::select(taxonomy_raw, pc_category = category, pc_field = field)
+    dplyr::left_join(pubs_canonicalized, category_lookup, by = "pc_field") |>
+      dplyr::relocate(pc_category, .before = pc_field)
+  }
+)
+```
+
+`taxonomy_raw` already exists as a target, so no additional file dependency
+is needed here. If `pc_field` contains a value not present in the taxonomy
+the resulting `pc_category` will be `NA` for that record.
+
+---
+
 #### `output_csv`
 
-Write a flattened version of the classified tibble to
+Write a flattened version of the enriched tibble to
 `data/dwr_publications.csv`. List columns (`authors`, `affiliations`,
 `funders`, `grant_numbers`) are collapsed to semicolon-delimited strings so
 the file is readable in Excel and other tabular tools without any special
@@ -365,7 +390,7 @@ tar_target(
       vapply(x, function(v) paste(v, collapse = "; "), character(1L))
     }
     flat <- dplyr::mutate(
-      pubs_canonicalized,
+      pubs_enriched,
       dplyr::across(c(authors, affiliations, funders, grant_numbers),
                     collapse_list_col)
     )
@@ -380,7 +405,7 @@ tar_target(
 
 #### `output_parquet`
 
-Write the classified tibble to `data/dwr_publications.parquet` using the `arrow`
+Write the enriched tibble to `data/dwr_publications.parquet` using the `arrow`
 package. List columns are preserved as Arrow list type, making this the
 preferred format for downstream applications (e.g., Shiny, Streamlit,
 TypeScript/React via DuckDB-WASM) that need the full structured data.
@@ -389,7 +414,7 @@ TypeScript/React via DuckDB-WASM) that need the full structured data.
 tar_target(
   output_parquet,
   {
-    arrow::write_parquet(pubs_canonicalized, "data/dwr_publications.parquet")
+    arrow::write_parquet(pubs_enriched, "data/dwr_publications.parquet")
     "data/dwr_publications.parquet"
   },
   format = "file"
@@ -427,7 +452,8 @@ added by this pipeline:
 | `is_author`        | At least one DWR author (boolean)                        |
 | `is_lead_author`   | First author is DWR-affiliated (boolean)                 |
 | `is_sole_author`   | All authors are DWR-affiliated (boolean)                 |
-| `pc_field`         | Assigned taxonomy field                                  |
+| `pc_category`      | Broad science category joined from taxonomy (e.g. `"atmospheric sciences"`) |
+| `pc_field`         | Assigned taxonomy field (e.g. `"climatology"`)           |
 | `pc_rationale`     | LLM rationale for field assignment                       |
 | `pc_text_source`   | Text used for classification (`"title+abstract"`)        |
 | `pc_classified_by` | Classification method (`"llm-full"`)                     |

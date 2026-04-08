@@ -128,6 +128,17 @@ list(
     apply_affiliation_lookup(pubs_classified, affiliation_lookup_csv)
   ),
 
+  # ── Enrich with taxonomy top-level category ─────────────────────────────────
+
+  tar_target(
+    pubs_enriched,
+    {
+      category_lookup <- dplyr::select(taxonomy_raw, pc_category = category, pc_field = field)
+      dplyr::left_join(pubs_canonicalized, category_lookup, by = "pc_field") |>
+        dplyr::relocate(pc_category, .before = pc_field)
+    }
+  ),
+
   # ── Outputs ─────────────────────────────────────────────────────────────────
 
   # Flat CSV with list columns collapsed to semicolon-delimited strings
@@ -138,7 +149,7 @@ list(
         vapply(x, function(v) paste(v, collapse = "; "), character(1L))
       }
       flat <- dplyr::mutate(
-        pubs_canonicalized,
+        pubs_enriched,
         dplyr::across(c(authors, affiliations, funders, grant_numbers),
                       collapse_list_col)
       )
@@ -152,7 +163,7 @@ list(
   tar_target(
     output_parquet,
     {
-      arrow::write_parquet(pubs_canonicalized, "data/dwr_publications.parquet")
+      arrow::write_parquet(pubs_enriched, "data/dwr_publications.parquet")
       "data/dwr_publications.parquet"
     },
     format = "file"
