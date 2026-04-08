@@ -18,18 +18,13 @@ list(
 
   # ── Taxonomy ────────────────────────────────────────────────────────────────
 
-  # Track the taxonomy CSV as a file dependency so edits trigger reclassification
   tar_target(taxonomy_file, "taxonomy/dwr_disciplines_taxonomy.csv", format = "file"),
 
-  # Read with all three columns (category, field, definition); category is
-  # preserved here so it can be joined back onto classified output later.
   tar_target(
     taxonomy_raw,
     readr::read_csv(taxonomy_file, show_col_types = FALSE)
   ),
 
-  # pc_taxonomy() expects two columns (field, definition); drop category before
-  # passing so the shape matches what the function requires.
   tar_target(taxonomy, pc_taxonomy(dplyr::select(taxonomy_raw, field, definition))),
 
   # ── Funder searches ─────────────────────────────────────────────────────────
@@ -50,7 +45,6 @@ list(
   # Launch the review app with: shiny::runApp("shiny/funder_review_app.R")
   tar_target(review_decisions_file, "data/review_decisions.csv", format = "file"),
 
-  # Filter pubs_funding to remove records manually marked "drop".
   tar_target(
     pubs_funding_reviewed,
     apply_review_decisions(pubs_funding, review_decisions_file)
@@ -71,8 +65,6 @@ list(
 
   # ── Combine and flag ────────────────────────────────────────────────────────
 
-  # Merge funder and affiliation results, deduplicating by DOI and preserving
-  # from_funder / from_affiliation provenance columns.
   tar_target(
     pubs_combined,
     {
@@ -92,7 +84,7 @@ list(
   ),
 
   # Add boolean DWR contribution flags: is_funder, is_author, is_lead_author,
-  # is_sole_author.
+  # is_sole_author
   tar_target(
     pubs_flagged,
     flag_dwr_contributions(pubs_combined)
@@ -119,6 +111,23 @@ list(
     )
   ),
 
+  # ── Affiliation canonicalisation ────────────────────────────────────────────
+
+  # Track the lookup CSV as a file dependency so that manual edits (or a re-run
+  # of build_affiliation_lookup()) automatically invalidate pubs_canonicalized.
+  # Build the lookup with:
+  #   source("R/build_institution_reference.R")
+  #   source("R/build_affiliation_lookup.R")
+  #   pubs_classified <- tar_read(pubs_classified)
+  #   build_institution_reference(pubs_classified, model = "<model-name>")
+  #   build_affiliation_lookup(pubs_classified, model = "<model-name>")
+  tar_target(affiliation_lookup_csv, "data/affiliation_lookup.csv", format = "file"),
+
+  tar_target(
+    pubs_canonicalized,
+    apply_affiliation_lookup(pubs_classified, affiliation_lookup_csv)
+  ),
+
   # ── Outputs ─────────────────────────────────────────────────────────────────
 
   # Flat CSV with list columns collapsed to semicolon-delimited strings
@@ -129,7 +138,7 @@ list(
         vapply(x, function(v) paste(v, collapse = "; "), character(1L))
       }
       flat <- dplyr::mutate(
-        pubs_classified,
+        pubs_canonicalized,
         dplyr::across(c(authors, affiliations, funders, grant_numbers),
                       collapse_list_col)
       )
@@ -143,7 +152,7 @@ list(
   tar_target(
     output_parquet,
     {
-      arrow::write_parquet(pubs_classified, "data/dwr_publications.parquet")
+      arrow::write_parquet(pubs_canonicalized, "data/dwr_publications.parquet")
       "data/dwr_publications.parquet"
     },
     format = "file"
