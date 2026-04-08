@@ -434,7 +434,7 @@ added by this pipeline:
 
 ---
 
-## Open Questions / Deferred Decisions
+## Open Questions / Deferred Decisions / Remaining Work
 
 - **Acknowledgments text in funder review app** — the review app currently
   relies on Scopus-provided funder and grant number fields, which are
@@ -445,34 +445,6 @@ added by this pipeline:
   and used to inform the `pubs_funding_reviewed` filter or a separate
   manual annotation column.
 
-- **LLM model name** — the specific model to pass to `pc_classify()` via the
-  California Department of Technology gateway is TBD.
-
-- **Classification prompts** — a custom `system_prompt` and
-  `classify_instructions` for DWR-domain publications should be drafted once
-  the taxonomy is finalised.
-
-- **Taxonomy development** — the ~35-field taxonomy may need definition
-  refinement to improve LLM classification performance. Iteration on
-  `taxonomy/dwr_taxonomy.csv` and re-running the `pubs_classified` target is
-  the intended workflow.
-
-- **Affiliation lookup scale** — `pubs_classified$affiliations` contains
-  **1,183 unique raw strings**. This is manageable: clustering will likely
-  reduce it to a few hundred clusters, each LLM batch can cover ~50–100
-  clusters, and the full lookup can be built in a handful of API calls. Manual
-  review of the resulting CSV is feasible in one sitting. The reference
-  institution list in the prompt does not need to be exhaustive — covering UC
-  and CSU campuses, major CA agencies, and common federal agencies should
-  handle the majority of strings.
-
-- **Clustering threshold tuning** — the string-distance threshold for
-  auto-grouping variants needs empirical tuning on the actual affiliation
-  strings. Too loose and different institutions merge; too tight and the
-  clustering adds little value over manual review. Plan for a round of
-  threshold experimentation once the raw strings are in hand.
-
-- **`UNKNOWN` resolution workflow** — strings the LLM cannot confidently
-  canonicalize will be written as `"UNKNOWN"` in the lookup CSV. A process for
-  resolving these (web search, manual identification) should be established
-  before the lookup is considered complete.
+- **Remaining UNKNOWN affiliations** — some canonicalized affiliations in the
+  file `affiliations_lookup.csv` are still "UNKNOWN" after a first pass because
+  they require manual work to address.
