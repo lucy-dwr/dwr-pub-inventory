@@ -1028,8 +1028,8 @@ University of Tehran,University of Tehran
 "The University of Tennessee, Knoxville","University of Tennessee, Knoxville"
 University of Texas at Tyler,University of Texas at Tyler
 Cockrell School of Engineering,"University of Texas, Austin"
+The University of Texas at Austin,"University of Texas, Austin"
 The University of Texas at El Paso,"University of Texas, El Paso"
-The University of Texas at Austin,"University of Texas,Austin"
 "University of the Pacific, California",University of the Pacific
 University of Toronto,University of Toronto
 University of Tsukuba,University of Tsukuba
@@ -1048,6 +1048,7 @@ University of Wisconsin-Stevens Point,"University of Wisconsin, Madison"
 UW-Madison College of Engineering,"University of Wisconsin, Madison"
 University of Wollongong,University of Wollongong
 University of Wyoming,University of Wyoming
+[NA],UNKNOWN
 Antarctic Group,UNKNOWN
 Applied Marine Sciences,UNKNOWN
 Atlantic,UNKNOWN
@@ -1091,11 +1092,13 @@ Ecosystem Conservation Division,UNKNOWN
 "Engineering, LLC",UNKNOWN
 Environmental Laboratory,UNKNOWN
 Faculty of Agriculture,UNKNOWN
+Faculty of Arts and Sciences,UNKNOWN
 Faculty of Business Administration,UNKNOWN
 Faculty of Science,UNKNOWN
 Fathom,UNKNOWN
 Fisheries Branch,UNKNOWN
 Genetics Research Laboratory,UNKNOWN
+GoFundMe,UNKNOWN
 Inc,UNKNOWN
 Inc. under contract to the U.S. Geological,UNKNOWN
 "Institute of Earth, Ocean, and Atmospheric Sciences",UNKNOWN
@@ -1109,6 +1112,7 @@ National Electric Coil,UNKNOWN
 National Institute of Education,UNKNOWN
 National Institute of Polar Research,UNKNOWN
 NATURAL RESOURCES,UNKNOWN
+not available,UNKNOWN
 Office of Naval Research,UNKNOWN
 Office of Quality Assurance,UNKNOWN
 OVAM,UNKNOWN
@@ -1178,7 +1182,3 @@ Yellow Sea Fisheries Research Institute Chinese Academy of Fishery Science,Yello
 Yugra State University,Yugra State University
 Zagazig University,Zagazig University
 Zhejiang Sci-Tech University,Zhejiang Sci-Tech University
-[NA],
-Faculty of Arts and Sciences,
-GoFundMe,
-not available,

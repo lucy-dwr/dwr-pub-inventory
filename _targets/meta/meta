@@ -10,16 +10,14 @@ classify_instr_file|stem|bccb48f3a60d5f0f|89a6cae8f5e1cf25|2c530c1562a7fbd1|-156
 system_prompt|stem|562cc763bf1d7318|7449feef0ddf80c1|5138af5d7258508c|-1644256151||t20550.8922384315s|s413b|413|rds|local|vector|||0.053||
 classify_instr|stem|712ab649c97ba642|529a60448d92d01f|c18f2cee68fd79af|547437410||t20550.8926574587s|s987b|987|rds|local|vector|||0.051||
 raw_affs|object|8cc60905b626b10e
-affiliation_lookup_csv|stem|732821cca62e8c89|cfddd47810b28546|2c530c1562a7fbd1|-2047668803|data/affiliation_lookup.csv|t20551.0540483558s|s74241b|74241|file|local|vector|||0.001||
 taxonomy_file|stem|f4fab25542fbe505|d3893a1a73840371|2c530c1562a7fbd1|446765236|taxonomy/dwr_disciplines_taxonomy.csv|t20550.9401188838s|s52926b|52926|file|local|vector|||0||
 taxonomy_raw|stem|285d0d70557d5b16|623417ba72f18fdf|31ab54afb715d766|-604133771||t20551.0574477955s|s15554b|15554|rds|local|vector|||0.004||
 taxonomy|stem|0a53807ee3628786|cd73c3b679c37fbe|f5bc847858ecd1b6|-2099479591||t20551.0574479185s|s15323b|15323|rds|local|vector|||0.001||
 pubs_classified|stem|fe184f0f94b7d440|7cc81513fbde75d1|4674f02290d51c6a|-1422515950||t20551.1145123082s|s1151708b|1151708|rds|local|vector|||4930.109|Batch classification failed: HTTP 504 Gateway Timeout. ℹ Setting pc_field and pc_rationale to 'NA' for this batch.|
 score_cdwr_relevance|function|838dd7111174000d
-pubs_canonicalized|stem|26f6c9848468242a|98c536ac6887eeda|4caf8de79637e8b1|-1440837022||t20551.1195682742s|s1145909b|1145909|rds|local|vector|||0.069||
 .build_user_message|function|7f766768de716bd2
 .canonicalise_top_strings|function|dd382d672e4bd9ad
-.Random.seed|object|c87b1d0a07d3bc13
+.Random.seed|object|01be548dfd5e7a8d
 .load_reference|function|b2fecdbfc0e7bf60
 score_dwr_relevance|function|838dd7111174000d
 .affiliation_system_prompt|function|3a642ac247f69b4f
@@ -29,6 +27,8 @@ apply_affiliation_lookup|function|6d53fd22b78821fc
 build_institution_reference|function|9072556c13241acd
 .label_clusters_llm|function|8565a90aaf9fcabf
 build_affiliation_lookup|function|163fd55c0752c48e
-pubs_enriched|stem|3a8643509c6c3bab|65c94a5220008bd9|1e3db838d51403af|1588356804||t20551.1500906831s|s1147156b|1147156|rds|local|vector|||0.066||
-output_parquet|stem|9020f5bc550177a1|870a30665f0a9f0a|38d2f11d08e2789b|129380964|data/dwr_publications.parquet|t20551.1501034413s|s1821692b|1821692|file|local|vector|||1.068||
-output_csv|stem|d74add4402c79f49|4bc90d2bb7141648|38d2f11d08e2789b|365528169|data/dwr_publications.csv|t20551.1501062976s|s3834544b|3834544|file|local|vector|||0.207||
+affiliation_lookup_csv|stem|b2b08fe2ea5b62ca|cfddd47810b28546|2c530c1562a7fbd1|-2047668803|data/affiliation_lookup.csv|t20551.178237518s|s74270b|74270|file|local|vector|||0||
+pubs_canonicalized|stem|24b02bb5ccb33b41|98c536ac6887eeda|0dfaa5f41a9a192d|-1440837022||t20551.1785298692s|s1145849b|1145849|rds|local|vector|||0.251||
+pubs_enriched|stem|3f10fece6fe63581|65c94a5220008bd9|4d7c384bdbd60fb8|1588356804||t20551.1785325727s|s1147097b|1147097|rds|local|vector|||0.049||
+output_parquet|stem|0acd71a4c1689cd7|870a30665f0a9f0a|a61be18f829b31ef|129380964|data/dwr_publications.parquet|t20551.1785349685s|s1821636b|1821636|file|local|vector|||0.18||
+output_csv|stem|d557c2d5ad4c0bf9|4bc90d2bb7141648|a61be18f829b31ef|365528169|data/dwr_publications.csv|t20551.1785358585s|s3834457b|3834457|file|local|vector|||0.042||
