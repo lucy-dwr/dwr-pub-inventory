@@ -1,11 +1,17 @@
-# Filter a publications tibble using saved manual review decisions.
-#
-# Reads `decisions_file` (a CSV with columns doi, decision, reviewed_at) and
-# removes any record explicitly marked "drop".  Records marked "keep",
-# "unsure", or not yet reviewed are retained.
-#
-# Used as a targets step so that running tar_make() after a review session
-# automatically propagates decisions downstream.
+#' Filter publications using saved manual review decisions
+#'
+#' Reads `decisions_file` (a CSV with columns `doi`, `decision`,
+#' `reviewed_at`) and removes any record explicitly marked `"drop"`. Records
+#' marked `"keep"`, `"unsure"`, or not yet reviewed are retained.
+#'
+#' Used as a targets step so that running `tar_make()` after a review session
+#' automatically propagates decisions downstream.
+#'
+#' @param pubs A tibble of publications.
+#' @param decisions_file Path to a CSV with columns `doi`, `decision`, and
+#'   `reviewed_at`.
+#'
+#' @return `pubs` with rows marked `"drop"` removed.
 
 apply_review_decisions <- function(pubs, decisions_file) {
   if (!file.exists(decisions_file)) {

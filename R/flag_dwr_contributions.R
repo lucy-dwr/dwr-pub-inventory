@@ -1,18 +1,29 @@
-# Add DWR contribution boolean flags to a deduplicated publications tibble.
-#
-# Expects `pubs` to have:
-#   - `query_source`  character — "funder", "affiliation", or "funder; affiliation"
-#   - `affiliations`  list<character> — per-author institutional affiliations
-#
-# Adds four non-exclusive boolean columns:
-#   - `is_funder`      TRUE if the record came from a funder search
-#   - `is_author`      TRUE if the record came from an affiliation search OR any
-#                      author has a DWR affiliation in the metadata
-#   - `is_lead_author` TRUE if the first-listed author is DWR-affiliated
-#   - `is_sole_author` TRUE if every author is DWR-affiliated
-#
-# The nesting relationship is: is_sole_author => is_lead_author => is_author.
-# is_funder is independent and can be TRUE alongside any authorship flag.
+#' Add DWR contribution boolean flags to a publications tibble
+#'
+#' Adds four non-exclusive boolean columns indicating how CA DWR is associated
+#' with each publication.
+#'
+#' @details
+#' The nesting relationship is: `is_sole_author` => `is_lead_author` =>
+#' `is_author`. `is_funder` is independent and can be `TRUE` alongside any
+#' authorship flag.
+#'
+#' @param pubs A deduplicated publications tibble with columns:
+#'   \describe{
+#'     \item{query_source}{character — `"funder"`, `"affiliation"`, or
+#'       `"funder; affiliation"`}
+#'     \item{affiliations}{list of character vectors — per-author institutional
+#'       affiliations}
+#'   }
+#'
+#' @return `pubs` with four added boolean columns:
+#'   \describe{
+#'     \item{is_funder}{`TRUE` if the record came from a funder search}
+#'     \item{is_author}{`TRUE` if from an affiliation search OR any author has
+#'       a DWR affiliation in the metadata}
+#'     \item{is_lead_author}{`TRUE` if the first-listed author is DWR-affiliated}
+#'     \item{is_sole_author}{`TRUE` if every author is DWR-affiliated}
+#'   }
 
 flag_dwr_contributions <- function(pubs) {
   dwr_pattern <- "California Department of Water Resources"

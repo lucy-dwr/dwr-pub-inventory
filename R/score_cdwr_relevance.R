@@ -1,15 +1,22 @@
-# Score publications by their likelihood of NOT being genuinely CA-DWR-funded.
-# Higher scores = less likely to be a true CA DWR publication.
-#
-# Signals and weights:
-#   +4  No California geographic mention across all text fields
-#   +4  No water-related topic in title or abstract
-#   +3  Domain keywords indicate a non-water field (medicine, physics, etc.)
-#   +2  No US institution detected in author affiliations
-#
-# Maximum possible score: 13
-#
-# Returns `pubs` with an added integer column `cdwr_score`.
+#' Score publications by likelihood of NOT being genuinely CA-DWR-funded
+#'
+#' Higher scores indicate a publication is less likely to be a true CA DWR
+#' publication.
+#'
+#' @details
+#' Signals and weights:
+#' \itemize{
+#'   \item +4  No California geographic mention across all text fields
+#'   \item +4  No water-related topic in title or abstract
+#'   \item +3  Domain keywords indicate a non-water field (medicine, physics, etc.)
+#'   \item +2  No US institution detected in author affiliations
+#' }
+#' Maximum possible score: 13.
+#'
+#' @param pubs A tibble of publications. Must have columns `title`, `abstract`,
+#'   `affiliations` (list), `funders` (list), and `grant_numbers` (list).
+#'
+#' @return `pubs` with an added integer column `cdwr_score`.
 
 score_cdwr_relevance <- function(pubs) {
 
