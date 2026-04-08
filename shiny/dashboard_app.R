@@ -5,6 +5,8 @@ library(DT)
 library(dplyr)
 library(arrow)
 library(stringr)
+library(shinychat)
+library(ellmer)
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 if (basename(getwd()) == "shiny") setwd("..")
@@ -61,6 +63,31 @@ CONTRIB_COLORS <- c(
 CATEGORY_COLORS <- c(
   "#1a3a5c", "#2d6a7a", "#4a9cad", "#7dc3d0",
   "#2d7a5f", "#7ec8a0", "#c9a227", "#8a6aad"
+)
+
+# ── Chat system prompt (built once at startup) ─────────────────────────────────
+# Include top affiliations (up to 60) to give the LLM enough context for matching
+top_affiliations <- head(all_affiliations, 60L)
+chat_system_prompt <- paste0(
+  "You are a helpful assistant for the DWR Peer-Reviewed Publication Inventory ",
+  "dashboard, a tool used by the California Department of Water Resources (DWR).\n\n",
+  "You help users in two ways:\n",
+  "1. FILTER-DRIVING: when the user describes a subset of the data in natural language ",
+  "(e.g. 'show hydrology papers from 2018 to 2022 where DWR was lead author'), ",
+  "call set_filters to update the dashboard controls.\n",
+  "2. LITERATURE SYNTHESIS: when the user asks for a summary or analysis of the ",
+  "currently visible papers, call synthesize_selection to retrieve the abstracts, ",
+  "then synthesize them in your response.\n\n",
+  "AVAILABLE FILTER VALUES\n",
+  "Year range: ", year_min, " to ", year_max, " (default view: ", YEAR_DEFAULT[1L],
+  "-", YEAR_DEFAULT[2L], ")\n",
+  "Science Fields: ", paste(field_choices[-1L], collapse = "; "), "\n",
+  "Contribution Types: ", paste(CONTRIB_LEVELS, collapse = ", "), "\n",
+  "Common Author Affiliations (sample): ",
+  paste(top_affiliations, collapse = "; "), "\n",
+  "(", length(all_affiliations), " total affiliations available)\n\n",
+  "When the user's intent is ambiguous between filtering and synthesis, ask for ",
+  "clarification. Be professional, concise, and suited to a government science context."
 )
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
@@ -122,9 +149,70 @@ app_css <- "
     white-space: nowrap;
   }
   .btn-dwr:hover, .btn-dwr:focus { background: #2e4d72 !important; }
+  .btn-chat-toggle { background: #2d7a5f !important; }
+  .btn-chat-toggle:hover, .btn-chat-toggle:focus { background: #235f4a !important; }
+  .btn-chat-toggle.is-open { background: #4a6080 !important; }
+  .btn-chat-toggle.is-open:hover { background: #3a5070 !important; }
 
   /* ── Main wrapper ── */
   .main-wrap { padding: 16px 24px 4px; }
+
+  /* ── Three-column flex layout ── */
+  .main-layout {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .panel-left {
+    flex: 0 0 40%;
+    min-width: 0;
+    transition: flex-basis 0.25s ease;
+  }
+  .panel-right {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .chat-sidebar {
+    flex: 0 0 0;
+    overflow: hidden;
+    min-width: 0;
+    transition: flex-basis 0.25s ease;
+  }
+  .main-layout.chat-open .panel-left  { flex-basis: 33%; }
+  .main-layout.chat-open .chat-sidebar {
+    flex: 0 0 340px;
+    overflow: visible;
+  }
+  .chat-sidebar-inner {
+    width: 340px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 180px);
+    min-height: 500px;
+    overflow: hidden;
+  }
+  .chat-sidebar-title {
+    font-size: 0.87rem; font-weight: 600; color: white;
+    background: #2d7a5f;
+    padding: 10px 14px;
+    border-radius: 4px 4px 0 0;
+    flex-shrink: 0;
+  }
+  .chat-sidebar-title small {
+    display: block; font-weight: 400;
+    font-size: 0.72rem; opacity: 0.85; margin-top: 2px;
+  }
+  /* shinychat fills the remaining space */
+  .chat-sidebar-inner .shiny-chat-container {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 
   /* ── Panel cards ── */
   .pcrd {
@@ -209,6 +297,7 @@ ui <- fluidPage(
   tags$head(
     tags$style(HTML(app_css)),
     tags$script(HTML("
+      // ── Decade tick marks on year slider ────────────────────────────────────
       $(document).on('shiny:connected', function() {
         var el = document.getElementById('year_range');
         if (!el) return;
@@ -249,12 +338,21 @@ ui <- fluidPage(
           return true;
         }
 
-        // The grid is rendered once on init and is static — disconnect after first success
+        // The grid is rendered once on init and is static -- disconnect after first success
         var obs = new MutationObserver(function() {
           if (injectDecades()) obs.disconnect();
         });
         obs.observe(container, { childList: true, subtree: true });
         setTimeout(injectDecades, 300);
+      });
+
+      // ── Chat sidebar toggle ──────────────────────────────────────────────────
+      $(document).on('click', '#btn_chat_toggle', function() {
+        var layout   = document.querySelector('.main-layout');
+        var isOpen   = layout.classList.toggle('chat-open');
+        var btn      = document.getElementById('btn_chat_toggle');
+        btn.innerHTML = isOpen ? 'Close chat' : 'Ask the data &#10022;';
+        btn.classList.toggle('is-open', isOpen);
       });
     "))
   ),
@@ -289,15 +387,20 @@ ui <- fluidPage(
     div(class = "ctrls-spacer"),
     actionButton("btn_sci",   "Science Category & Field Classification", class = "btn-dwr"),
     actionButton("btn_about", "About the Inventory",                     class = "btn-dwr"),
-    actionButton("btn_reset", "Reset",                                   class = "btn-dwr")
+    actionButton("btn_reset", "Reset",                                   class = "btn-dwr"),
+    tags$button(
+      id    = "btn_chat_toggle",
+      class = "btn-dwr btn-chat-toggle",
+      HTML("Ask the data &#10022;")
+    )
   ),
 
   # ── Main content ─────────────────────────────────────────────────────────────
   div(class = "main-wrap",
-    fluidRow(
+    div(class = "main-layout",
 
-      # ── Left panel (5 cols) ────────────────────────────────────────────────
-      column(5,
+      # ── Left panel ──────────────────────────────────────────────────────────
+      div(class = "panel-left",
         # Featured article
         div(class = "pcrd", uiOutput("featured_ui")),
 
@@ -316,8 +419,8 @@ ui <- fluidPage(
         )
       ),
 
-      # ── Right panel (7 cols) ───────────────────────────────────────────────
-      column(7,
+      # ── Right panel ─────────────────────────────────────────────────────────
+      div(class = "panel-right",
         # Filter dropdowns
         div(class = "pcrd filt-row",
           fluidRow(
@@ -362,7 +465,22 @@ ui <- fluidPage(
         div(class = "pcrd",
           DT::dataTableOutput("article_table")
         )
+      ),
+
+      # ── Chat sidebar ─────────────────────────────────────────────────────────
+      div(class = "chat-sidebar",
+        div(class = "chat-sidebar-inner",
+          div(class = "chat-sidebar-title",
+            "\u2736 Ask the data",
+            tags$small("Filter by description or summarize visible papers")
+          ),
+          shinychat::chat_mod_ui(
+            "chat",
+            placeholder = "e.g. Show hydrology papers from 2015\u20132022\u2026"
+          )
+        )
       )
+
     )
   ),
 
@@ -691,6 +809,126 @@ server <- function(input, output, session) {
     updateSelectInput(session, "f_contrib", selected = "All")
     updateSelectInput(session, "f_affil",   selected = "All")
   })
+
+  # ── Chat ──────────────────────────────────────────────────────────────────
+
+  # Create one ellmer chat object per session with the system prompt.
+  # Use chat_openai_compatible to match the pubclassify pipeline's provider.
+  chat_obj <- ellmer::chat_openai_compatible(
+    base_url      = Sys.getenv("PUBCLASSIFY_LLM_BASE_URL",
+                               unset = "https://customeruat.sda.state.ca.gov/api/v1"),
+    system_prompt = chat_system_prompt,
+    api_key       = Sys.getenv("PUBCLASSIFY_LLM_KEY",
+                               unset = Sys.getenv("OPENAI_API_KEY")),
+    model         = Sys.getenv("PUBCLASSIFY_LLM_MODEL", unset = "Anthropic Claude Sonnet 4.5"),
+    echo          = "none"
+  )
+
+  # Tool: set_filters
+  # Updates the Shiny filter controls; returns a confirmation string to the LLM.
+  chat_obj$register_tool(ellmer::tool(
+    function(
+      year_start        = NULL,
+      year_end          = NULL,
+      science_field     = NULL,
+      contribution_type = NULL,
+      affiliation       = NULL
+    ) {
+      changed <- character(0)
+
+      if (!is.null(year_start) || !is.null(year_end)) {
+        current   <- isolate(input$year_range)
+        new_start <- if (!is.null(year_start)) as.integer(year_start) else current[1L]
+        new_end   <- if (!is.null(year_end))   as.integer(year_end)   else current[2L]
+        updateSliderInput(session, "year_range", value = c(new_start, new_end))
+        changed <- c(changed, paste0("Year \u2192 ", new_start, "\u2013", new_end))
+      }
+
+      if (!is.null(science_field)) {
+        updateSelectInput(session, "f_field", selected = science_field)
+        changed <- c(changed, paste0("Science Field \u2192 ", science_field))
+      }
+
+      if (!is.null(contribution_type)) {
+        updateSelectInput(session, "f_contrib", selected = contribution_type)
+        changed <- c(changed, paste0("Contribution Type \u2192 ", contribution_type))
+      }
+
+      if (!is.null(affiliation)) {
+        updateSelectInput(session, "f_affil", selected = affiliation)
+        changed <- c(changed, paste0("Author Affiliation \u2192 ", affiliation))
+      }
+
+      if (length(changed) == 0L) return("No filters were changed.")
+      paste0("Filters updated: ", paste(changed, collapse = "; "), ".")
+    },
+    "Update the dashboard filter controls based on the user's request. Only supply
+     parameters you want to change; omit the rest. Returns a confirmation of what
+     was changed.",
+    arguments = list(
+      year_start        = ellmer::type_integer(
+        "Start year for the year range filter (e.g. 2015)", required = FALSE),
+      year_end          = ellmer::type_integer(
+        "End year for the year range filter (e.g. 2022)", required = FALSE),
+      science_field     = ellmer::type_string(
+        "Science field name exactly as listed, or 'All' to reset", required = FALSE),
+      contribution_type = ellmer::type_string(
+        "One of: Funder, Co-Author, Lead Author, Sole Author, or 'All' to reset",
+        required = FALSE),
+      affiliation       = ellmer::type_string(
+        "Canonical institution name exactly as listed, or 'All' to reset",
+        required = FALSE)
+    )
+  ))
+
+  # Tool: synthesize_selection
+  # Returns titles + abstracts of the currently filtered papers back to the LLM,
+  # which then synthesizes them in its own response. No second LLM call is made.
+  chat_obj$register_tool(ellmer::tool(
+    function() {
+      df <- isolate(filtered())
+      n  <- nrow(df)
+
+      if (n == 0L) {
+        return(paste0(
+          "No papers are currently visible. ",
+          "Ask the user to adjust the filters before requesting a synthesis."
+        ))
+      }
+
+      if (n > 300L) {
+        return(paste0(
+          "There are ", n, " papers in the current view \u2014 too many to synthesize ",
+          "at once. Tell the user: \"There are ", n, " papers in the current view. ",
+          "Please narrow the selection using the Science Field, Contribution Type, or ",
+          "year range filters before requesting a synthesis.\""
+        ))
+      }
+
+      # Build title + abstract content for the LLM to synthesize
+      lines <- vapply(seq_len(n), function(i) {
+        row      <- df[i, ]
+        title_i  <- if (!is.na(row$title))    row$title    else "[No title]"
+        abstract_i <- if (!is.na(row$abstract)) row$abstract else "[No abstract available]"
+        year_i   <- if (!is.na(row$year))     as.character(row$year) else "?"
+        paste0(i, ". (", year_i, ") ", title_i, "\n   Abstract: ", abstract_i)
+      }, character(1L))
+
+      paste0(
+        "The current filtered view contains ", n, " paper",
+        if (n == 1L) "" else "s", ". ",
+        "Here are their titles and abstracts for you to synthesize:\n\n",
+        paste(lines, collapse = "\n\n")
+      )
+    },
+    "Retrieve the titles and abstracts of the currently filtered publications so
+     you can synthesize or analyze them. Use this when the user asks for a summary,
+     analysis, or description of themes in the visible papers. Do not use for
+     navigation requests -- use set_filters instead."
+  ))
+
+  # Hand off to shinychat, which handles streaming and the reactive input loop
+  shinychat::chat_mod_server("chat", chat_obj)
 }
 
 shinyApp(ui, server)
