@@ -206,7 +206,58 @@ app_css <- "
 ui <- fluidPage(
   title = "DWR Peer-Reviewed Publication Inventory",
   theme = bslib::bs_theme(version = 5),
-  tags$head(tags$style(HTML(app_css))),
+  tags$head(
+    tags$style(HTML(app_css)),
+    tags$script(HTML("
+      $(document).on('shiny:connected', function() {
+        var el = document.getElementById('year_range');
+        if (!el) return;
+        var container = el.closest('.shiny-input-container');
+
+        function injectDecades() {
+          var slider = $(el).data('ionRangeSlider');
+          if (!slider) return false;
+          var grid = container.querySelector('.irs-grid');
+          if (!grid) return false;
+
+          var min = slider.options.min, max = slider.options.max;
+
+          // Hide all auto-generated labels and tick lines
+          grid.querySelectorAll('.irs-grid-text:not(.dwr-decade), .irs-grid-pol:not(.dwr-decade-pol)').forEach(function(t) {
+            t.style.display = 'none';
+          });
+
+          // Remove any stale custom elements before re-injecting
+          grid.querySelectorAll('.dwr-decade, .dwr-decade-pol').forEach(function(t) { t.remove(); });
+
+          // Inject a label and tick line for each decade within [min, max]
+          for (var yr = Math.ceil(min / 10) * 10; yr <= max; yr += 10) {
+            var pct = ((yr - min) / (max - min) * 100) + '%';
+
+            var pol = document.createElement('span');
+            pol.className = 'irs-grid-pol dwr-decade-pol';
+            pol.style.left = pct;
+            grid.appendChild(pol);
+
+            var span = document.createElement('span');
+            span.className = 'irs-grid-text dwr-decade';
+            span.style.left = pct;
+            span.style.transform = 'translateX(-50%)';
+            span.textContent = yr;
+            grid.appendChild(span);
+          }
+          return true;
+        }
+
+        // The grid is rendered once on init and is static — disconnect after first success
+        var obs = new MutationObserver(function() {
+          if (injectDecades()) obs.disconnect();
+        });
+        obs.observe(container, { childList: true, subtree: true });
+        setTimeout(injectDecades, 300);
+      });
+    "))
+  ),
 
   # ── Header ──────────────────────────────────────────────────────────────────
   div(class = "dwr-header",
@@ -396,7 +447,7 @@ server <- function(input, output, session) {
       list(icon = "coins",    n = sum(df$is_funder, na.rm = TRUE),
            lbl = "Articles Funded"),
       list(icon = "building", n = sum(df$is_author, na.rm = TRUE),
-           lbl = "Affiliated Org"),
+           lbl = "Affiliated Orgs"),
       list(icon = "users",    n = sum(df$is_author & !df$is_lead_author, na.rm = TRUE),
            lbl = "Co-Authored"),
       list(icon = "user",     n = sum(df$is_lead_author, na.rm = TRUE),
@@ -533,16 +584,19 @@ server <- function(input, output, session) {
         text          = ~total,
         textposition  = "top center",
         textfont      = list(size = 10, color = "#1a2f4a"),
+        cliponaxis    = FALSE,
         showlegend    = FALSE,
         hoverinfo     = "none"
       ) |>
       layout(
         barmode       = "stack",
-        xaxis         = list(title = "",              tickformat = "d", fixedrange = TRUE),
-        yaxis         = list(title = "Publications",               fixedrange = TRUE),
+        xaxis         = list(title = "", tickformat = "d", fixedrange = TRUE,
+                             automargin = TRUE),
+        yaxis         = list(title = "Publications", fixedrange = TRUE,
+                             range = list(0, max(totals$total, na.rm = TRUE) * 1.12)),
         legend        = list(orientation = "h", y = -0.22, x = 0.5,
                              xanchor = "center", font = list(size = 11)),
-        margin        = list(t = 16, b = 50, l = 50, r = 20),
+        margin        = list(t = 28, b = 50, l = 50, r = 20),
         paper_bgcolor = "rgba(0,0,0,0)",
         plot_bgcolor  = "rgba(0,0,0,0)"
       ) |>
