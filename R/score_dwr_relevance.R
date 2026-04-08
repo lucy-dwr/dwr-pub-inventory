@@ -18,7 +18,7 @@
 #'
 #' @return `pubs` with an added integer column `cdwr_score`.
 
-score_cdwr_relevance <- function(pubs) {
+score_dwr_relevance <- function(pubs) {
 
   ca_pattern <- paste0(
     "california|\\bcdwr\\b|\\bdwr\\b|sacramento|san francisco|bay.?delta|",

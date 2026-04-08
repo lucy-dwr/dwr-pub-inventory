@@ -20,7 +20,7 @@ retrieval and LLM classification is handled by the
 _targets.R                  # Pipeline declaration (targets DAG only)
 setup.R                     # One-time dev setup (load pubclassify from local path)
 R/                          # Custom functions, sourced by tar_source("R/")
-  score_cdwr_relevance.R    # Heuristic scoring for funder review prioritisation
+  score_dwr_relevance.R    # Heuristic scoring for funder review prioritisation
 shiny/
   funder_review_app.R       # Shiny app for manual funder review
 taxonomy/
@@ -122,12 +122,12 @@ shiny::runApp("shiny/funder_review_app.R")
 ```
 
 The app loads `pubs_funding` from the targets store, scores every record
-with `score_cdwr_relevance()` (see below), and presents them in descending
+with `score_dwr_relevance()` (see below), and presents them in descending
 suspicion order so the most likely false positives are reviewed first. For each
 publication the reviewer sees the title, suspicion score, DOI, year/journal,
 author affiliations, funders, grant numbers, and an embedded view of the paper.
 
-**Suspicion scoring (`R/score_cdwr_relevance.R`)** adds points for signals that
+**Suspicion scoring (`R/score_dwr_relevance.R`)** adds points for signals that
 suggest a record is *not* a genuine CA DWR publication:
 
 | Signal | Points |
@@ -213,7 +213,7 @@ record when a DOI appears in both result sets.
 #### `pubs_flagged`
 
 Add four boolean contribution columns to `pubs_combined`. These flags are not
-mutually exclusive — a publication can have any combination set.
+mutually exclusive — a publication can both a funder flag and authorship flags.
 
 | Column           | Definition                                |
 |------------------|-------------------------------------------|
@@ -223,7 +223,7 @@ mutually exclusive — a publication can have any combination set.
 | `is_sole_author` | All authors are DWR-affiliated            |
 
 The flags are nested: `is_sole_author → is_lead_author → is_author`. A record
-can have `is_funder = TRUE` and any combination of authorship flags set
+can have `is_funder = TRUE` and more than one nested authorship flag set
 simultaneously.
 
 - `is_funder` is derived from `from_funder` provenance.

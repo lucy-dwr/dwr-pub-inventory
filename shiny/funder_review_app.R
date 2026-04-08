@@ -10,7 +10,7 @@ if (basename(getwd()) == "shiny") setwd("..")
 # Capture absolute root now — reactive contexts don't inherit setwd reliably.
 .ROOT <- getwd()
 
-source(file.path(.ROOT, "R/score_cdwr_relevance.R"))
+source(file.path(.ROOT, "R/score_dwr_relevance.R"))
 
 # Ensure data/ directory exists before any write attempt.
 dir.create(file.path(.ROOT, "data"), showWarnings = FALSE)
@@ -20,7 +20,7 @@ DECISIONS_PATH <- file.path(.ROOT, "data", "review_decisions.csv")
 # ── Data (loaded once at startup) ─────────────────────────────────────────────
 
 pubs <- tar_read(pubs_funding) |>
-  score_cdwr_relevance() |>
+  score_dwr_relevance() |>
   arrange(desc(cdwr_score), doi)
 
 N <- nrow(pubs)
