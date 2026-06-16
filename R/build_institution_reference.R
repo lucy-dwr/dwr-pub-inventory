@@ -89,7 +89,7 @@ build_institution_reference <- function(
       from = (b - 1L) * batch_size + 1L,
       to   = min(b * batch_size, n_strings)
     )
-    message(sprintf("  Batch %d/%d (strings %d–%d)...", b, n_batches, idx[1L], idx[length(idx)]))
+    message(sprintf("  Batch %d/%d (strings %d-%d)...", b, n_batches, idx[1L], idx[length(idx)]))
     canonical[idx] <- .canonicalise_top_strings(top_strings[idx], idx[1L] - 1L, model, api_key, base_url)
   }
 
