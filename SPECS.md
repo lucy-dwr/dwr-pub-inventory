@@ -76,7 +76,7 @@ filter. Hierarchy (most → least specific):
 
 - **Left:** DWR logo (if available) + "CALIFORNIA DEPARTMENT OF WATER RESOURCES"
 - **Center:** "PEER-REVIEWED PUBLICATION INVENTORY" + subtitle showing the
-  active year range, e.g. `2020–2026`
+  active year range, e.g. `2020-2026`
 - **Right:** "CONTACT" label + instruction text +
   `dwrscience@water.ca.gov` as a `mailto:` link
 
@@ -112,7 +112,7 @@ Selecting a value filters the reactive dataset.
 
 | Filter             | Source                                                       | Notes                              |
 |--------------------|--------------------------------------------------------------|------------------------------------|
-| Division           | Placeholder — `"All"` only; disabled or grayed out          | Column not yet in data; see §Placeholder |
+| Division           | Unique non-blank values of `funding_division`, sorted alphabetically | Populated from the funding division lookup |
 | Science Field      | Unique values of `pc_field`, sorted alphabetically          | Displays the field name            |
 | Contribution Type  | Fixed: All / Funder / Co-Author / Lead Author / Sole Author | Derived `contribution_type` column |
 | Author Affiliation | All unique canonical institution names from `affiliations`, split on `"; "`, `NA` excluded, alphabetically sorted | ~900 options; standard dropdown scroll |
@@ -139,7 +139,7 @@ Style: light card with subtle border; icon color matches the dashboard palette.
 
 ## Year Range Control
 
-Default year range: **2020–2026**. The control lives **above or beside the
+Default year range: **2020-2026**. The control lives **above or beside the
 Publications by Year chart** (exact placement to be decided during build).
 
 Implementation: `sliderInput` with `min = 1962`, `max = 2026` (dynamic from
@@ -161,12 +161,12 @@ header updates to reflect the selected range.
 
 ### Articles by Division Bar Chart (left panel)
 
-- **Placeholder.** The `division` column does not yet exist in the data.
-- Display a horizontal bar chart shell with a visible note:
-  `"Division data coming soon"` or similar
+- Uses the `funding_division` column added during export from
+  `data/funding_division_lookup.csv`.
+- Blank `funding_division` values are excluded from the chart.
 - Chart title: "Articles by Division"
-- When division data is added, bars should be horizontal, sorted descending by
-  count, colored in the same palette as other charts
+- Bars should be horizontal, sorted descending by count, colored in the same
+  palette as other charts
 
 ### Publications by Year and Contribution (right panel)
 
@@ -248,18 +248,22 @@ update date for now; update manually when data is refreshed.
 
 ---
 
-## Placeholder: Division Data
+## Division Data
 
-The Division filter and "Articles by Division" chart both depend on a `division`
-column that is not yet present in `data/dwr_publications.csv`. Until it is added:
+The Division filter and "Articles by Division" chart both depend on the
+`funding_division` column in `data/dwr_publications.csv` and
+`data/dwr_publications.parquet`. The column is joined during export from
+`data/funding_division_lookup.csv`.
 
-- The Division dropdown shows only `"All"` and is visually disabled (grayed)
-  with a tooltip: `"Division data not yet available"`
-- The Articles by Division chart shows a styled placeholder panel with the
-  message: `"Division classifications are in progress — check back soon"`
+`data/funding_division_lookup.csv` is a manual lookup for funder-query records
+that explicitly passed funding review (`decision == "keep"`). Records marked
+`drop` or `unsure` are excluded from the lookup. The lookup stores the manual
+assignment in a `division` column; exports expose that value as
+`funding_division`.
 
-When division data becomes available, add a `division` column to the CSV and
-remove the placeholder behavior from both components.
+Blank `funding_division` values mean the record passed funding review but still
+needs a division assignment. Blank values are not shown as a Division filter
+choice and are omitted from the Articles by Division chart.
 
 ---
 
@@ -319,17 +323,17 @@ interfaces are identical across providers in `ellmer`.
 | Scope | Papers | Approx. tokens |
 |---|---|---|
 | Entire dataset | 1,402 | ~569K |
-| Default view (2020–2026) | ~708 | ~300K |
+| Default view (2020-2026) | ~708 | ~300K |
 | Largest single field (fisheries biology) | 198 | ~85K |
-| Typical filtered view (one field + year band) | 30–100 | ~12–40K |
+| Typical filtered view (one field + year band) | 30-100 | ~12-40K |
 
 Claude's usable context window is ~190K tokens after accounting for system
 prompt and response space. This means:
 
 - **Typical filtered subsets fit easily.** A single science field, a
-  contribution type, a short year range — these produce 30–200 papers, well
+  contribution type, a short year range — these produce 30-200 papers, well
   within context.
-- **Large subsets do not fit.** The default 2020–2026 view (~300K tokens) and
+- **Large subsets do not fit.** The default 2020-2026 view (~300K tokens) and
   the full corpus (~569K tokens) exceed the window.
 
 #### Strategy: stuffing with a synthesis gate
@@ -419,7 +423,7 @@ All parameters are optional; only supplied ones are updated. Implemented via
 `updateSliderInput()` / `updateSelectInput()` inside `session`.
 
 The tool returns a plain-text confirmation of what was changed, e.g.:
-*"Filters updated: Science Field → hydrology, Year → 2015–2022."*
+*"Filters updated: Science Field → hydrology, Year → 2015-2022."*
 
 #### `synthesize_selection`
 

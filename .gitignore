@@ -39,6 +39,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# macOS metadata
+.DS_Store
+
 # pkgdown site
 docs/
 
@@ -47,3 +50,5 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+data/author_division_lookup.csv
