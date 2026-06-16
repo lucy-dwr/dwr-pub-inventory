@@ -58,7 +58,7 @@ normalize_scopus_name <- function(name) {
 
 #' Prepare the author division lookup for name matching.
 #'
-#' Reads `data/author_division_lookup.csv` and adds normalized name fields
+#' Reads `data/lookups/author_division_lookup.csv` and adds normalized name fields
 #' used by `author_in_lookup()` and `find_author_divisions()`.
 #'
 #' @param lookup_path Path to the lookup CSV (columns: division, year, name).

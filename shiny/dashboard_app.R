@@ -13,7 +13,7 @@ if (basename(getwd()) == "shiny") setwd("..")
 .ROOT <- getwd()
 
 # ── Load data ──────────────────────────────────────────────────────────────────
-pubs_raw <- arrow::read_parquet(file.path(.ROOT, "data/dwr_publications.parquet"))
+pubs_raw <- arrow::read_parquet(file.path(.ROOT, "data/generated/dwr_publications.parquet"))
 
 # Graceful fallback if pipeline hasn't been rebuilt yet
 if (!"pc_category" %in% names(pubs_raw)) pubs_raw$pc_category <- NA_character_

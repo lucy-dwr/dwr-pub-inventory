@@ -24,17 +24,17 @@ paths:
   taxonomy: taxonomy/dwr_disciplines_taxonomy.csv
   system_prompt: prompts/system_prompt.txt
   classify_instructions: prompts/classify_instructions.txt
-  funding_review_decisions: data/funding_review_decisions.csv
-  funder_review_queue: data/funder_review_queue.parquet
-  accepted_publications: data/accepted_publications.parquet
+  funding_review_decisions: data/decisions/funding_review_decisions.csv
+  funder_review_queue: data/queues/funder_review_queue.parquet
+  accepted_publications: data/generated/accepted_publications.parquet
   harvests_dir: data/harvests
-  affiliation_lookup: data/affiliation_lookup.csv
-  output_csv: data/dwr_publications.csv
-  output_parquet: data/dwr_publications.parquet
+  affiliation_lookup: data/lookups/affiliation_lookup.csv
+  output_csv: data/generated/dwr_publications.csv
+  output_parquet: data/generated/dwr_publications.parquet
   refresh_log: data/refresh_log.csv
-  funding_division_lookup: data/funding_division_lookup.csv
-  author_review_decisions: data/author_review_decisions.csv
-  author_division_decisions: data/author_division_decisions.csv
-  author_review_queue: data/author_review_queue.parquet
-  author_division_lookup: data/author_division_lookup.csv
-  dwr_org_lookup: data/dwr_org_lookup.csv
+  funding_division_lookup: data/lookups/funding_division_lookup.csv
+  author_review_decisions: data/decisions/author_review_decisions.csv
+  author_division_decisions: data/decisions/author_division_decisions.csv
+  author_review_queue: data/queues/author_review_queue.parquet
+  author_division_lookup: data/lookups/author_division_lookup.csv
+  dwr_org_lookup: data/lookups/dwr_org_lookup.csv

@@ -6,9 +6,9 @@
 #' independently of the funder review.
 #'
 #' @param pubs_harvest   Tibble of harvested candidates (all query sources).
-#' @param decisions_path Path to `data/author_review_decisions.csv`.
-#' @param accepted_path  Path to `data/accepted_publications.parquet`.
-#' @param lookup_path    Path to `data/author_division_lookup.csv`.
+#' @param decisions_path Path to `data/decisions/author_review_decisions.csv`.
+#' @param accepted_path  Path to `data/generated/accepted_publications.parquet`.
+#' @param lookup_path    Path to `data/lookups/author_division_lookup.csv`.
 #' @param include_unsure If `TRUE`, records previously marked `unsure` are
 #'   re-queued for a second look.
 #'
@@ -17,9 +17,9 @@
 
 build_author_review_queue <- function(
     pubs_harvest,
-    decisions_path = "data/author_review_decisions.csv",
-    accepted_path  = "data/accepted_publications.parquet",
-    lookup_path    = "data/author_division_lookup.csv",
+    decisions_path = "data/decisions/author_review_decisions.csv",
+    accepted_path  = "data/generated/accepted_publications.parquet",
+    lookup_path    = "data/lookups/author_division_lookup.csv",
     include_unsure = FALSE
 ) {
   if (file.exists(decisions_path)) {

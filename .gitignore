@@ -51,4 +51,6 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-data/author_division_lookup.csv
+data/lookups/author_division_lookup.csv
+data/queues/*.parquet
+data/harvests/*.parquet

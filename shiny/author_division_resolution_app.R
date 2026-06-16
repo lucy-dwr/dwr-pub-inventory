@@ -9,10 +9,11 @@ if (basename(getwd()) == "shiny") setwd("..")
 
 source(file.path(.ROOT, "R", "author_name_utils.R"))
 
-AUTHOR_DIVISION_DECISIONS_PATH <- file.path(.ROOT, "data", "author_division_decisions.csv")
-QUEUE_PATH            <- file.path(.ROOT, "data", "author_review_queue.parquet")
-LOOKUP_PATH           <- file.path(.ROOT, "data", "author_division_lookup.csv")
-ORG_LOOKUP_PATH       <- file.path(.ROOT, "data", "dwr_org_lookup.csv")
+AUTHOR_DIVISION_DECISIONS_PATH <- file.path(.ROOT, "data", "decisions", "author_division_decisions.csv")
+QUEUE_PATH            <- file.path(.ROOT, "data", "queues", "author_review_queue.parquet")
+LOOKUP_PATH           <- file.path(.ROOT, "data", "lookups", "author_division_lookup.csv")
+ORG_LOOKUP_PATH       <- file.path(.ROOT, "data", "lookups", "dwr_org_lookup.csv")
+dir.create(dirname(AUTHOR_DIVISION_DECISIONS_PATH), recursive = TRUE, showWarnings = FALSE)
 
 # ── Startup: load lookup with canonicalization ────────────────────────────────
 

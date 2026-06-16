@@ -1,5 +1,5 @@
 join_author_division <- function(pubs, lookup_path, org_lookup_path,
-                                  decisions_path = "data/author_division_decisions.csv") {
+                                  decisions_path = "data/decisions/author_division_decisions.csv") {
   if (!file.exists(decisions_path)) {
     return(dplyr::mutate(pubs, author_division = NA_character_))
   }

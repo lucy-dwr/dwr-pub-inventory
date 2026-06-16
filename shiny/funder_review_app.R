@@ -7,10 +7,9 @@ library(arrow)
 if (basename(getwd()) == "shiny") setwd("..")
 .ROOT <- getwd()
 
-dir.create(file.path(.ROOT, "data"), showWarnings = FALSE)
-
-QUEUE_PATH     <- file.path(.ROOT, "data", "funder_review_queue.parquet")
-DECISIONS_PATH <- file.path(.ROOT, "data", "funding_review_decisions.csv")
+QUEUE_PATH     <- file.path(.ROOT, "data", "queues", "funder_review_queue.parquet")
+DECISIONS_PATH <- file.path(.ROOT, "data", "decisions", "funding_review_decisions.csv")
+dir.create(dirname(DECISIONS_PATH), recursive = TRUE, showWarnings = FALSE)
 
 # ── Data (loaded once at startup) ─────────────────────────────────────────────
 

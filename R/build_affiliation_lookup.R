@@ -39,8 +39,8 @@
 
 build_affiliation_lookup <- function(
   pubs,
-  output_path    = "data/affiliation_lookup.csv",
-  reference_path = "data/institution_reference.txt",
+  output_path    = "data/lookups/affiliation_lookup.csv",
+  reference_path = "data/lookups/institution_reference.txt",
   batch_size     = 50L,
   threshold      = 0.10,
   model,

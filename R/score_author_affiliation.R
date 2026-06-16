@@ -14,7 +14,7 @@
 #'
 #' @param pubs        Tibble with `affiliations` (list), `authors` (list),
 #'   `year`, `title`, and `abstract` columns.
-#' @param lookup_path Path to `data/author_division_lookup.csv`.
+#' @param lookup_path Path to `data/lookups/author_division_lookup.csv`.
 #'
 #' @return `pubs` with `caff_score` column added.
 

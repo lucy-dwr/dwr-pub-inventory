@@ -7,15 +7,14 @@ library(arrow)
 if (basename(getwd()) == "shiny") setwd("..")
 .ROOT <- getwd()
 
-dir.create(file.path(.ROOT, "data"), showWarnings = FALSE)
-
 source(file.path(.ROOT, "R", "author_name_utils.R"))
 
-QUEUE_PATH            <- file.path(.ROOT, "data", "author_review_queue.parquet")
-DECISIONS_PATH        <- file.path(.ROOT, "data", "author_review_decisions.csv")
-AUTHOR_DIVISION_DECISIONS_PATH <- file.path(.ROOT, "data", "author_division_decisions.csv")
-LOOKUP_PATH           <- file.path(.ROOT, "data", "author_division_lookup.csv")
-ORG_LOOKUP_PATH       <- file.path(.ROOT, "data", "dwr_org_lookup.csv")
+QUEUE_PATH            <- file.path(.ROOT, "data", "queues", "author_review_queue.parquet")
+DECISIONS_PATH        <- file.path(.ROOT, "data", "decisions", "author_review_decisions.csv")
+AUTHOR_DIVISION_DECISIONS_PATH <- file.path(.ROOT, "data", "decisions", "author_division_decisions.csv")
+LOOKUP_PATH           <- file.path(.ROOT, "data", "lookups", "author_division_lookup.csv")
+ORG_LOOKUP_PATH       <- file.path(.ROOT, "data", "lookups", "dwr_org_lookup.csv")
+dir.create(dirname(DECISIONS_PATH), recursive = TRUE, showWarnings = FALSE)
 
 # ── Data (loaded once at startup) ─────────────────────────────────────────────
 

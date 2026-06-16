@@ -19,7 +19,7 @@
 #'   \item `source("R/build_institution_reference.R")`
 #'   \item `pubs_classified <- targets::tar_read(pubs_classified)`
 #'   \item `build_institution_reference(pubs_classified, model = "<model-name>")`
-#'   \item Review/edit `data/institution_reference.txt`.
+#'   \item Review/edit `data/lookups/institution_reference.txt`.
 #'   \item Run [build_affiliation_lookup()] — it reads the file automatically.
 #' }
 #'
@@ -39,7 +39,7 @@
 build_institution_reference <- function(
   pubs,
   top_n       = 100L,
-  output_path = "data/institution_reference.txt",
+  output_path = "data/lookups/institution_reference.txt",
   use_llm     = TRUE,
   batch_size  = 20L,
   model       = NULL,

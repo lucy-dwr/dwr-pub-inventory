@@ -16,14 +16,14 @@
 #'   eligible for acceptance: funder records not marked `drop`, plus
 #'   affiliation-based candidates. Must contain a `record_key` column.
 #' @param refresh_id        Character. The current refresh identifier.
-#' @param accepted_path     Path to `data/accepted_publications.parquet`.
+#' @param accepted_path     Path to `data/generated/accepted_publications.parquet`.
 #'
 #' @return The path to the updated accepted-publications Parquet file.
 
 append_accepted_publications <- function(
     pubs_new_enriched,
     refresh_id,
-    accepted_path = "data/accepted_publications.parquet"
+    accepted_path = "data/generated/accepted_publications.parquet"
 ) {
   now_str <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 

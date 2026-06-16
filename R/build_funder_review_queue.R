@@ -9,8 +9,8 @@
 #'
 #' @param pubs_harvest   Tibble of harvested candidates (all query sources) with
 #'   a `record_key` column.
-#' @param decisions_path Path to `data/funding_review_decisions.csv`.
-#' @param accepted_path  Path to `data/accepted_publications.parquet`.
+#' @param decisions_path Path to `data/decisions/funding_review_decisions.csv`.
+#' @param accepted_path  Path to `data/generated/accepted_publications.parquet`.
 #' @param include_unsure Logical. If `TRUE`, records previously marked `unsure`
 #'   are included in the queue for a second look.
 #'
@@ -19,8 +19,8 @@
 
 build_funder_review_queue <- function(
     pubs_harvest,
-    decisions_path = "data/funding_review_decisions.csv",
-    accepted_path  = "data/accepted_publications.parquet",
+    decisions_path = "data/decisions/funding_review_decisions.csv",
+    accepted_path  = "data/generated/accepted_publications.parquet",
     include_unsure = FALSE
 ) {
   # Load existing review decisions
