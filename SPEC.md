@@ -3,7 +3,7 @@
 ## Overview
 
 A Shiny app dashboard displaying DWR's peer-reviewed publication inventory.
-It lives at `shiny/dashboard_app.R` and reads from `data/dwr_publications.parquet`.
+It lives at `shiny/dashboard_app.R` and reads from `data/generated/dwr_publications.parquet`.
 All visible counts, charts, and table rows update reactively based on the
 user's active filters and search.
 
@@ -14,7 +14,7 @@ dashboard enhancements are listed near the end of this document.
 
 ## Data Source
 
-**File:** `data/dwr_publications.parquet`
+**File:** `data/generated/dwr_publications.parquet`
 
 Loaded once at startup using `arrow::read_parquet()`. Key columns used:
 
@@ -170,7 +170,7 @@ header updates to reflect the selected range.
 - Current implementation is a placeholder panel.
 - Placeholder text: `"Division classifications are in progress — check back soon"`.
 - The planned implementation will use the `funding_division` column added
-  during export from `data/funding_division_lookup.csv`.
+  during export from `data/lookups/funding_division_lookup.csv`.
 
 ### Publications by Year and Contribution (right panel)
 
@@ -249,15 +249,17 @@ update date for now; update manually when data is refreshed.
 ## Division Data
 
 The pipeline can add `funding_division` and `author_division` to
-`data/dwr_publications.csv` and `data/dwr_publications.parquet`.
+`data/generated/dwr_publications.csv` and `data/generated/dwr_publications.parquet`.
 
-`data/funding_division_lookup.csv` is a manual lookup for funder-query records
+`data/lookups/funding_division_lookup.csv` is a manual lookup for funder-query records
 that explicitly passed funding review (`decision == "keep"`). Records marked
 `drop` or `unsure` are excluded from the lookup. The lookup stores the manual
 assignment in a `division` column; exports expose that value as
-`funding_division`.
+`funding_division`. Newly accepted current-refresh rows are prepended, and
+`new == TRUE` means the row still needs a funding division assignment from the
+current refresh.
 
-`data/author_division_decisions.csv` stores confirmed DWR authors and resolved
+`data/decisions/author_division_decisions.csv` stores confirmed DWR authors and resolved
 division assignments. Exports expose those values as `author_division`.
 
 Blank `funding_division` values mean the record passed funding review but still
@@ -524,7 +526,7 @@ without requiring the user to pre-filter.
 **Architecture:**
 - At pipeline time (`_targets.R`), build an embedding store for all abstracts
   using `ragnar::ragnar_store_create()`. Store the resulting DuckDB file at
-  `data/pub_embeddings.duckdb`.
+  `data/generated/pub_embeddings.duckdb`.
 - At chat runtime, when the user's intent is discovery rather than synthesis
   of the current view, retrieve the top-K most relevant abstracts using
   `ragnar::ragnar_retrieve()` and pass them to the LLM.

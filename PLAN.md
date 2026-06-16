@@ -17,8 +17,8 @@ The pipeline:
 6. Applies review decisions from durable CSV files.
 7. Flags DWR contribution types.
 8. Classifies new records into the DWR taxonomy.
-9. Canonicalizes affiliations through `data/affiliation_lookup.csv`.
-10. Appends accepted records to `data/accepted_publications.parquet`.
+9. Canonicalizes affiliations through `data/lookups/affiliation_lookup.csv`.
+10. Appends accepted records to `data/generated/accepted_publications.parquet`.
 11. Updates the keep-only funding division lookup.
 12. Joins funding and author division fields into dashboard exports.
 
@@ -44,7 +44,7 @@ shiny::runApp("shiny/author_division_resolution_app.R")
 targets::tar_make()
 ```
 
-The full publish step requires `data/affiliation_lookup.csv` to exist.
+The full publish step requires `data/lookups/affiliation_lookup.csv` to exist.
 
 ## Key Source Files
 
@@ -77,33 +77,33 @@ The full publish step requires `data/affiliation_lookup.csv` to exist.
 
 | File | Purpose |
 |------|---------|
-| `data/funding_review_decisions.csv` | Publication-level funder review decisions |
-| `data/author_review_decisions.csv` | Publication-level author/affiliation review decisions |
-| `data/author_division_decisions.csv` | Per-author DWR/not-DWR and division decisions |
-| `data/funding_division_lookup.csv` | Kept funder records and manual funding division assignments |
-| `data/author_division_lookup.csv` | Local HR-derived author/year/division lookup; ignored by Git |
-| `data/dwr_org_lookup.csv` | Raw org label to canonical division lookup |
-| `data/accepted_publications.parquet` | Durable accepted-publications table |
-| `data/dwr_publications.csv` | Dashboard CSV export |
-| `data/dwr_publications.parquet` | Dashboard Parquet export |
+| `data/decisions/funding_review_decisions.csv` | Publication-level funder review decisions |
+| `data/decisions/author_review_decisions.csv` | Publication-level author/affiliation review decisions |
+| `data/decisions/author_division_decisions.csv` | Per-author DWR/not-DWR and division decisions |
+| `data/lookups/funding_division_lookup.csv` | Kept funder records and manual funding division assignments; `new` flags current-refresh blanks |
+| `data/lookups/author_division_lookup.csv` | Local HR-derived author/year/division lookup; ignored by Git |
+| `data/lookups/dwr_org_lookup.csv` | Raw org label to canonical division lookup |
+| `data/generated/accepted_publications.parquet` | Durable accepted-publications table |
+| `data/generated/dwr_publications.csv` | Dashboard CSV export |
+| `data/generated/dwr_publications.parquet` | Dashboard Parquet export |
 | `data/refresh_log.csv` | Refresh log |
 | `data/harvests/` | Refresh-specific candidate snapshots |
 
 Generated queue files:
 
-- `data/funder_review_queue.parquet`
-- `data/author_review_queue.parquet`
+- `data/queues/funder_review_queue.parquet`
+- `data/queues/author_review_queue.parquet`
 
 ## Review Semantics
 
 ### Funder Review
 
 The funder queue contains candidates whose `query_source` includes
-`"funder"`. Decisions are saved in `data/funding_review_decisions.csv`.
+`"funder"`. Decisions are saved in `data/decisions/funding_review_decisions.csv`.
 
 Decision handling:
 
-- `keep`: retained and eligible for `data/funding_division_lookup.csv`.
+- `keep`: retained and eligible for `data/lookups/funding_division_lookup.csv`.
 - `drop`: funder side is removed.
 - `unsure`: retained for now, but not eligible for the funding division lookup.
 
@@ -114,8 +114,8 @@ The author queue contains candidates whose `query_source` includes
 `query_source == "funder; affiliation"`.
 
 The app writes publication-level decisions to
-`data/author_review_decisions.csv` and per-author decisions to
-`data/author_division_decisions.csv`.
+`data/decisions/author_review_decisions.csv` and per-author decisions to
+`data/decisions/author_division_decisions.csv`.
 
 Confirmed DWR authors with unresolved divisions are handled in
 `shiny/author_division_resolution_app.R`.
@@ -129,11 +129,11 @@ records when only one side is dropped, so contribution flags remain accurate.
 ## Author Division Assignment
 
 `author_name_utils.R` prepares and matches the local
-`data/author_division_lookup.csv` lookup. The review apps use these helpers to
+`data/lookups/author_division_lookup.csv` lookup. The review apps use these helpers to
 resolve likely divisions automatically when possible.
 
 `join_author_division()` does not re-run the HR lookup match during export.
-Instead, it reads `data/author_division_decisions.csv` and joins divisions for rows with:
+Instead, it reads `data/decisions/author_division_decisions.csv` and joins divisions for rows with:
 
 ```text
 decision == "dwr"
@@ -145,7 +145,7 @@ divisions for confirmed DWR authors on a publication.
 
 ## Dashboard State
 
-`shiny/dashboard_app.R` reads `data/dwr_publications.parquet`.
+`shiny/dashboard_app.R` reads `data/generated/dwr_publications.parquet`.
 
 Implemented dashboard features:
 
@@ -167,13 +167,13 @@ Not yet implemented in the dashboard:
 - Author Division filter
 - production copy for About and Classification modals
 
-See `SPECS.md` for the current dashboard specification and planned dashboard
+See `SPEC.md` for the current dashboard specification and planned dashboard
 enhancements.
 
 ## Known Prerequisites And Gaps
 
-- `data/affiliation_lookup.csv` is required for the full publish pipeline.
-- `data/author_division_lookup.csv` is required locally but ignored by Git.
+- `data/lookups/affiliation_lookup.csv` is required for the full publish pipeline.
+- `data/lookups/author_division_lookup.csv` is required locally but ignored by Git.
 - `refresh_log_completed` currently records funder-oriented review counts; it
   does not separately record author review counts.
 - The funder review app does not capture acknowledgments text.

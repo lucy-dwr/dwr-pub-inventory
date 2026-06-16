@@ -170,6 +170,8 @@ list(
   targets::tar_target(
     funder_review_queue_file,
     {
+      harvest_candidates_file
+      dir.create(dirname(pipeline_config$paths$funder_review_queue), recursive = TRUE, showWarnings = FALSE)
       arrow::write_parquet(funder_review_queue, pipeline_config$paths$funder_review_queue)
       pipeline_config$paths$funder_review_queue
     },
@@ -191,6 +193,8 @@ list(
   targets::tar_target(
     author_review_queue_file,
     {
+      harvest_candidates_file
+      dir.create(dirname(pipeline_config$paths$author_review_queue), recursive = TRUE, showWarnings = FALSE)
       arrow::write_parquet(author_review_queue, pipeline_config$paths$author_review_queue)
       pipeline_config$paths$author_review_queue
     },
@@ -277,7 +281,7 @@ list(
 
   # ── Phase 8: Filter to records not yet in the accepted-publications table ──
 
-  # Side-reads data/accepted_publications.parquet without creating a formal
+  # Side-reads data/generated/accepted_publications.parquet without creating a formal
   # targets dependency (which would cause a cycle). The filter is only
   # bypassed when DWR_REFRESH_MODE=reclassify_all.
   targets::tar_target(
@@ -381,6 +385,7 @@ list(
     funding_division_lookup_updated,
     update_funding_division_lookup(
       accepted_path = accepted_publications_updated,
+      refresh_id = refresh_id,
       decisions_path = pipeline_config$paths$funding_review_decisions,
       lookup_path   = pipeline_config$paths$funding_division_lookup
     ),
@@ -404,6 +409,7 @@ list(
       }
       list_cols <- intersect(c("authors", "affiliations", "funders", "grant_numbers"), names(pubs))
       flat <- dplyr::mutate(pubs, dplyr::across(dplyr::all_of(list_cols), collapse_list_col))
+      dir.create(dirname(pipeline_config$paths$output_csv), recursive = TRUE, showWarnings = FALSE)
       readr::write_csv(flat, pipeline_config$paths$output_csv)
       pipeline_config$paths$output_csv
     },
@@ -420,6 +426,7 @@ list(
           pipeline_config$paths$dwr_org_lookup,
           author_division_decisions_file
         )
+      dir.create(dirname(pipeline_config$paths$output_parquet), recursive = TRUE, showWarnings = FALSE)
       arrow::write_parquet(pubs, pipeline_config$paths$output_parquet)
       pipeline_config$paths$output_parquet
     },
