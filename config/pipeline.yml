@@ -1,0 +1,40 @@
+llm:
+  base_url: https://customeruat.sda.state.ca.gov/api/v1
+  provider: openai-compatible
+  model: Anthropic Claude Sonnet 4.6
+
+scopus:
+  doc_types:
+    - article
+    - review
+  auto_fetch: true
+  max_results: .inf
+  searches:
+    funder:
+      query: California Department of Water Resources
+      field: funder
+    affiliation:
+      query: California Department of Water Resources
+      field: affiliation
+
+refresh:
+  default_mode: new_records_only
+
+paths:
+  taxonomy: taxonomy/dwr_disciplines_taxonomy.csv
+  system_prompt: prompts/system_prompt.txt
+  classify_instructions: prompts/classify_instructions.txt
+  funder_review_decisions: data/funder_review_decisions.csv
+  funder_review_queue: data/funder_review_queue.parquet
+  accepted_publications: data/accepted_publications.parquet
+  harvests_dir: data/harvests
+  affiliation_lookup: data/affiliation_lookup.csv
+  output_csv: data/dwr_publications.csv
+  output_parquet: data/dwr_publications.parquet
+  refresh_log: data/refresh_log.csv
+  funding_division_lookup: data/funding_division_lookup.csv
+  author_review_decisions: data/author_review_decisions.csv
+  author_decisions: data/author_decisions.csv
+  author_review_queue: data/author_review_queue.parquet
+  author_division_lookup: data/author_division_lookup.csv
+  dwr_org_lookup: data/dwr_org_lookup.csv
