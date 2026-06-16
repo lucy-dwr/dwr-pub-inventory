@@ -4,7 +4,7 @@
 #' `pubs_new_enriched` whose `record_key` is not already present. Previously
 #' accepted records are never overwritten in the default `new_records_only` mode.
 #'
-#' Accepted records receive four provenance columns:
+#' Accepted records receive provenance columns:
 #'   - `accepted_at`              — datetime of acceptance
 #'   - `accepted_refresh_id`      — refresh that produced this acceptance
 #'   - `first_seen_at`            — copy of `accepted_at` on first write

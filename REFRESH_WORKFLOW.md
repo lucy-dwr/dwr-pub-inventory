@@ -1,66 +1,136 @@
 # Publication Inventory Refresh Workflow
 
-## Purpose
+This document describes the implemented refresh workflow for the DWR
+publication inventory.
 
-This note describes the production refresh workflow for the DWR
-publication inventory. The workflow supports periodic refreshes that add newly
-harvested, reviewed, and validated publications without unintentionally
-overwriting records that were previously accepted into the inventory.
+The workflow separates four concepts:
 
-Earlier versions of the pipeline behaved like a full rebuild:
+1. Scopus candidate records harvested during a refresh.
+2. Manual publication-level review decisions for funder and author candidates.
+3. Manual author-level DWR/division decisions.
+4. Accepted production records used to generate dashboard exports.
 
-```text
-Scopus search
--> manual review decisions
--> combine, deduplicate, classify, canonicalize
--> overwrite final exports
+The dashboard files, `data/dwr_publications.csv` and
+`data/dwr_publications.parquet`, are exports. The durable source of truth is
+`data/accepted_publications.parquet`.
+
+## Operator Workflow
+
+### 1. Start A Refresh And Build Queues
+
+```r
+Sys.setenv(DWR_REFRESH_ID = "2026-06-08")  # optional; defaults to today's date
+targets::tar_make(funder_review_queue_file, author_review_queue_file)
 ```
 
-For a production inventory that grows over time, the workflow should separate
-three concepts:
+This step:
 
-1. Candidate records harvested from Scopus.
-2. Manual review decisions for candidate records.
-3. Accepted records that belong in the production inventory.
+- runs the Scopus funder and affiliation searches configured in
+  `config/pipeline.yml`
+- assigns stable `record_key` values
+- attaches `harvest_id` and `harvested_at`
+- combines and deduplicates funder and affiliation candidates
+- writes a harvest snapshot to `data/harvests/`
+- writes review queues for the Shiny review apps
 
-The final `data/dwr_publications.csv` and
-`data/dwr_publications.parquet` files should be treated as exports, not as the
-source of truth.
+Queue files:
 
-## Addressed Risks
+- `data/funder_review_queue.parquet`
+- `data/author_review_queue.parquet`
 
-The append-oriented workflow is designed to avoid these scheduled-refresh
-risks:
+### 2. Review Funder Candidates
 
-- Previously accepted records can be overwritten by a later full rebuild.
-- It is hard to tell when a publication was first harvested or accepted.
-- It is hard to distinguish new candidates from previously reviewed records.
-- Manual review decisions are keyed by DOI, but some records do not have a DOI.
-- Existing records may be reclassified or recanonicalized unintentionally.
-- There is no durable table of accepted production records separate from the
-  latest Scopus search output.
+```r
+shiny::runApp("shiny/funder_review_app.R")
+```
 
-## Model
+The funder review app reads `data/funder_review_queue.parquet` and writes
+`data/funding_review_decisions.csv`.
 
-The pipeline uses a pragmatic append-oriented workflow with durable refresh
-metadata:
+Decision values:
 
-1. Add a refresh log.
-2. Persist harvested candidates by refresh.
-3. Assign stable record keys to harvested publications.
-4. Review only new or unresolved candidates.
-5. Append newly accepted records into a durable accepted-publications table.
-6. Export the current full inventory from the accepted-publications table.
+| Decision | Meaning |
+|----------|---------|
+| `keep` | DWR funding is confirmed |
+| `drop` | DWR funding is not supported; remove the funder side |
+| `unsure` | Funding evidence is ambiguous; retain for now |
 
-This keeps production history auditable while avoiding unnecessary complexity.
+The funding division lookup is stricter than the accepted-publications flow:
+only funder records with an explicit `keep` decision are eligible for
+`data/funding_division_lookup.csv`.
 
-## Proposed Data Files
+### 3. Review Author/Affiliation Candidates
+
+```r
+shiny::runApp("shiny/author_review_app.R")
+```
+
+The author review app reads `data/author_review_queue.parquet` and writes:
+
+- `data/author_review_decisions.csv`: publication-level keep/drop/unsure
+  decisions for affiliation-side candidates.
+- `data/author_division_decisions.csv`: per-author DWR/not-DWR decisions, plus division
+  and division-rule fields when they can be resolved.
+
+The author queue includes records whose `query_source` contains
+`"affiliation"`, including overlap records with
+`query_source == "funder; affiliation"`. Overlap records can therefore receive
+independent funder and author decisions.
+
+### 4. Resolve Missing Author Divisions
+
+```r
+shiny::runApp("shiny/author_division_resolution_app.R")
+```
+
+This app reads `data/author_division_decisions.csv` and focuses on rows where the author
+was confirmed as DWR but no division has been assigned. It uses
+`data/author_division_lookup.csv` and `data/dwr_org_lookup.csv` to suggest or
+constrain division assignments, then writes updates back to
+`data/author_division_decisions.csv`.
+
+`data/author_division_lookup.csv` is a required local input and is ignored by
+Git.
+
+### 5. Publish The Updated Inventory
+
+```r
+targets::tar_make()
+```
+
+This step:
+
+- applies funder and author publication-level review decisions
+- corrects `query_source` for overlap records when only one side was dropped
+- flags DWR contribution types (`is_funder`, `is_author`, `is_lead_author`,
+  `is_sole_author`)
+- classifies new records in the DWR taxonomy
+- canonicalizes affiliations using `data/affiliation_lookup.csv`
+- appends newly accepted records to `data/accepted_publications.parquet`
+- updates `data/funding_division_lookup.csv`
+- joins `funding_division` and `author_division`
+- writes `data/dwr_publications.csv` and `data/dwr_publications.parquet`
+- completes the refresh log
+
+The publish step requires `data/affiliation_lookup.csv` to exist because it is
+tracked as a file target. Rebuild it with `R/build_affiliation_lookup.R` if it
+is missing or stale.
+
+## Refresh Modes
+
+Set `DWR_REFRESH_MODE` before `targets::tar_make()`:
+
+| Mode | Behavior |
+|------|----------|
+| `new_records_only` | Default. Classifies only records not already accepted. |
+| `reclassify_all` | Classifies every record in the current reviewed harvest. |
+
+## Data Files
 
 ### `data/refresh_log.csv`
 
-One row per refresh cycle.
-
-Suggested columns:
+One row per refresh cycle. The implemented log columns are created by
+`R/create_refresh_id.R`:
 
 ```text
 refresh_id
@@ -78,48 +148,25 @@ n_accepted
 notes
 ```
 
-The `refresh_id` can be a date-like value such as `2026-06-08`, or a timestamp
-if multiple refreshes may occur on the same day.
+At present, the completion counts are funder-oriented. Author-specific review
+counts are not separately recorded.
 
 ### `data/harvests/`
 
-Store raw or lightly normalized candidate records for each refresh.
-
-Example:
+Stores candidate snapshots for each refresh:
 
 ```text
-data/harvests/
-  harvest_2026-06-08_candidates.parquet
-  harvest_2026-09-15_candidates.parquet
+data/harvests/harvest_<refresh_id>_candidates.parquet
 ```
 
-Each harvested candidate should include:
+Each row includes the assigned `record_key`, the `query_source`, and refresh
+metadata.
 
-```text
-record_key
-doi
-scopus_id
-title
-abstract
-year
-authors
-affiliations
-funders
-grant_numbers
-journal
-source
-query_source
-harvest_id
-harvested_at
-raw_metadata_hash
-```
+### `data/funding_review_decisions.csv`
 
-### `data/funder_review_decisions.csv`
+Publication-level decisions from `shiny/funder_review_app.R`.
 
-Continue storing manual review decisions, but key decisions by `record_key`
-rather than DOI alone.
-
-Suggested columns:
+Schema:
 
 ```text
 record_key
@@ -130,29 +177,50 @@ review_refresh_id
 review_notes
 ```
 
-Valid decisions:
+### `data/author_review_decisions.csv`
+
+Publication-level decisions from `shiny/author_review_app.R` for
+affiliation-side candidates.
+
+Schema:
 
 ```text
-keep
-drop
-unsure
+record_key
+doi
+decision
+reviewed_at
+review_refresh_id
+review_notes
 ```
 
-For the broad accepted-publications flow, records marked `drop` are excluded
-by `apply_review_decisions()`, while `keep` and `unsure` records are retained.
-The funding-division lookup is stricter: `data/funding_division_lookup.csv`
-contains only funder records with an explicit `keep` decision.
+### `data/author_division_decisions.csv`
 
-Manual corrections are made by editing the matching DOI or `record_key` row in
-this file. Changing a decision away from `keep` removes that record from the
-funding-division lookup the next time the lookup is updated.
+Author-level decisions from the author review and author division resolution
+apps.
+
+Schema:
+
+```text
+record_key
+doi
+author_name
+decision
+reviewed_at
+review_refresh_id
+division
+division_rule
+year
+```
+
+Rows with `decision == "dwr"` and a non-empty `division` are used by
+`join_author_division()` to populate the `author_division` export column.
 
 ### `data/funding_division_lookup.csv`
 
-Manual DOI-to-division lookup for records found by the funder query that passed
-the funding review stage.
+Manual DOI-to-division lookup for funder-query records that passed funding
+review.
 
-Columns:
+Schema:
 
 ```text
 doi
@@ -165,181 +233,63 @@ new
 
 Invariants:
 
-- every row has `decision == "keep"` in `data/funder_review_decisions.csv`
+- every retained row has `decision == "keep"` in
+  `data/funding_review_decisions.csv`
 - records marked `drop` or `unsure` are excluded
-- `division` may be blank when a kept record still needs division assignment
-- the dashboard exports receive this value as `funding_division`
+- `division` may be blank when a kept record still needs assignment
+- exports expose this value as `funding_division`
 
 ### `data/accepted_publications.parquet`
 
-This is the durable production source of truth.
-
-Suggested columns:
+Durable production source of truth. New records are appended by
+`append_accepted_publications()` and receive provenance fields:
 
 ```text
-record_key
-doi
-scopus_id
-title
-abstract
-year
-authors
-affiliations
-funders
-grant_numbers
-journal
-source
-query_source
-is_funder
-is_author
-is_lead_author
-is_sole_author
-pc_category
-pc_field
-pc_rationale
 accepted_at
 accepted_refresh_id
 first_seen_at
 last_seen_at
 last_metadata_refresh_id
-classification_version
-affiliation_lookup_version
 record_status
 ```
 
-The final dashboard exports should be generated from this table:
+### Dashboard Exports
+
+Generated from `data/accepted_publications.parquet`:
 
 ```text
 data/dwr_publications.csv
 data/dwr_publications.parquet
 ```
+
+Both exports include joined `funding_division` and `author_division` fields
+when the relevant lookup/decision files contain assignments.
 
 ## Stable Record Keys
 
-DOI alone is not sufficient because some records do not have one. The workflow
-needs a stable `record_key` that can identify previously seen records.
-
-Recommended key priority:
+`record_key` is assigned by `R/add_record_keys.R` using this priority:
 
 ```text
-record_key =
-  scopus_id, if available
-  else normalized DOI, if available
-  else hash(normalized title + year + first author + journal)
+Scopus EID
+normalized DOI
+hash(normalized title + year + first author + journal)
 ```
 
-The fallback hash is not perfect, but it gives DOI-missing records a stable key
-that is usually good enough for deduplication and review tracking.
-
-## Proposed Refresh Flow
-
-### 1. Start a Refresh
-
-Create a new `refresh_id` and write a row to `data/refresh_log.csv` with
-`started_at`.
-
-### 2. Harvest Scopus Candidates
-
-Run the funder and affiliation searches.
-
-Save the harvested candidates with:
-
-- `refresh_id`
-- `harvested_at`
-- `record_key`
-- `query_source`
-- `raw_metadata_hash`
-
-### 3. Identify New or Unresolved Candidates
-
-Compare harvested candidates against:
-
-- previously accepted records
-- previous review decisions
-- previous harvests
-
-The review queue should include records that are:
-
-- newly harvested and not previously reviewed
-- previously marked `unsure`, if the workflow wants a second review
-- records whose metadata changed enough to require another look
-
-### 4. Manual Review
-
-Launch the review app on the refresh-specific review queue.
-
-The app writes decisions to `data/funder_review_decisions.csv` using `record_key`, not
-DOI alone.
-
-### 5. Append Accepted Records
-
-After review, append newly accepted records to
-`data/accepted_publications.parquet`.
-
-Previously accepted records should not be overwritten by default. If old
-metadata should be refreshed, that should be a separate explicit mode.
-
-Possible modes:
-
-```text
-new_records_only
-update_existing_metadata
-reclassify_all
-```
-
-The safest default is `new_records_only`.
-
-### 6. Classify and Canonicalize
-
-For normal scheduled refreshes, classify and canonicalize only newly accepted
-records.
-
-Reclassifying the entire inventory should be reserved for cases where the
-taxonomy, prompts, model, or classification policy changes.
-
-### 7. Export the Current Inventory
-
-Generate the dashboard-ready exports from the accepted-publications table,
-joining `funding_division` from `data/funding_division_lookup.csv`:
-
-```text
-data/dwr_publications.csv
-data/dwr_publications.parquet
-```
-
-### 8. Finish the Refresh
-
-Update `data/refresh_log.csv` with:
-
-- `completed_at`
-- candidate counts
-- review counts
-- accepted count
-- any notes about unusual issues
-
-## Review App Behavior
-
-The review app reads the refresh review queue and writes decisions to
-`data/funder_review_decisions.csv`.
-
-It:
-
-1. Reads a refresh-specific review queue.
-2. Displays only records needing review.
-3. Saves decisions keyed by `record_key`.
-4. Preserves prior decisions unless the reviewer explicitly changes them.
+The key lets review decisions and accepted records survive changes in file
+order and supports records that do not have a DOI.
 
 ## Implementation Components
 
-The implemented workflow is made up of:
-
-1. `refresh_log.csv`.
-2. `record_key` creation.
-3. Harvested candidate snapshots in `data/harvests/`.
-4. Review decisions keyed by `record_key`.
-5. A review app that reads `data/funder_review_queue.parquet`.
-6. `accepted_publications.parquet`.
-7. Exports derived from accepted publications plus the funding-division lookup.
-
-The final exports are generated from accepted publications plus the
-funding-division lookup.
+- `_targets.R`: pipeline definition and operator comments.
+- `config/pipeline.yml`: non-secret settings and file paths.
+- `R/build_funder_review_queue.R`: funder queue construction.
+- `R/build_author_review_queue.R`: author/affiliation queue construction.
+- `R/apply_review_decisions.R`: shared keep/drop filtering.
+- `R/append_accepted_publications.R`: append-oriented accepted table update.
+- `R/update_funding_division_lookup.R`: keep-only funding division lookup.
+- `R/join_funding_division.R`: export-time funding division join.
+- `R/join_author_division.R`: export-time author division join from
+  `data/author_division_decisions.csv`.
+- `shiny/funder_review_app.R`: funder publication review.
+- `shiny/author_review_app.R`: author publication and author-level review.
+- `shiny/author_division_resolution_app.R`: unresolved division assignment.

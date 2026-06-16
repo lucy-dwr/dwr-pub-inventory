@@ -7,6 +7,9 @@ It lives at `shiny/dashboard_app.R` and reads from `data/dwr_publications.parque
 All visible counts, charts, and table rows update reactively based on the
 user's active filters and search.
 
+This specification describes the current implemented dashboard. Planned
+dashboard enhancements are listed near the end of this document.
+
 ---
 
 ## Data Source
@@ -29,6 +32,8 @@ Loaded once at startup using `arrow::read_parquet()`. Key columns used:
 | `is_lead_author` | "Lead Authored" stat; contribution type chart       |
 | `is_sole_author` | Sole Author contribution type in chart              |
 | `journal`     | (reserved; not displayed in initial version)           |
+| `funding_division` | Export column available when joined by pipeline; not yet used by the dashboard |
+| `author_division` | Export column available when joined by pipeline; not yet used by the dashboard |
 
 `pc_category` and `pc_field` are both present in the parquet file — no
 in-app taxonomy join is needed. Category names are title-cased for display.
@@ -63,7 +68,7 @@ filter. Hierarchy (most → least specific):
 │  LEFT PANEL (≈40%)          │  RIGHT PANEL (≈60%)                       │
 │  ─ Featured Article         │  ─ Filter dropdowns (row)                 │
 │  ─ Science Category pie     │  ─ Summary stat boxes (row)               │
-│  ─ Articles by Division bar │  ─ Publications by Year stacked bar chart │
+│  ─ Division placeholder     │  ─ Publications by Year stacked bar chart │
 │                             │  ─ Article table                          │
 └──────────────────────────────────────────────────────────────────────────┘
 │  FOOTER (full width)                                                    │
@@ -107,15 +112,16 @@ A row directly below the header containing:
 
 ## Filters Row (right panel, top)
 
-Four `selectInput` dropdowns in a single row. Each defaults to `"All"`.
-Selecting a value filters the reactive dataset.
+Four `selectInput` dropdowns are displayed in a single row. Three are active.
+The Division control is currently disabled and does not filter the reactive
+dataset.
 
 | Filter             | Source                                                       | Notes                              |
 |--------------------|--------------------------------------------------------------|------------------------------------|
-| Division           | Unique non-blank values of `funding_division`, sorted alphabetically | Populated from the funding division lookup |
+| Division           | `"All"` only | Disabled placeholder; dashboard filtering by division is planned but not implemented |
 | Science Field      | Unique values of `pc_field`, sorted alphabetically          | Displays the field name            |
 | Contribution Type  | Fixed: All / Funder / Co-Author / Lead Author / Sole Author | Derived `contribution_type` column |
-| Author Affiliation | All unique canonical institution names from `affiliations`, split on `"; "`, `NA` excluded, alphabetically sorted | ~900 options; standard dropdown scroll |
+| Author Affiliation | All unique non-empty values from the `affiliations` list column | Standard dropdown scroll |
 
 ---
 
@@ -161,12 +167,10 @@ header updates to reflect the selected range.
 
 ### Articles by Division Bar Chart (left panel)
 
-- Uses the `funding_division` column added during export from
-  `data/funding_division_lookup.csv`.
-- Blank `funding_division` values are excluded from the chart.
-- Chart title: "Articles by Division"
-- Bars should be horizontal, sorted descending by count, colored in the same
-  palette as other charts
+- Current implementation is a placeholder panel.
+- Placeholder text: `"Division classifications are in progress — check back soon"`.
+- The planned implementation will use the `funding_division` column added
+  during export from `data/funding_division_lookup.csv`.
 
 ### Publications by Year and Contribution (right panel)
 
@@ -220,23 +224,17 @@ Closeable via an ✕ button or clicking outside.
 
 **Title:** About the Inventory
 
-**Body (placeholder):**
-> *[Placeholder] This inventory tracks peer-reviewed publications funded by
-> or authored by staff of the California Department of Water Resources (DWR).
-> Publications are identified through Scopus searches and classified into
-> scientific fields using custom taxonomy and large language model. For
-> questions, contact dwrscience@water.ca.gov.*
+**Body:** Placeholder production copy. The current app text begins with
+`[Placeholder]` and briefly describes the inventory, Scopus searches, taxonomy,
+and LLM classification.
 
 ### Science Category & Field Classification Modal
 
 **Title:** Science Category & Field Classification
 
-**Body (placeholder):**
-> *[Placeholder] Publications are classified into scientific fields using a
-> custom DWR taxonomy developed in collaboration with subject-matter experts.
-> Each field belongs to a broader science category. Classification is performed
-> using a large language model guided by structured field definitions.
-> See the full taxonomy for detailed field descriptions.*
+**Body:** Placeholder production copy. The current app text begins with
+`[Placeholder]` and describes the custom DWR taxonomy and LLM-guided
+classification.
 
 ---
 
@@ -250,10 +248,8 @@ update date for now; update manually when data is refreshed.
 
 ## Division Data
 
-The Division filter and "Articles by Division" chart both depend on the
-`funding_division` column in `data/dwr_publications.csv` and
-`data/dwr_publications.parquet`. The column is joined during export from
-`data/funding_division_lookup.csv`.
+The pipeline can add `funding_division` and `author_division` to
+`data/dwr_publications.csv` and `data/dwr_publications.parquet`.
 
 `data/funding_division_lookup.csv` is a manual lookup for funder-query records
 that explicitly passed funding review (`decision == "keep"`). Records marked
@@ -261,9 +257,31 @@ that explicitly passed funding review (`decision == "keep"`). Records marked
 assignment in a `division` column; exports expose that value as
 `funding_division`.
 
+`data/author_division_decisions.csv` stores confirmed DWR authors and resolved
+division assignments. Exports expose those values as `author_division`.
+
 Blank `funding_division` values mean the record passed funding review but still
-needs a division assignment. Blank values are not shown as a Division filter
-choice and are omitted from the Articles by Division chart.
+needs a division assignment.
+
+The dashboard does not yet use either division column for filtering or charts.
+
+---
+
+## Planned Dashboard Enhancements
+
+These items are documented as planned work, not current dashboard behavior:
+
+- Replace the Division placeholder panel with a horizontal Articles by Division
+  chart using `funding_division`.
+- Enable the Division dropdown and populate it from non-blank
+  `funding_division` values.
+- Decide whether to expose `author_division` as a separate filter, combine it
+  with `funding_division`, or leave it as an export-only field.
+- Add dashboard behavior for multi-valued `author_division` values if an author
+  division filter is implemented.
+- Replace placeholder About and Classification modal text with production copy.
+- Consider updating the footer date dynamically from the export or refresh log
+  rather than hardcoding it.
 
 ---
 
@@ -276,8 +294,10 @@ choice and are omitted from the Articles by Division chart.
 | `plotly`      | Interactive pie and bar charts               |
 | `DT`          | Interactive article table                    |
 | `dplyr`       | Data manipulation                            |
+| `arrow`       | Parquet loading                              |
 | `stringr`     | String splitting, case conversion            |
-| `readr`       | CSV loading                                  |
+| `shinychat`   | Chat UI                                      |
+| `ellmer`      | LLM client and tool calling                  |
 
 ---
 
@@ -305,8 +325,9 @@ not need to switch tools or modes.
 
 **Provider:** The same OpenAI-compatible endpoint used by the `pubclassify`
 pipeline (California Department of Technology, base URL
-`PUBCLASSIFY_LLM_BASE_URL`). `ellmer::chat_openai()` with a custom `base_url`
-and `api_key = Sys.getenv("PUBCLASSIFY_LLM_KEY")`.
+`PUBCLASSIFY_LLM_BASE_URL`). The app uses
+`ellmer::chat_openai_compatible()` with a custom `base_url` and
+`api_key = Sys.getenv("PUBCLASSIFY_LLM_KEY")`.
 
 If that endpoint is unavailable or a higher-capability model is needed,
 `ellmer::chat_anthropic()` can be substituted — the tool-call and streaming
