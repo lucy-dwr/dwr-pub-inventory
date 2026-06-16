@@ -13,7 +13,7 @@ source(file.path(.ROOT, "R", "author_name_utils.R"))
 
 QUEUE_PATH            <- file.path(.ROOT, "data", "author_review_queue.parquet")
 DECISIONS_PATH        <- file.path(.ROOT, "data", "author_review_decisions.csv")
-AUTHOR_DECISIONS_PATH <- file.path(.ROOT, "data", "author_decisions.csv")
+AUTHOR_DIVISION_DECISIONS_PATH <- file.path(.ROOT, "data", "author_division_decisions.csv")
 LOOKUP_PATH           <- file.path(.ROOT, "data", "author_division_lookup.csv")
 ORG_LOOKUP_PATH       <- file.path(.ROOT, "data", "dwr_org_lookup.csv")
 
@@ -66,9 +66,9 @@ save_decision <- function(record_key, doi, decision, refresh_id) {
   write_csv(d, DECISIONS_PATH)
 }
 
-load_author_decisions <- function() {
-  if (file.exists(AUTHOR_DECISIONS_PATH)) {
-    d <- read_csv(AUTHOR_DECISIONS_PATH, show_col_types = FALSE,
+load_author_division_decisions <- function() {
+  if (file.exists(AUTHOR_DIVISION_DECISIONS_PATH)) {
+    d <- read_csv(AUTHOR_DIVISION_DECISIONS_PATH, show_col_types = FALSE,
                   col_types = cols(.default = col_character()))
     if (!"division"      %in% names(d)) d$division      <- NA_character_
     if (!"division_rule" %in% names(d)) d$division_rule <- NA_character_
@@ -84,7 +84,7 @@ load_author_decisions <- function() {
 save_author_decision <- function(record_key, doi, author_name, year, decision,
                                   division = NA_character_, division_rule = NA_character_,
                                   refresh_id) {
-  d <- load_author_decisions() |>
+  d <- load_author_division_decisions() |>
     filter(!(.data$record_key == .env$record_key & .data$author_name == .env$author_name))
   if (decision != "clear") {
     d <- bind_rows(d, tibble(
@@ -95,7 +95,7 @@ save_author_decision <- function(record_key, doi, author_name, year, decision,
       review_refresh_id=refresh_id
     ))
   }
-  write_csv(d, AUTHOR_DECISIONS_PATH)
+  write_csv(d, AUTHOR_DIVISION_DECISIONS_PATH)
 }
 
 current_refresh_id <- function() {
@@ -259,16 +259,16 @@ server <- function(input, output, session) {
   rv <- reactiveValues(
     idx             = 1L,
     decisions       = load_decisions(),
-    author_decisions = load_author_decisions()
+    author_division_decisions = load_author_division_decisions()
   )
 
   # ── Author action (per-author DWR/Not DWR buttons) ──────────────────────
 
   observeEvent(input$author_action, {
     a <- input$author_action
-    existing <- rv$author_decisions$decision[
-      rv$author_decisions$record_key == a$record_key &
-      rv$author_decisions$author_name == a$author_name
+    existing <- rv$author_division_decisions$decision[
+      rv$author_division_decisions$record_key == a$record_key &
+      rv$author_division_decisions$author_name == a$author_name
     ]
     decision <- if (length(existing) > 0L && existing[1L] == a$decision) "clear" else a$decision
 
@@ -286,7 +286,7 @@ server <- function(input, output, session) {
 
     save_author_decision(a$record_key, current_doi(), a$author_name, pub_year,
                           decision, division, division_rule, REFRESH_ID)
-    rv$author_decisions <- load_author_decisions()
+    rv$author_division_decisions <- load_author_division_decisions()
   })
 
   # ── Derived reactives ────────────────────────────────────────────────────
@@ -462,7 +462,7 @@ server <- function(input, output, session) {
     key  <- pub$record_key
     year <- pub$year
     authors <- pub$authors[[1L]]
-    ad  <- rv$author_decisions
+    ad  <- rv$author_division_decisions
 
     if (!length(authors)) return(tags$em("none"))
 

@@ -9,7 +9,7 @@ if (basename(getwd()) == "shiny") setwd("..")
 
 source(file.path(.ROOT, "R", "author_name_utils.R"))
 
-AUTHOR_DECISIONS_PATH <- file.path(.ROOT, "data", "author_decisions.csv")
+AUTHOR_DIVISION_DECISIONS_PATH <- file.path(.ROOT, "data", "author_division_decisions.csv")
 QUEUE_PATH            <- file.path(.ROOT, "data", "author_review_queue.parquet")
 LOOKUP_PATH           <- file.path(.ROOT, "data", "author_division_lookup.csv")
 ORG_LOOKUP_PATH       <- file.path(.ROOT, "data", "dwr_org_lookup.csv")
@@ -37,13 +37,13 @@ all_divisions <- sort(unique(c(
 # ── Decision I/O ──────────────────────────────────────────────────────────────
 
 load_decisions <- function() {
-  if (!file.exists(AUTHOR_DECISIONS_PATH)) {
+  if (!file.exists(AUTHOR_DIVISION_DECISIONS_PATH)) {
     return(tibble(record_key=character(), doi=character(), author_name=character(),
                   year=character(), decision=character(), division=character(),
                   division_rule=character(), reviewed_at=character(),
                   review_refresh_id=character()))
   }
-  d <- read_csv(AUTHOR_DECISIONS_PATH, show_col_types = FALSE,
+  d <- read_csv(AUTHOR_DIVISION_DECISIONS_PATH, show_col_types = FALSE,
                 col_types = cols(.default = col_character()))
   if (!"year"          %in% names(d)) d$year          <- NA_character_
   if (!"division"      %in% names(d)) d$division      <- NA_character_
@@ -58,7 +58,7 @@ save_division <- function(record_key, author_name, division, rule) {
     d$division[idx[1L]]      <- division
     d$division_rule[idx[1L]] <- as.character(rule)
   }
-  write_csv(d, AUTHOR_DECISIONS_PATH)
+  write_csv(d, AUTHOR_DIVISION_DECISIONS_PATH)
 }
 
 # ── Startup: sync year/title from queue parquet via DOI ──────────────────────
@@ -100,7 +100,7 @@ pub_meta <- (
   d_synced <- select(d_synced, -doi_key, -year_meta, -new_year)
 
   if (sum(year_changed) > 0L || sum(invalidate) > 0L) {
-    write_csv(d_synced, AUTHOR_DECISIONS_PATH)
+    write_csv(d_synced, AUTHOR_DIVISION_DECISIONS_PATH)
     message(sprintf(
       "Synced year for %d decision(s); cleared %d stale auto-resolution(s) for re-resolution.",
       sum(year_changed), sum(invalidate)

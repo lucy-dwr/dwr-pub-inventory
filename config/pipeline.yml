@@ -24,7 +24,7 @@ paths:
   taxonomy: taxonomy/dwr_disciplines_taxonomy.csv
   system_prompt: prompts/system_prompt.txt
   classify_instructions: prompts/classify_instructions.txt
-  funder_review_decisions: data/funder_review_decisions.csv
+  funding_review_decisions: data/funding_review_decisions.csv
   funder_review_queue: data/funder_review_queue.parquet
   accepted_publications: data/accepted_publications.parquet
   harvests_dir: data/harvests
@@ -34,7 +34,7 @@ paths:
   refresh_log: data/refresh_log.csv
   funding_division_lookup: data/funding_division_lookup.csv
   author_review_decisions: data/author_review_decisions.csv
-  author_decisions: data/author_decisions.csv
+  author_division_decisions: data/author_division_decisions.csv
   author_review_queue: data/author_review_queue.parquet
   author_division_lookup: data/author_division_lookup.csv
   dwr_org_lookup: data/dwr_org_lookup.csv

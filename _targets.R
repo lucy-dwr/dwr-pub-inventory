@@ -161,7 +161,7 @@ list(
     funder_review_queue,
     build_funder_review_queue(
       pubs_harvest_candidates,
-      decisions_path = pipeline_config$paths$funder_review_decisions,
+      decisions_path = pipeline_config$paths$funding_review_decisions,
       accepted_path  = pipeline_config$paths$accepted_publications
     )
   ),
@@ -202,8 +202,8 @@ list(
   # Track both decisions CSVs as file dependencies so that any edits (via the
   # Shiny apps) trigger re-evaluation of all downstream targets.
   targets::tar_target(
-    funder_review_decisions_file,
-    pipeline_config$paths$funder_review_decisions,
+    funding_review_decisions_file,
+    pipeline_config$paths$funding_review_decisions,
     format = "file"
   ),
 
@@ -214,8 +214,8 @@ list(
   ),
 
   targets::tar_target(
-    author_decisions_file,
-    pipeline_config$paths$author_decisions,
+    author_division_decisions_file,
+    pipeline_config$paths$author_division_decisions,
     format = "file"
   ),
 
@@ -224,7 +224,7 @@ list(
     apply_review_decisions(
       dplyr::filter(pubs_harvest_candidates,
                     grepl("funder", .data$query_source, fixed = TRUE)),
-      funder_review_decisions_file
+      funding_review_decisions_file
     )
   ),
 
@@ -255,7 +255,7 @@ list(
                              col_types = readr::cols(.default = readr::col_character()))
         d$record_key[!is.na(d$decision) & d$decision == "drop"]
       }
-      funder_drops <- read_drops(pipeline_config$paths$funder_review_decisions)
+      funder_drops <- read_drops(pipeline_config$paths$funding_review_decisions)
       author_drops <- read_drops(pipeline_config$paths$author_review_decisions)
 
       dplyr::mutate(combined,
@@ -381,7 +381,7 @@ list(
     funding_division_lookup_updated,
     update_funding_division_lookup(
       accepted_path = accepted_publications_updated,
-      decisions_path = pipeline_config$paths$funder_review_decisions,
+      decisions_path = pipeline_config$paths$funding_review_decisions,
       lookup_path   = pipeline_config$paths$funding_division_lookup
     ),
     format = "file"
@@ -397,7 +397,7 @@ list(
         join_author_division(
           pipeline_config$paths$author_division_lookup,
           pipeline_config$paths$dwr_org_lookup,
-          author_decisions_file
+          author_division_decisions_file
         )
       collapse_list_col <- function(x) {
         vapply(x, function(v) paste(unlist(v), collapse = "; "), character(1L))
@@ -418,7 +418,7 @@ list(
         join_author_division(
           pipeline_config$paths$author_division_lookup,
           pipeline_config$paths$dwr_org_lookup,
-          author_decisions_file
+          author_division_decisions_file
         )
       arrow::write_parquet(pubs, pipeline_config$paths$output_parquet)
       pipeline_config$paths$output_parquet
@@ -431,7 +431,7 @@ list(
   targets::tar_target(
     refresh_log_completed,
     {
-      decisions <- readr::read_csv(funder_review_decisions_file, show_col_types = FALSE,
+      decisions <- readr::read_csv(funding_review_decisions_file, show_col_types = FALSE,
                                    col_types = readr::cols(.default = readr::col_character()))
       this_refresh <- dplyr::filter(decisions, .data$review_refresh_id == refresh_id)
       n_accepted <- nrow(arrow::read_parquet(accepted_publications_updated))

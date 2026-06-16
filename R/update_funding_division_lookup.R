@@ -6,14 +6,14 @@
 #' are preserved for retained rows.
 #'
 #' @param accepted_path  Path to `data/accepted_publications.parquet`.
-#' @param decisions_path Path to `data/review_decisions.csv`.
+#' @param decisions_path Path to `data/funding_review_decisions.csv`.
 #' @param lookup_path    Path to `data/funding_division_lookup.csv`.
 #'
 #' @return The path to the updated lookup file (invisibly).
 
 update_funding_division_lookup <- function(
     accepted_path,
-    decisions_path = "data/review_decisions.csv",
+    decisions_path = "data/funding_review_decisions.csv",
     lookup_path = "data/funding_division_lookup.csv"
 ) {
   accepted <- arrow::read_parquet(accepted_path)
