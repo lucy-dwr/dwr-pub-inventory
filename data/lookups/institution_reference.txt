@@ -11,8 +11,9 @@ California State University, Chico
 California State University, East Bay
 California State University, Fresno
 California State University, Monterey Bay
+California State University, San Francisco
+California State University, San Jose
 California Trout
-Center for Western Weather and Water Extremes
 Chinese Academy of Sciences
 Colorado School of Mines
 Colorado State University
@@ -35,7 +36,6 @@ National Centers for Environmental Prediction
 National Ecological Observatory Network
 National Oceanic and Atmospheric Administration
 National Oceanic and Atmospheric Administration National Marine Fisheries Service
-National Oceanic and Atmospheric Administration Southwest Fisheries Science Center
 Nature Conservancy
 North Carolina State University
 Northern Illinois University
@@ -45,18 +45,16 @@ Peking University
 Pennsylvania State University
 Plymouth State University
 Point Blue Conservation Science
-San Francisco State University
-San Jose State University
 Stanford University
 State University of New York
-The University of Arizona
+University of Arizona
 United States Army Engineer Research and Development Center
 United States Department of Agriculture
 United States Forest Service
 United States Environmental Protection Agency
 United States Fish and Wildlife Service
 United States Geological Survey
-University of California Cooperative Extension
+University of California Agriculture and Natural Resources
 University of California, Berkeley
 University of California, Davis
 University of California, Irvine

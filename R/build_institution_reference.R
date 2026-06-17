@@ -17,8 +17,8 @@
 #' Typical workflow:
 #' \enumerate{
 #'   \item `source("R/build_institution_reference.R")`
-#'   \item `pubs_classified <- targets::tar_read(pubs_classified)`
-#'   \item `build_institution_reference(pubs_classified, model = "<model-name>")`
+#'   \item `pubs_to_publish <- targets::tar_read(pubs_to_publish)`
+#'   \item `build_institution_reference(pubs_to_publish, model = "<model-name>")`
 #'   \item Review/edit `data/lookups/institution_reference.txt`.
 #'   \item Run [build_affiliation_lookup()] — it reads the file automatically.
 #' }
@@ -30,9 +30,11 @@
 #'   useful for a quick manual review pass before committing to an LLM call.
 #' @param batch_size Number of strings per LLM API call (reduce if hitting
 #'   timeouts).
-#' @param model LLM model name (required when `use_llm = TRUE`).
+#' @param model LLM model name. Defaults to `llm.model` in
+#'   `config/pipeline.yml`.
 #' @param api_key API key (reads `PUBCLASSIFY_LLM_KEY` by default).
-#' @param base_url OpenAI-compatible base URL (reads `PUBCLASSIFY_LLM_BASE_URL`).
+#' @param base_url OpenAI-compatible base URL. Defaults to `llm.base_url` in
+#'   `config/pipeline.yml`.
 #'
 #' @return Invisibly, a character vector of canonical institution names.
 
@@ -44,7 +46,7 @@ build_institution_reference <- function(
   batch_size  = 20L,
   model       = NULL,
   api_key     = Sys.getenv("PUBCLASSIFY_LLM_KEY"),
-  base_url    = Sys.getenv("PUBCLASSIFY_LLM_BASE_URL")
+  base_url    = NULL
 ) {
   # Frequency table across all author-publication pairs (not unique strings)
   all_affs <- unlist(pubs$affiliations)
@@ -67,9 +69,9 @@ build_institution_reference <- function(
     return(invisible(top_strings))
   }
 
-  if (is.null(model) || !nzchar(model)) {
-    stop("build_institution_reference: `model` is required when use_llm = TRUE.")
-  }
+  llm_defaults <- .institution_llm_defaults()
+  if (is.null(model) || !nzchar(as.character(model))) model <- llm_defaults$model
+  if (is.null(base_url) || !nzchar(as.character(base_url))) base_url <- llm_defaults$base_url
 
   # LLM canonicalises the top strings in batches: strips department prefixes,
   # expands abbreviations, standardises punctuation. No reference list is needed
@@ -94,12 +96,14 @@ build_institution_reference <- function(
   }
 
   # Deduplicate: multiple raw strings may resolve to the same institution
-  institutions <- sort(unique(canonical[canonical != "UNKNOWN" & !is.na(canonical)]))
+  canonical <- .normalize_unknown_canonical(canonical)
 
-  n_unknown <- sum(canonical == "UNKNOWN" | is.na(canonical))
+  institutions <- sort(unique(canonical[canonical != "Unknown" & !is.na(canonical)]))
+
+  n_unknown <- sum(canonical == "Unknown" | is.na(canonical))
   if (n_unknown > 0L) {
     message(sprintf(
-      "%d string(s) returned UNKNOWN — excluded from reference list. ",
+      "%d string(s) returned Unknown — excluded from reference list. ",
       n_unknown
     ), appendLF = FALSE)
     message("Add them manually to ", output_path, " if needed.")
@@ -113,6 +117,24 @@ build_institution_reference <- function(
   invisible(institutions)
 }
 
+#' Read default LLM settings from pipeline config
+#'
+#' @return List with `model` and `base_url`.
+#'
+#' @noRd
+.institution_llm_defaults <- function() {
+  cfg <- yaml::read_yaml("config/pipeline.yml")
+  model <- cfg$llm$model
+  base_url <- cfg$llm$base_url
+  if (is.null(model) || !nzchar(as.character(model))) {
+    stop("config/pipeline.yml must define llm.model.", call. = FALSE)
+  }
+  if (is.null(base_url) || !nzchar(as.character(base_url))) {
+    stop("config/pipeline.yml must define llm.base_url.", call. = FALSE)
+  }
+  list(model = as.character(model), base_url = as.character(base_url))
+}
+
 #' Send a batch of affiliation strings to the LLM for canonicalisation
 #'
 #' @param strings Character vector of raw affiliation strings.
@@ -123,7 +145,7 @@ build_institution_reference <- function(
 #' @param base_url OpenAI-compatible base URL.
 #'
 #' @return Character vector of canonical names the same length as `strings`.
-#'   Failed or unresolvable entries are `"UNKNOWN"`.
+#'   Failed or unresolvable entries are `"Unknown"`.
 #'
 #' @noRd
 .canonicalise_top_strings <- function(strings, index_offset = 0L, model, api_key, base_url) {
@@ -138,13 +160,13 @@ build_institution_reference <- function(
     "- University of California campuses: \"University of California, [City]\"\n",
     "- California State University campuses: use official campus name.\n",
     "- Government agencies: full official name, e.g. \"U.S. Geological Survey\".\n",
-    "- If a string contains multiple distinct institutions, return \"UNKNOWN\".\n",
-    "- If you cannot identify the institution with confidence, return \"UNKNOWN\".\n\n",
+    "- If a string contains multiple distinct institutions, return \"Unknown\".\n",
+    "- If you cannot identify the institution with confidence, return \"Unknown\".\n\n",
     "Strings:\n",
     numbered,
     "\n\nRespond with a JSON array only — no other text. Each element:\n",
     "  \"index\": the number from the list above (integer)\n",
-    "  \"canonical\": the institution name or \"UNKNOWN\"\n\n",
+    "  \"canonical\": the institution name or \"Unknown\"\n\n",
     "Example: [{\"index\": 1, \"canonical\": \"University of California, Davis\"}, ...]"
   )
 
@@ -183,7 +205,7 @@ build_institution_reference <- function(
         httr2::resp_status(resp)
       ))
     }
-    return(rep("UNKNOWN", length(strings)))
+    return(rep("Unknown", length(strings)))
   }
 
   raw_text <- resp |>
@@ -204,12 +226,25 @@ build_institution_reference <- function(
   )
 
   if (is.null(parsed) || !all(c("index", "canonical") %in% names(parsed))) {
-    return(rep("UNKNOWN", length(strings)))
+    return(rep("Unknown", length(strings)))
   }
 
   result_map <- setNames(as.character(parsed$canonical), as.character(parsed$index))
   vapply(indices, function(i) {
     val <- result_map[[as.character(i)]]
-    if (is.null(val) || is.na(val) || !nzchar(val)) "UNKNOWN" else val
+    .normalize_unknown_canonical(if (is.null(val) || is.na(val) || !nzchar(val)) "Unknown" else val)
   }, character(1L))
+}
+
+#' Normalize unresolved canonical institution markers
+#'
+#' @param x Character vector of canonical institution names.
+#'
+#' @return `x`, with any case variant of `"unknown"` converted to `"Unknown"`.
+#'
+#' @noRd
+.normalize_unknown_canonical <- function(x) {
+  x <- as.character(x)
+  x[!is.na(x) & tolower(trimws(x)) == "unknown"] <- "Unknown"
+  x
 }

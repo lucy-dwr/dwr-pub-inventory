@@ -1,26 +1,34 @@
-#' Build a canonical institution lookup table from raw affiliation strings
+#' Build a canonical institution lookup table from affiliation occurrences
 #'
-#' Extracts all unique raw affiliation strings from `pubs$affiliations`,
-#' clusters near-identical variants by string distance, sends each cluster to
-#' an OpenAI-compatible LLM to obtain a single canonical institution name, and
-#' writes the result to a CSV for human review.
+#' Builds one durable lookup row per publication/raw-affiliation occurrence,
+#' while sending only unique raw strings to an OpenAI-compatible LLM.
+#' The LLM canonicalization is applied back to each occurrence so ambiguous
+#' generic strings can be resolved differently during manual review.
 #'
 #' @details
 #' Output CSV columns:
 #' \describe{
+#'   \item{record_key}{Stable publication key}
+#'   \item{doi}{Publication DOI}
+#'   \item{doi_url}{DOI URL}
+#'   \item{title}{Publication title}
+#'   \item{year}{Publication year, when available}
 #'   \item{raw}{Raw string exactly as it appears in `pubs$affiliations`}
-#'   \item{canonical}{Canonical institution name, or `"UNKNOWN"` if
+#'   \item{canonical}{Canonical institution name, or `"Unknown"` if
 #'     unresolvable}
+#'   \item{new}{Logical flag marking unresolved rows that need human review}
+#'   \item{reviewed_at}{Manual review timestamp, if reviewed}
+#'   \item{review_notes}{Optional manual review notes}
 #' }
 #'
 #' After reviewing (and manually correcting) the CSV, it is tracked by the
-#' `affiliation_lookup_csv` target and consumed by [apply_affiliation_lookup()].
+#' `affiliation_lookup_file` target and consumed by [apply_affiliation_lookup()].
 #'
 #' Typical usage:
 #' ```r
 #' source("R/build_affiliation_lookup.R")
-#' pubs_classified <- targets::tar_read(pubs_classified)
-#' build_affiliation_lookup(pubs_classified, model = "<model-name>")
+#' pubs_to_publish <- targets::tar_read(pubs_to_publish)
+#' build_affiliation_lookup(pubs_to_publish, model = "<model-name>")
 #' ```
 #'
 #' @param pubs Tibble with an `affiliations` list column.
@@ -28,93 +36,503 @@
 #' @param reference_path Path to the institution reference list produced by
 #'   [build_institution_reference()]; one canonical name per line. If the file
 #'   does not exist, the LLM receives no reference list and a warning is issued.
+#' @param system_prompt_path Path to the affiliation canonicalization system
+#'   prompt template. Must contain `{{reference_section}}`.
+#' @param user_template_path Path to the affiliation canonicalization user
+#'   prompt template. Must contain `{{cluster_blocks}}`.
 #' @param batch_size Number of clusters to send per LLM API call.
-#' @param threshold Jaro-Winkler distance cut height for clustering; lower is
-#'   more conservative (only near-identical strings merge).
-#' @param model LLM model name passed to the API.
+#' @param threshold Optional Jaro-Winkler distance cut height for fuzzy
+#'   clustering. Defaults to `NULL`, which sends each unique raw string as its
+#'   own cluster to avoid grouping distinct institutions with similar names.
+#' @param model LLM model name passed to the API. Defaults to `llm.model` in
+#'   `config/pipeline.yml`.
 #' @param api_key API key (reads `PUBCLASSIFY_LLM_KEY` by default).
-#' @param base_url OpenAI-compatible base URL (reads `PUBCLASSIFY_LLM_BASE_URL`).
+#' @param base_url OpenAI-compatible base URL. Defaults to `llm.base_url` in
+#'   `config/pipeline.yml`.
 #'
-#' @return Invisibly, the lookup data frame with columns `raw` and `canonical`.
+#' @return Invisibly, the occurrence-level lookup data frame.
 
 build_affiliation_lookup <- function(
   pubs,
   output_path    = "data/lookups/affiliation_lookup.csv",
   reference_path = "data/lookups/institution_reference.txt",
+  system_prompt_path = "prompts/affiliation_system_prompt.txt",
+  user_template_path = "prompts/affiliation_user_template.txt",
   batch_size     = 50L,
-  threshold      = 0.10,
-  model,
+  threshold      = NULL,
+  model = NULL,
   api_key  = Sys.getenv("PUBCLASSIFY_LLM_KEY"),
-  base_url = Sys.getenv("PUBCLASSIFY_LLM_BASE_URL")
+  base_url = NULL
 ) {
-  reference <- .load_reference(reference_path)
-  
-  # ---- Stage 1: Extract unique raw strings ----------------------------------
+  llm_defaults <- .affiliation_llm_defaults()
+  if (is.null(model) || !nzchar(as.character(model))) model <- llm_defaults$model
+  if (is.null(base_url) || !nzchar(as.character(base_url))) base_url <- llm_defaults$base_url
 
-  raw_affs <- unique(unlist(pubs$affiliations))
-  raw_affs <- raw_affs[!is.na(raw_affs) & nzchar(trimws(raw_affs))]
-  n <- length(raw_affs)
-  message(sprintf("build_affiliation_lookup: %d unique raw affiliation strings.", n))
-
-  # ---- Stage 2: Cluster by Jaro-Winkler string distance --------------------
-
-  message("Computing pairwise Jaro-Winkler distances (this may take a moment)...")
-  dm <- stringdist::stringdistmatrix(raw_affs, raw_affs, method = "jw", p = 0.1)
-  hc <- stats::hclust(stats::as.dist(dm), method = "average")
-  cluster_ids <- stats::cutree(hc, h = threshold)
-
-  clusters_df <- data.frame(
-    raw        = raw_affs,
-    cluster_id = cluster_ids,
-    stringsAsFactors = FALSE
+  existing_lookup <- .read_existing_lookup(output_path)
+  reference <- .combined_reference(reference_path, existing_lookup)
+  system_prompt_template <- .read_prompt_template(
+    system_prompt_path,
+    required_placeholder = "{{reference_section}}"
   )
+  user_prompt_template <- .read_prompt_template(
+    user_template_path,
+    required_placeholder = "{{cluster_blocks}}"
+  )
+  
+  # ---- Stage 1: Build occurrence inventory ----------------------------------
 
-  n_clusters <- length(unique(cluster_ids))
+  occurrences <- .build_affiliation_occurrences(pubs)
+  if (nrow(occurrences) == 0L) {
+    readr::write_csv(existing_lookup, output_path)
+    message(sprintf(
+      "build_affiliation_lookup: no current affiliation occurrences; wrote %s unchanged (%d rows).",
+      output_path,
+      nrow(existing_lookup)
+    ))
+    return(invisible(existing_lookup))
+  }
+
+  occurrences <- .apply_existing_occurrence_reviews(occurrences, existing_lookup)
+  occurrences <- .apply_trusted_raw_canonical(occurrences, existing_lookup)
+
+  needs_label <- is.na(occurrences$canonical) |
+    !nzchar(trimws(occurrences$canonical)) |
+    (occurrences$new & occurrences$canonical == "Unknown")
+  raw_affs <- unique(occurrences$raw[needs_label])
+  raw_affs <- raw_affs[!is.na(raw_affs) & nzchar(trimws(raw_affs))]
+  n_new <- length(raw_affs)
+
   message(sprintf(
-    "Formed %d clusters from %d strings at threshold %.2f.",
-    n_clusters, n, threshold
+    "build_affiliation_lookup: %d publication/raw-affiliation occurrence(s).",
+    nrow(occurrences)
+  ))
+  message(sprintf(
+    "build_affiliation_lookup: %d unique raw affiliation string(s) need LLM labels.",
+    n_new
   ))
 
-  # ---- Stage 3: LLM labels each cluster ------------------------------------
+  if (n_new > 0L) {
+    # ---- Stage 2: Create LLM labeling groups -------------------------------
 
-  cluster_list <- split(clusters_df$raw, clusters_df$cluster_id)
-  cids         <- as.integer(names(cluster_list))
-  n_batches    <- ceiling(n_clusters / batch_size)
+    if (is.null(threshold)) {
+      cluster_ids <- seq_along(raw_affs)
+      message(sprintf(
+        "Using one raw affiliation string per LLM cluster (%d cluster(s)).",
+        n_new
+      ))
+    } else if (n_new == 1L) {
+      cluster_ids <- 1L
+    } else {
+      message("Computing pairwise Jaro-Winkler distances for new strings (this may take a moment)...")
+      dm <- stringdist::stringdistmatrix(raw_affs, raw_affs, method = "jw", p = 0.1)
+      hc <- stats::hclust(stats::as.dist(dm), method = "average")
+      cluster_ids <- stats::cutree(hc, h = threshold)
+    }
 
-  # Pre-fill with UNKNOWN; successful LLM responses overwrite entries
-  canonical_by_cid <- setNames(rep("UNKNOWN", n_clusters), as.character(cids))
+    clusters_df <- data.frame(
+      raw        = raw_affs,
+      cluster_id = cluster_ids,
+      stringsAsFactors = FALSE
+    )
 
-  for (b in seq_len(n_batches)) {
-    idx_start <- (b - 1L) * batch_size + 1L
-    idx_end   <- min(b * batch_size, n_clusters)
-    batch_cids <- cids[idx_start:idx_end]
-    batch      <- cluster_list[as.character(batch_cids)]
+    n_clusters <- length(unique(cluster_ids))
+    if (!is.null(threshold)) {
+      message(sprintf(
+        "Formed %d clusters from %d new strings at threshold %.2f.",
+        n_clusters, n_new, threshold
+      ))
+    }
 
-    message(sprintf(
-      "LLM batch %d/%d (clusters %d-%d of %d)...",
-      b, n_batches, idx_start, idx_end, n_clusters
-    ))
+    # ---- Stage 3: LLM labels each cluster ----------------------------------
 
-    results <- .label_clusters_llm(batch, model, api_key, base_url, reference)
-    canonical_by_cid[as.character(batch_cids)] <- results
+    cluster_list <- split(clusters_df$raw, clusters_df$cluster_id)
+    cids         <- as.integer(names(cluster_list))
+    n_batches    <- ceiling(n_clusters / batch_size)
+
+    canonical_by_cid <- setNames(rep("Unknown", n_clusters), as.character(cids))
+
+    for (b in seq_len(n_batches)) {
+      idx_start <- (b - 1L) * batch_size + 1L
+      idx_end   <- min(b * batch_size, n_clusters)
+      batch_cids <- cids[idx_start:idx_end]
+      batch      <- cluster_list[as.character(batch_cids)]
+
+      message(sprintf(
+        "LLM batch %d/%d (clusters %d-%d of %d)...",
+        b, n_batches, idx_start, idx_end, n_clusters
+      ))
+
+      results <- .label_clusters_llm(
+        batch,
+        model,
+        api_key,
+        base_url,
+        reference,
+        system_prompt_template,
+        user_prompt_template
+      )
+      canonical_by_cid[as.character(batch_cids)] <- results
+    }
+
+    raw_to_canonical <- setNames(
+      .normalize_unknown_canonical(canonical_by_cid[as.character(cluster_ids)]),
+      raw_affs
+    )
+    idx <- which(needs_label & occurrences$raw %in% names(raw_to_canonical))
+    occurrences$canonical[idx] <- unname(raw_to_canonical[occurrences$raw[idx]])
+    occurrences$new[idx] <- occurrences$canonical[idx] == "Unknown"
   }
 
-  # Join canonical names back to the per-string data frame
-  clusters_df$canonical <- canonical_by_cid[as.character(clusters_df$cluster_id)]
-  lookup <- clusters_df[, c("raw", "canonical")]
+  occurrences$canonical <- .normalize_unknown_canonical(occurrences$canonical)
+  occurrences$new <- .coerce_new_flag(occurrences$new)
+  occurrences <- .append_existing_occurrences_not_current(occurrences, existing_lookup)
+  occurrences <- .order_affiliation_lookup(occurrences)
 
-  n_unknown <- sum(lookup$canonical == "UNKNOWN", na.rm = TRUE)
-  if (n_unknown > 0L) {
+  n_unresolved <- sum(occurrences$new & occurrences$canonical == "Unknown", na.rm = TRUE)
+  if (n_unresolved > 0L) {
     message(sprintf(
-      "%d string(s) could not be resolved and are marked UNKNOWN. ",
-      n_unknown
+      "%d occurrence(s) are unresolved and marked new/Unknown. ",
+      n_unresolved
     ), appendLF = FALSE)
-    message(sprintf("Edit %s to resolve them before running tar_make().", output_path))
+    message("Review them in shiny/affiliation_review_app.R before publishing.")
   }
 
-  readr::write_csv(lookup, output_path)
-  message(sprintf("Lookup written to %s (%d rows).", output_path, nrow(lookup)))
-  invisible(lookup)
+  readr::write_csv(occurrences, output_path)
+  message(sprintf("Lookup written to %s (%d occurrence rows).", output_path, nrow(occurrences)))
+  invisible(occurrences)
+}
+
+#' Read default LLM settings from pipeline config
+#'
+#' @return List with `model` and `base_url`.
+#'
+#' @noRd
+.affiliation_llm_defaults <- function() {
+  cfg <- yaml::read_yaml("config/pipeline.yml")
+  model <- cfg$llm$model
+  base_url <- cfg$llm$base_url
+  if (is.null(model) || !nzchar(as.character(model))) {
+    stop("config/pipeline.yml must define llm.model.", call. = FALSE)
+  }
+  if (is.null(base_url) || !nzchar(as.character(base_url))) {
+    stop("config/pipeline.yml must define llm.base_url.", call. = FALSE)
+  }
+  list(model = as.character(model), base_url = as.character(base_url))
+}
+
+#' Read the existing affiliation lookup
+#'
+#' @param path Path to the lookup CSV.
+#'
+#' @return Data frame with occurrence-level lookup columns.
+#'
+#' @noRd
+.read_existing_lookup <- function(path) {
+  if (!file.exists(path)) {
+    return(.empty_affiliation_lookup())
+  }
+
+  lookup <- readr::read_csv(path, show_col_types = FALSE)
+  if (!all(c("raw", "canonical") %in% names(lookup))) {
+    stop(sprintf(
+      "build_affiliation_lookup: existing lookup %s must contain `raw` and `canonical` columns.",
+      path
+    ))
+  }
+  if (!"new" %in% names(lookup)) {
+    lookup$new <- FALSE
+  }
+
+  required <- c(
+    "record_key", "doi", "doi_url", "title", "year", "authors",
+    "raw", "canonical", "new", "reviewed_at", "review_notes"
+  )
+  for (col in setdiff(required, names(lookup))) {
+    lookup[[col]] <- if (col == "new") FALSE else NA_character_
+  }
+
+  lookup$record_key <- as.character(lookup$record_key)
+  lookup$doi <- as.character(lookup$doi)
+  lookup$doi_url <- as.character(lookup$doi_url)
+  lookup$title <- as.character(lookup$title)
+  lookup$year <- as.character(lookup$year)
+  lookup$authors <- as.character(lookup$authors)
+  lookup$raw <- as.character(lookup$raw)
+  lookup$canonical <- .normalize_unknown_canonical(lookup$canonical)
+  lookup$new <- .coerce_new_flag(lookup$new)
+  lookup$reviewed_at <- as.character(lookup$reviewed_at)
+  lookup$review_notes <- as.character(lookup$review_notes)
+
+  lookup <- lookup[!is.na(lookup$raw) & nzchar(trimws(lookup$raw)), , drop = FALSE]
+  lookup <- lookup[, c(required, setdiff(names(lookup), required)), drop = FALSE]
+
+  occurrence_key <- .occurrence_key(lookup$record_key, lookup$raw)
+  legacy <- is.na(lookup$record_key) | !nzchar(trimws(lookup$record_key))
+  keep <- legacy | !duplicated(occurrence_key)
+  lookup[keep, , drop = FALSE]
+}
+
+#' Empty occurrence-level affiliation lookup
+#'
+#' @return Empty data frame with canonical lookup columns.
+#'
+#' @noRd
+.empty_affiliation_lookup <- function() {
+  data.frame(
+    record_key = character(),
+    doi = character(),
+    doi_url = character(),
+    title = character(),
+    year = character(),
+    authors = character(),
+    raw = character(),
+    canonical = character(),
+    new = logical(),
+    reviewed_at = character(),
+    review_notes = character(),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Build one lookup row per publication/raw-affiliation occurrence
+#'
+#' @param pubs Publication data with `record_key` and `affiliations`.
+#'
+#' @return Occurrence-level lookup data frame.
+#'
+#' @noRd
+.build_affiliation_occurrences <- function(pubs) {
+  if (!"affiliations" %in% names(pubs) || nrow(pubs) == 0L) {
+    return(.empty_affiliation_lookup())
+  }
+
+  get_col <- function(name) {
+    if (name %in% names(pubs)) as.character(pubs[[name]]) else rep(NA_character_, nrow(pubs))
+  }
+  collapse_value <- function(x) {
+    x <- unlist(x)
+    x <- x[!is.na(x) & nzchar(trimws(x))]
+    if (length(x) == 0L) NA_character_ else paste(unique(x), collapse = "; ")
+  }
+
+  record_key <- get_col("record_key")
+  missing_key <- is.na(record_key) | !nzchar(trimws(record_key))
+  record_key[missing_key] <- paste0("row_", which(missing_key))
+
+  doi <- vapply(get_col("doi"), .normalize_doi, character(1L))
+  doi_url <- ifelse(is.na(doi) | !nzchar(doi), NA_character_, paste0("https://doi.org/", doi))
+  title <- get_col("title")
+  year <- get_col("year")
+  authors <- if ("authors" %in% names(pubs)) {
+    vapply(pubs$authors, collapse_value, character(1L))
+  } else {
+    rep(NA_character_, nrow(pubs))
+  }
+
+  pieces <- lapply(seq_len(nrow(pubs)), function(i) {
+    raw <- unique(unlist(pubs$affiliations[[i]]))
+    raw <- raw[!is.na(raw) & nzchar(trimws(raw))]
+    if (length(raw) == 0L) return(NULL)
+    data.frame(
+      record_key = record_key[[i]],
+      doi = doi[[i]],
+      doi_url = doi_url[[i]],
+      title = title[[i]],
+      year = year[[i]],
+      authors = authors[[i]],
+      raw = raw,
+      canonical = NA_character_,
+      new = TRUE,
+      reviewed_at = NA_character_,
+      review_notes = NA_character_,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  occurrences <- do.call(rbind, pieces)
+  if (is.null(occurrences) || nrow(occurrences) == 0L) {
+    return(.empty_affiliation_lookup())
+  }
+
+  occurrences[!duplicated(.occurrence_key(occurrences$record_key, occurrences$raw)), , drop = FALSE]
+}
+
+#' Apply previously reviewed occurrence-level decisions to current rows
+#'
+#' @param occurrences Current occurrence inventory.
+#' @param existing_lookup Existing lookup rows.
+#'
+#' @return Current rows with preserved canonical review fields where available.
+#'
+#' @noRd
+.apply_existing_occurrence_reviews <- function(occurrences, existing_lookup) {
+  if (nrow(occurrences) == 0L || nrow(existing_lookup) == 0L) {
+    return(occurrences)
+  }
+
+  existing_occ <- existing_lookup[
+    !is.na(existing_lookup$record_key) & nzchar(trimws(existing_lookup$record_key)),
+    ,
+    drop = FALSE
+  ]
+  if (nrow(existing_occ) == 0L) {
+    return(occurrences)
+  }
+
+  existing_key <- .occurrence_key(existing_occ$record_key, existing_occ$raw)
+  names(existing_key) <- seq_along(existing_key)
+  current_key <- .occurrence_key(occurrences$record_key, occurrences$raw)
+  match_idx <- match(current_key, existing_key)
+  matched <- which(!is.na(match_idx))
+  if (length(matched) == 0L) {
+    return(occurrences)
+  }
+
+  old <- existing_occ[match_idx[matched], , drop = FALSE]
+  preserve_cols <- c("canonical", "new", "reviewed_at", "review_notes")
+  for (col in preserve_cols) {
+    occurrences[matched, col] <- old[[col]]
+  }
+  occurrences
+}
+
+#' Apply a single unambiguous reviewed canonical value for repeated raw strings
+#'
+#' @param occurrences Current occurrence inventory.
+#' @param existing_lookup Existing lookup rows.
+#'
+#' @return Current rows with obvious repeated raw strings filled.
+#'
+#' @noRd
+.apply_trusted_raw_canonical <- function(occurrences, existing_lookup) {
+  if (nrow(occurrences) == 0L || nrow(existing_lookup) == 0L) {
+    return(occurrences)
+  }
+
+  reviewed <- existing_lookup[
+    !existing_lookup$new &
+      !is.na(existing_lookup$canonical) &
+      nzchar(trimws(existing_lookup$canonical)) &
+      existing_lookup$canonical != "Unknown",
+    ,
+    drop = FALSE
+  ]
+  if (nrow(reviewed) == 0L) {
+    return(occurrences)
+  }
+
+  raw_values <- split(reviewed$canonical, reviewed$raw)
+  trusted <- vapply(raw_values, function(x) {
+    vals <- sort(unique(x[!is.na(x) & nzchar(trimws(x))]))
+    if (length(vals) == 1L) vals[[1L]] else NA_character_
+  }, character(1L))
+  trusted <- trusted[!is.na(trusted)]
+  if (length(trusted) == 0L) {
+    return(occurrences)
+  }
+
+  needs_value <- is.na(occurrences$canonical) | !nzchar(trimws(occurrences$canonical))
+  idx <- which(needs_value & occurrences$raw %in% names(trusted))
+  if (length(idx) > 0L) {
+    occurrences$canonical[idx] <- unname(trusted[occurrences$raw[idx]])
+    occurrences$new[idx] <- FALSE
+  }
+  occurrences
+}
+
+#' Preserve existing occurrence rows outside the current publish set
+#'
+#' @param current Current occurrence rows.
+#' @param existing_lookup Existing lookup rows.
+#'
+#' @return Combined lookup rows.
+#'
+#' @noRd
+.append_existing_occurrences_not_current <- function(current, existing_lookup) {
+  if (nrow(existing_lookup) == 0L) {
+    return(current)
+  }
+
+  existing_occ <- existing_lookup[
+    !is.na(existing_lookup$record_key) & nzchar(trimws(existing_lookup$record_key)),
+    ,
+    drop = FALSE
+  ]
+  if (nrow(existing_occ) == 0L) {
+    return(current)
+  }
+
+  current_key <- .occurrence_key(current$record_key, current$raw)
+  existing_key <- .occurrence_key(existing_occ$record_key, existing_occ$raw)
+  old <- existing_occ[!existing_key %in% current_key, , drop = FALSE]
+  .bind_lookup_rows(current, old)
+}
+
+#' Order lookup rows for efficient review
+#'
+#' @param lookup Occurrence-level lookup rows.
+#'
+#' @return Ordered lookup rows.
+#'
+#' @noRd
+.order_affiliation_lookup <- function(lookup) {
+  lookup[order(
+    !lookup$new,
+    lookup$canonical != "Unknown",
+    lookup$raw,
+    lookup$doi,
+    na.last = TRUE
+  ), , drop = FALSE]
+}
+
+#' Bind lookup rows while preserving columns
+#'
+#' @param x First data frame.
+#' @param y Second data frame.
+#'
+#' @return Row-bound data frame.
+#'
+#' @noRd
+.bind_lookup_rows <- function(x, y) {
+  for (col in setdiff(names(y), names(x))) x[[col]] <- NA
+  for (col in setdiff(names(x), names(y))) y[[col]] <- NA
+  y <- y[, names(x), drop = FALSE]
+  rbind(x, y)
+}
+
+#' Build an occurrence key
+#'
+#' @param record_key Publication record key.
+#' @param raw Raw affiliation string.
+#'
+#' @return Character occurrence key.
+#'
+#' @noRd
+.occurrence_key <- function(record_key, raw) {
+  paste(as.character(record_key), as.character(raw), sep = "\r")
+}
+
+#' Combine file and lookup-derived canonical institution references
+#'
+#' @param reference_path Path to the institution reference text file.
+#' @param existing_lookup Existing affiliation lookup data frame.
+#'
+#' @return Character vector of canonical institution names.
+#'
+#' @noRd
+.combined_reference <- function(reference_path, existing_lookup) {
+  reference <- .load_reference(reference_path)
+  established <- character()
+  if (nrow(existing_lookup) > 0L) {
+    reviewed <- !existing_lookup$new
+    established <- existing_lookup$canonical[
+      reviewed &
+        !is.na(existing_lookup$canonical) &
+        nzchar(trimws(existing_lookup$canonical)) &
+        existing_lookup$canonical != "Unknown"
+    ]
+  }
+  sort(unique(c(reference, established)))
 }
 
 #' Read the institution reference list from a plain-text file
@@ -140,6 +558,46 @@ build_affiliation_lookup <- function(
   lines[nzchar(lines)]
 }
 
+#' Read a prompt template from disk and validate its dynamic placeholder
+#'
+#' @param path Path to prompt template.
+#' @param required_placeholder Placeholder that must appear in the template.
+#'
+#' @return Prompt template text.
+#'
+#' @noRd
+.read_prompt_template <- function(path, required_placeholder) {
+  if (!file.exists(path)) {
+    stop(sprintf("Prompt template not found: %s", path), call. = FALSE)
+  }
+  template <- readr::read_file(path)
+  if (!grepl(required_placeholder, template, fixed = TRUE)) {
+    stop(sprintf(
+      "Prompt template %s must contain placeholder %s.",
+      path,
+      required_placeholder
+    ), call. = FALSE)
+  }
+  template
+}
+
+#' Normalize a DOI value for trace output
+#'
+#' @param doi DOI value, possibly already expressed as a URL.
+#'
+#' @return Normalized DOI string or `NA_character_`.
+#'
+#' @noRd
+.normalize_doi <- function(doi) {
+  doi <- trimws(as.character(doi))
+  if (length(doi) == 0L || is.na(doi) || !nzchar(doi)) {
+    return(NA_character_)
+  }
+  doi <- sub("^https?://(dx\\.)?doi\\.org/", "", doi, ignore.case = TRUE)
+  doi <- sub("^doi:\\s*", "", doi, ignore.case = TRUE)
+  trimws(doi)
+}
+
 #' Send one batch of clusters to the LLM and return canonical names
 #'
 #' @param clusters Named list of character vectors (cluster ID → member strings).
@@ -147,13 +605,23 @@ build_affiliation_lookup <- function(
 #' @param api_key API key.
 #' @param base_url OpenAI-compatible base URL.
 #' @param reference Character vector of known canonical institution names.
+#' @param system_prompt_template System prompt template text.
+#' @param user_prompt_template User prompt template text.
 #'
 #' @return Character vector of canonical names in the same order as `clusters`.
 #'
 #' @noRd
-.label_clusters_llm <- function(clusters, model, api_key, base_url, reference) {
-  user_msg   <- .build_user_message(clusters)
-  system_msg <- .affiliation_system_prompt(reference)
+.label_clusters_llm <- function(
+  clusters,
+  model,
+  api_key,
+  base_url,
+  reference,
+  system_prompt_template,
+  user_prompt_template
+) {
+  user_msg   <- .build_user_message(clusters, user_prompt_template)
+  system_msg <- .affiliation_system_prompt(reference, system_prompt_template)
 
   endpoint <- paste0(gsub("/$", "", base_url), "/chat/completions")
 
@@ -187,7 +655,7 @@ build_affiliation_lookup <- function(
         httr2::resp_body_string(resp)
       ))
     }
-    return(rep("UNKNOWN", length(clusters)))
+    return(rep("Unknown", length(clusters)))
   }
 
   body     <- httr2::resp_body_json(resp)
@@ -208,25 +676,26 @@ build_affiliation_lookup <- function(
   )
 
   if (is.null(parsed) || !all(c("cluster_id", "canonical") %in% names(parsed))) {
-    return(rep("UNKNOWN", length(clusters)))
+    return(rep("Unknown", length(clusters)))
   }
 
   result_map <- setNames(as.character(parsed$canonical), as.character(parsed$cluster_id))
 
   vapply(names(clusters), function(cid) {
     val <- result_map[[cid]]
-    if (is.null(val) || is.na(val) || !nzchar(val)) "UNKNOWN" else val
+    .normalize_unknown_canonical(if (is.null(val) || is.na(val) || !nzchar(val)) "Unknown" else val)
   }, character(1L))
 }
 
 #' Format the user message for one batch of clusters
 #'
 #' @param clusters Named list of character vectors (cluster ID → member strings).
+#' @param user_prompt_template User prompt template text.
 #'
 #' @return A single character string containing the formatted prompt.
 #'
 #' @noRd
-.build_user_message <- function(clusters) {
+.build_user_message <- function(clusters, user_prompt_template) {
   cluster_blocks <- vapply(seq_along(clusters), function(i) {
     cid     <- names(clusters)[i]
     members <- clusters[[i]]
@@ -234,16 +703,11 @@ build_affiliation_lookup <- function(
     sprintf("Cluster %s:\n%s", cid, lines)
   }, character(1L))
 
-  paste0(
-    "Identify the canonical institution name for each cluster of affiliation ",
-    "strings below. Each cluster groups strings that likely refer to the same ",
-    "institution.\n\n",
+  gsub(
+    "{{cluster_blocks}}",
     paste(cluster_blocks, collapse = "\n\n"),
-    "\n\nRespond with a JSON array only — no other text, no markdown. ",
-    "Each element must have exactly two fields:\n",
-    "  \"cluster_id\": the cluster number (integer)\n",
-    "  \"canonical\": the full official institution name, or \"UNKNOWN\"\n\n",
-    "Example: [{\"cluster_id\": 1, \"canonical\": \"University of California, Davis\"}, ...]"
+    user_prompt_template,
+    fixed = TRUE
   )
 }
 
@@ -252,11 +716,12 @@ build_affiliation_lookup <- function(
 #' @param reference Character vector of canonical institution names produced by
 #'   [build_institution_reference()]. If empty, the reference section is
 #'   omitted from the prompt.
+#' @param system_prompt_template System prompt template text.
 #'
 #' @return A single character string containing the system prompt.
 #'
 #' @noRd
-.affiliation_system_prompt <- function(reference) {
+.affiliation_system_prompt <- function(reference, system_prompt_template) {
   ref_section <- if (length(reference) > 0L) {
     paste0(
       "Known institutions in this dataset — if a cluster matches one of these, ",
@@ -268,25 +733,39 @@ build_affiliation_lookup <- function(
     ""
   }
 
-  paste0(
-    "You are an expert in academic and government institution names, with deep ",
-    "knowledge of California research institutions and water agencies. Your task ",
-    "is to identify the single canonical (full, official) name for each cluster ",
-    "of affiliation strings you are given.\n\n",
-
-    "Rules:\n",
-    "1. Always use the full official institution name — no abbreviations.\n",
-    "2. University of California campuses: \"University of California, [City]\"\n",
-    "   e.g., \"University of California, Davis\" (not \"UC Davis\" or \"UCD\").\n",
-    "3. California State University campuses: use the official campus name,\n",
-    "   e.g., \"California State University, Sacramento\" or \"San Jose State University\".\n",
-    "4. Government agencies: spell out the full official name,\n",
-    "   e.g., \"U.S. Geological Survey\", \"California Department of Water Resources\".\n",
-    "5. If a cluster clearly contains strings from two genuinely different\n",
-    "   institutions, return \"UNKNOWN\" — do not pick one arbitrarily.\n",
-    "6. If you cannot confidently identify the institution, return \"UNKNOWN\".\n",
-    "   It is better to return UNKNOWN than to guess incorrectly.\n\n",
-
-    ref_section
+  gsub(
+    "{{reference_section}}",
+    ref_section,
+    system_prompt_template,
+    fixed = TRUE
   )
+}
+
+#' Normalize unresolved canonical institution markers
+#'
+#' @param x Character vector of canonical institution names.
+#'
+#' @return `x`, with any case variant of `"unknown"` converted to `"Unknown"`.
+#'
+#' @noRd
+.normalize_unknown_canonical <- function(x) {
+  x <- as.character(x)
+  x[!is.na(x) & tolower(trimws(x)) == "unknown"] <- "Unknown"
+  x
+}
+
+#' Coerce lookup review flags to logical
+#'
+#' @param x Vector read from the lookup `new` column.
+#'
+#' @return Logical vector.
+#'
+#' @noRd
+.coerce_new_flag <- function(x) {
+  if (is.logical(x)) {
+    return(replace(x, is.na(x), FALSE))
+  }
+  vals <- tolower(trimws(as.character(x)))
+  vals[is.na(vals) | !nzchar(vals)] <- "false"
+  vals %in% c("true", "t", "1", "yes", "y")
 }
