@@ -1,37 +1,37 @@
 doi,doi_url,year,title,division,new
-10.1002/jwmg.70157,https://doi.org/10.1002/jwmg.70157,2026,Seasonal and decadal changes in winter body condition of four sympatric diving ducks,SWP - Integrated Science and Engineering,TRUE
+10.1002/jwmg.70157,https://doi.org/10.1002/jwmg.70157,2026,Seasonal and decadal changes in winter body condition of four sympatric diving ducks,SWP - Integrated Science and Engineering,FALSE
 10.1002/qj.70019,https://doi.org/10.1002/qj.70019,2026,Impacts of atmospheric river reconnaissance dropsondes on ECMWF Integrated Forecasting System precipitation forecasts,Flood Operations,FALSE
-10.1002/rra.70156,https://doi.org/10.1002/rra.70156,2026,Non-Physical Barrier Design and Environmental Conditions Alter Routing and Survival of Juvenile Chinook Salmon (Oncorhynchus tshawytscha) in the Sacramento-San Joaquin River Delta,Regional Assistance,TRUE
-10.1002/vzj2.70065,https://doi.org/10.1002/vzj2.70065,2026,Soil structure changes under reduced tillage and cover cropping enhance carbon mineralization in Mediterranean croplands,Regional Assistance,TRUE
+10.1002/rra.70156,https://doi.org/10.1002/rra.70156,2026,Non-Physical Barrier Design and Environmental Conditions Alter Routing and Survival of Juvenile Chinook Salmon (Oncorhynchus tshawytscha) in the Sacramento-San Joaquin River Delta,Regional Assistance,FALSE
+10.1002/vzj2.70065,https://doi.org/10.1002/vzj2.70065,2026,Soil structure changes under reduced tillage and cover cropping enhance carbon mineralization in Mediterranean croplands,Regional Assistance,FALSE
 10.1007/s11356-026-37659-2,https://doi.org/10.1007/s11356-026-37659-2,2026,Impact of fog on California waterfowl flight activity: historical and modern insights into effects post-Clean Air Act,,TRUE
-10.1007/s12237-026-01686-6,https://doi.org/10.1007/s12237-026-01686-6,2026,Pulsed Zooplankton Production in Seasonally Managed Wetlands Could Supplement Food Availability for a Threatened Fishery in the San Francisco Estuary,SWP - Integrated Science and Engineering,TRUE
+10.1007/s12237-026-01686-6,https://doi.org/10.1007/s12237-026-01686-6,2026,Pulsed Zooplankton Production in Seasonally Managed Wetlands Could Supplement Food Availability for a Threatened Fishery in the San Francisco Estuary,SWP - Integrated Science and Engineering,FALSE
 10.1007/s13253-024-00649-3,https://doi.org/10.1007/s13253-024-00649-3,2026,Stopping Rule Sampling to Monitor and Protect Endangered Species,SWP - Integrated Science and Engineering,FALSE
 10.1016/j.desal.2025.119674,https://doi.org/10.1016/j.desal.2025.119674,2026,"Pilot-scale membrane distillation modeling: Validation, comparison, and consensus",Multibenefit Initiatives,FALSE
-10.1016/j.fishres.2026.107689,https://doi.org/10.1016/j.fishres.2026.107689,2026,Retention rate and biological effects of Floy and FRyID tags on juvenile longfin smelt (Spirinchus thaleichthys),SWP - Integrated Science and Engineering,TRUE
-10.1029/2025gh001627,https://doi.org/10.1029/2025gh001627,2026,Statewide Intensification of Harmful Algal Blooms Across California Lakes and Reservoirs,SWP - Integrated Science and Engineering,TRUE
-10.1029/2025jd044818,https://doi.org/10.1029/2025jd044818,2026,Evaluation of GFSv16 for Near-Real-Time Data Impact Studies During the Atmospheric River Reconnaissance Program 2022,Flood Operations,TRUE
-10.1029/2025jd045006,https://doi.org/10.1029/2025jd045006,2026,The Sierra Barrier Jet and Distribution of Precipitation in Northern California,Flood Operations,TRUE
-10.1038/s41597-026-06625-5,https://doi.org/10.1038/s41597-026-06625-5,2026,A Global High-Resolution Precipitation Climate Record: PERSIANN-CCS-CDR Version 2.0,Flood Operations,TRUE
-10.1071/wf25161,https://doi.org/10.1071/wf25161,2026,Probabilistic prediction of post-fire debris-flow runout and implications for prefire assessments of post-fire hazards,Flood Operations,TRUE
-10.1111/rec.70425,https://doi.org/10.1111/rec.70425,2026,Investigating the efficacy of tidal wetland restoration in enhancing aquatic food web resources for native fishes,SWP - Integrated Science and Engineering,TRUE
-10.3354/esr01471,https://doi.org/10.3354/esr01471,2026,Morphometric variation and sexual dimorphism of endangered longfin smelt Spirinchus thaleichthys in the San Francisco Estuary,SWP - Integrated Science and Engineering,TRUE
-10.5194/hess-30-1719-2026,https://doi.org/10.5194/hess-30-1719-2026,2026,Leveraging normalized data to improve point-scale estimates of precipitation-temperature scaling rates,Flood Operations,TRUE
-10.1002/eap.3079,https://doi.org/10.1002/eap.3079,2025,Unfriendly neighbors: When facilitation does not contribute to restoration success in tidal marsh,,FALSE
-10.1002/eap.70146,https://doi.org/10.1002/eap.70146,2025,Floodplain inundation and lateral connectivity promote productivity in a managed river ecosystem,,FALSE
-10.1002/ecs2.70391,https://doi.org/10.1002/ecs2.70391,2025,Ephemeral flows and vegetation productivity: Insights for desert conservation,Sustainable Groundwater Management,TRUE
+10.1016/j.fishres.2026.107689,https://doi.org/10.1016/j.fishres.2026.107689,2026,Retention rate and biological effects of Floy and FRyID tags on juvenile longfin smelt (Spirinchus thaleichthys),SWP - Integrated Science and Engineering,FALSE
+10.1029/2025gh001627,https://doi.org/10.1029/2025gh001627,2026,Statewide Intensification of Harmful Algal Blooms Across California Lakes and Reservoirs,SWP - Integrated Science and Engineering,FALSE
+10.1029/2025jd044818,https://doi.org/10.1029/2025jd044818,2026,Evaluation of GFSv16 for Near-Real-Time Data Impact Studies During the Atmospheric River Reconnaissance Program 2022,Flood Operations,FALSE
+10.1029/2025jd045006,https://doi.org/10.1029/2025jd045006,2026,The Sierra Barrier Jet and Distribution of Precipitation in Northern California,Flood Operations,FALSE
+10.1038/s41597-026-06625-5,https://doi.org/10.1038/s41597-026-06625-5,2026,A Global High-Resolution Precipitation Climate Record: PERSIANN-CCS-CDR Version 2.0,Flood Operations,FALSE
+10.1071/wf25161,https://doi.org/10.1071/wf25161,2026,Probabilistic prediction of post-fire debris-flow runout and implications for prefire assessments of post-fire hazards,Flood Operations,FALSE
+10.1111/rec.70425,https://doi.org/10.1111/rec.70425,2026,Investigating the efficacy of tidal wetland restoration in enhancing aquatic food web resources for native fishes,SWP - Integrated Science and Engineering,FALSE
+10.3354/esr01471,https://doi.org/10.3354/esr01471,2026,Morphometric variation and sexual dimorphism of endangered longfin smelt Spirinchus thaleichthys in the San Francisco Estuary,SWP - Integrated Science and Engineering,FALSE
+10.5194/hess-30-1719-2026,https://doi.org/10.5194/hess-30-1719-2026,2026,Leveraging normalized data to improve point-scale estimates of precipitation-temperature scaling rates,Flood Operations,FALSE
+10.1002/eap.3079,https://doi.org/10.1002/eap.3079,2025,Unfriendly neighbors: When facilitation does not contribute to restoration success in tidal marsh,,TRUE
+10.1002/eap.70146,https://doi.org/10.1002/eap.70146,2025,Floodplain inundation and lateral connectivity promote productivity in a managed river ecosystem,,TRUE
+10.1002/ecs2.70391,https://doi.org/10.1002/ecs2.70391,2025,Ephemeral flows and vegetation productivity: Insights for desert conservation,Sustainable Groundwater Management,FALSE
 10.1002/qj.5049,https://doi.org/10.1002/qj.5049,2025,An overview of drifting-buoy deployments in atmospheric river reconnaissance from 2019 to 2024,Flood Operations,FALSE
 10.1007/s00382-025-07583-1,https://doi.org/10.1007/s00382-025-07583-1,2025,Heresy in ENSO teleconnections: atmospheric rivers as disruptors of canonical seasonal precipitation anomalies in the Southwestern US,Flood Operations,FALSE
 10.1007/s10641-025-01720-9,https://doi.org/10.1007/s10641-025-01720-9,2025,Decoupling abundance and timing of presence to characterize distributional patterns of longfin smelt (Spirinchus thaleichthys) in the San Francisco Estuary,SWP - Integrated Science and Engineering,FALSE
 10.1007/s11869-025-01871-9,https://doi.org/10.1007/s11869-025-01871-9,2025,Quantifying the effectiveness of superposed roughness elements to reduce dust emissions at the Salton Sea using computational fluid dynamics simulations,,TRUE
 10.1016/j.agrformet.2025.110735,https://doi.org/10.1016/j.agrformet.2025.110735,2025,Dynamic methane emissions in a restored wetland: Decadal insights into uncertain climate outcomes and critical science needs,Multibenefit Initiatives,FALSE
 10.1016/j.apsoil.2025.106419,https://doi.org/10.1016/j.apsoil.2025.106419,2025,Effects of grazing exclusion and pasture management on soil microbial communities in Californian irrigated pastures,Regional Assistance,FALSE
-10.1016/j.coche.2024.101078,https://doi.org/10.1016/j.coche.2024.101078,2025,Distributed water desalination and purification systems: perspective and future directions,,FALSE
+10.1016/j.coche.2024.101078,https://doi.org/10.1016/j.coche.2024.101078,2025,Distributed water desalination and purification systems: perspective and future directions,,TRUE
 10.1016/j.ejrh.2025.102339,https://doi.org/10.1016/j.ejrh.2025.102339,2025,Enhancing the accuracy and generalizability of reference evapotranspiration forecasting in California using deep global learning,SWP - Model Support,FALSE
 10.1016/j.envsoft.2025.106372,https://doi.org/10.1016/j.envsoft.2025.106372,2025,Texture2Par: A texture-driven tool for estimating subsurface hydraulic properties,Regional Assistance,FALSE
-10.1016/j.jhydrol.2025.133362,https://doi.org/10.1016/j.jhydrol.2025.133362,2025,A regional assessment of the operational National Water Model in the San Francisco Bay area for the 2018-2019 water year,,FALSE
+10.1016/j.jhydrol.2025.133362,https://doi.org/10.1016/j.jhydrol.2025.133362,2025,A regional assessment of the operational National Water Model in the San Francisco Bay area for the 2018-2019 water year,,TRUE
 10.1016/j.jhydrol.2025.133401,https://doi.org/10.1016/j.jhydrol.2025.133401,2025,What is the current state and potential for hydrologic models to simulate vegetation dynamically?,Regional Assistance,FALSE
 10.1016/j.watres.2025.123462,https://doi.org/10.1016/j.watres.2025.123462,2025,Techno-economic assessment of distributed wellhead RO water treatment for nitrate removal and salinity reduction: A field study in small disadvantaged communities,SWP - Engineering,FALSE
-10.1029/2024gl113303,https://doi.org/10.1029/2024gl113303,2025,Robust Multi-Decadal Variability of Madden-Julian Oscillation Amplitude in the 20th Century,,FALSE
+10.1029/2024gl113303,https://doi.org/10.1029/2024gl113303,2025,Robust Multi-Decadal Variability of Madden-Julian Oscillation Amplitude in the 20th Century,,TRUE
 10.1029/2024gl113370,https://doi.org/10.1029/2024gl113370,2025,CYGNSS Satellite Sampling of Surface Heat Fluxes Across Atmospheric River Life Cycles,Flood Operations,FALSE
 10.1029/2024gl113956,https://doi.org/10.1029/2024gl113956,2025,Decadal Variability of the MJO and Implications for Southwestern United States Wintertime Precipitation Predictability,Flood Operations,FALSE
 10.1029/2024jd041966,https://doi.org/10.1029/2024jd041966,2025,Characteristics of Precipitation Patterns in Moisture-Dominated Versus Wind-Dominated Atmospheric Rivers Over Western North America,Flood Operations,FALSE
@@ -44,24 +44,24 @@ doi,doi_url,year,title,division,new
 10.1029/2025gl114629,https://doi.org/10.1029/2025gl114629,2025,Decelerating Response of Western US Runoff to Shrinking Snowpacks,Flood Operations,FALSE
 10.1029/2025gl115639,https://doi.org/10.1029/2025gl115639,2025,Impact of Airborne Radio Occultation Observations on Short Term Precipitation Forecasts of an Atmospheric River,Flood Operations,FALSE
 10.1029/2025gl115972,https://doi.org/10.1029/2025gl115972,2025,Seasonality in the Predictive Skill of Southwest United States Precipitation in the Seasonal Forecast Systems,Flood Operations,FALSE
-10.1029/2025gl117069,https://doi.org/10.1029/2025gl117069,2025,Adaptive Sampling of the Upper Ocean by Autonomous Floats During Atmospheric River Precipitation,Flood Operations,TRUE
+10.1029/2025gl117069,https://doi.org/10.1029/2025gl117069,2025,Adaptive Sampling of the Upper Ocean by Autonomous Floats During Atmospheric River Precipitation,Flood Operations,FALSE
 10.1029/2025gl118477,https://doi.org/10.1029/2025gl118477,2025,Lightning Characteristics of Atmospheric Rivers Over the Americas Observed by GOES-16,Flood Operations,FALSE
-10.1029/2025jd043580,https://doi.org/10.1029/2025jd043580,2025,A Trajectory-Based Method for Estimating the Contribution of Landfalling Atmospheric Rivers to Top-Decile Precipitation Across Colorado,Flood Operations,TRUE
-10.1038/s41467-024-55176-z,https://doi.org/10.1038/s41467-024-55176-z,2025,Mitigating CaCO3 crystal nucleation and growth through continuous ion displacement via alternating electric fields,,FALSE
+10.1029/2025jd043580,https://doi.org/10.1029/2025jd043580,2025,A Trajectory-Based Method for Estimating the Contribution of Landfalling Atmospheric Rivers to Top-Decile Precipitation Across Colorado,Flood Operations,FALSE
+10.1038/s41467-024-55176-z,https://doi.org/10.1038/s41467-024-55176-z,2025,Mitigating CaCO3 crystal nucleation and growth through continuous ion displacement via alternating electric fields,,TRUE
 10.1038/s41598-024-77031-3,https://doi.org/10.1038/s41598-024-77031-3,2025,A holistic stochastic model for precipitation events,Flood Operations,FALSE
 10.1038/s41598-025-15932-7,https://doi.org/10.1038/s41598-025-15932-7,2025,"Hybrid physical-statistical framework for seasonal streamflow forecasting in the Upper Feather River Basin, California",Executive,FALSE
 10.1038/s41612-025-00949-6,https://doi.org/10.1038/s41612-025-00949-6,2025,Are AI weather models learning atmospheric physics? A sensitivity analysis of cyclone Xynthia,Flood Operations,FALSE
-10.1038/s41612-025-01265-9,https://doi.org/10.1038/s41612-025-01265-9,2025,A regional high resolution AI weather model for the prediction of atmospheric rivers and extreme precipitation,Flood Operations,TRUE
+10.1038/s41612-025-01265-9,https://doi.org/10.1038/s41612-025-01265-9,2025,A regional high resolution AI weather model for the prediction of atmospheric rivers and extreme precipitation,Flood Operations,FALSE
 10.1038/s43247-025-02235-y,https://doi.org/10.1038/s43247-025-02235-y,2025,Role of evolving sea surface temperature modes of variability in improving seasonal precipitation forecasts,Flood Operations,FALSE
 10.1038/s43247-025-03000-x,https://doi.org/10.1038/s43247-025-03000-x,2025,Water sources and land capacitor effects stimulate observed summer Arctic moistening and warming,,TRUE
-10.1061/jidedh.ireng-10528,https://doi.org/10.1061/jidedh.ireng-10528,2025,Production of Agricultural Water and Nutrients from Brackish Water Sources,South Central Region Office,TRUE
-10.1071/wf25136,https://doi.org/10.1071/wf25136,2025,Insights from a 25-year database of post-fire debris flows in California,Flood Operations,TRUE
-10.1088/1748-9326/ade45b,https://doi.org/10.1088/1748-9326/ade45b,2025,"Explaining hot spots of methane flux in a restored wetland: the role of water level, soil disturbance, and methanotrophy",,FALSE
+10.1061/jidedh.ireng-10528,https://doi.org/10.1061/jidedh.ireng-10528,2025,Production of Agricultural Water and Nutrients from Brackish Water Sources,South Central Region Office,FALSE
+10.1071/wf25136,https://doi.org/10.1071/wf25136,2025,Insights from a 25-year database of post-fire debris flows in California,Flood Operations,FALSE
+10.1088/1748-9326/ade45b,https://doi.org/10.1088/1748-9326/ade45b,2025,"Explaining hot spots of methane flux in a restored wetland: the role of water level, soil disturbance, and methanotrophy",,TRUE
 10.1088/2515-7620/add3cc,https://doi.org/10.1088/2515-7620/add3cc,2025,The 1991 California ‘Miracle March’: precipitation myth or miracle?,Flood Operations,FALSE
 10.1093/tafafs/vnae009,https://doi.org/10.1093/tafafs/vnae009,2025,Size mediates relative risk and anti-predation response in juvenile sturgeon,SWP - Model Support,FALSE
 10.1111/1755-0998.13777,https://doi.org/10.1111/1755-0998.13777,2025,Rapid CRISPR-Cas13a genetic identification enables new opportunities for listed Chinook salmon management,SWP - Integrated Science and Engineering,FALSE
 10.1111/eva.70168,https://doi.org/10.1111/eva.70168,2025,Population Genomic Insights Into Recent Nutria (Myocastor coypus) Invasion Dynamics,Flood Operations,FALSE
-10.1111/gwat.13474,https://doi.org/10.1111/gwat.13474,2025,ARCHI: A New R Package for Automated Imputation of Regionally Correlated Hydrologic Records,,FALSE
+10.1111/gwat.13474,https://doi.org/10.1111/gwat.13474,2025,ARCHI: A New R Package for Automated Imputation of Regionally Correlated Hydrologic Records,,TRUE
 10.1175/bams-d-23-0336.1,https://doi.org/10.1175/bams-d-23-0336.1,2025,Beyond Expectations: Investigating Anomalous 2022-23 Winter Weather Conditions and Water Resources Impacts in California,Flood Operations,FALSE
 10.1175/jcli-d-24-0287.1,https://doi.org/10.1175/jcli-d-24-0287.1,2025,How Do Model Biases Affect Large-Scale Teleconnections That Control Southwest U.S. Precipitation? Part II: Seasonal Models,Flood Operations,FALSE
 10.1175/mwr-d-24-0136.1,https://doi.org/10.1175/mwr-d-24-0136.1,2025,CW3E’s West-WRF 200-Member Ensemble,Flood Operations,FALSE
@@ -74,51 +74,51 @@ doi,doi_url,year,title,division,new
 10.15447/sfews.2025v23iss4art4,https://doi.org/10.15447/sfews.2025v23iss4art4,2025,Effects of Flow on Pesticides in Water and Zooplankton in the Northern Sacramento-San Joaquin Delta,,TRUE
 10.21663/eeg-d-24-00032,https://doi.org/10.21663/eeg-d-24-00032,2025,Analysis of Near-Surface Shear Wave Velocity Data for Site Response Applications in the Sacramento-San Joaquin Delta Region of California,SWP - Engineering,FALSE
 10.3389/frsen.2025.1519420,https://doi.org/10.3389/frsen.2025.1519420,2025,"Landcover-specific calibration of the optical trapezoid model (OPTRAM) for soil moisture monitoring in the Central Valley, California",Sustainable Groundwater Management,FALSE
-10.3390/geotechnics5020041,https://doi.org/10.3390/geotechnics5020041,2025,Nonlinear Viscoplastic Modeling of the Feijão Dam 1 Failure,SWP - Engineering,TRUE
+10.3390/geotechnics5020041,https://doi.org/10.3390/geotechnics5020041,2025,Nonlinear Viscoplastic Modeling of the Feijão Dam 1 Failure,SWP - Engineering,FALSE
 10.3390/rs17091654,https://doi.org/10.3390/rs17091654,2025,"Passive Microwave Imagers, Their Applications, and Benefits: A Review",Flood Operations,FALSE
 10.3390/w17020254,https://doi.org/10.3390/w17020254,2025,Ionic Strength and pH-Responsive Ultrafiltration Membrane to Overcome the Typical Permeability-Selectivity Tradeoff,Regional Assistance,FALSE
-10.3390/w17162363,https://doi.org/10.3390/w17162363,2025,Real-Time Energy Optimal Control of Two-Stage Reverse Osmosis Desalination,Planning,TRUE
+10.3390/w17162363,https://doi.org/10.3390/w17162363,2025,Real-Time Energy Optimal Control of Two-Stage Reverse Osmosis Desalination,Planning,FALSE
 10.5194/amt-18-1485-2025,https://doi.org/10.5194/amt-18-1485-2025,2025,A novel assessment of the vertical velocity correction for non-orthogonal sonic anemometers,Regional Assistance,FALSE
-10.5194/amt-18-3361-2025,https://doi.org/10.5194/amt-18-3361-2025,2025,Observing atmospheric rivers using multi-GNSS airborne radio occultation: system description and data evaluation,Flood Operations,TRUE
-10.5194/hess-29-6829-2025,https://doi.org/10.5194/hess-29-6829-2025,2025,Ensembling differentiable process-based and data-driven models with diverse meteorological forcing datasets to advance streamflow simulation,Flood Operations,TRUE
-10.1002/hyp.15314,https://doi.org/10.1002/hyp.15314,2024,Quantifying the Impacts of Fire-Related Perturbations in WRF-Hydro Terrestrial Water Budget Simulations in California's Feather River Basin,,FALSE
+10.5194/amt-18-3361-2025,https://doi.org/10.5194/amt-18-3361-2025,2025,Observing atmospheric rivers using multi-GNSS airborne radio occultation: system description and data evaluation,Flood Operations,FALSE
+10.5194/hess-29-6829-2025,https://doi.org/10.5194/hess-29-6829-2025,2025,Ensembling differentiable process-based and data-driven models with diverse meteorological forcing datasets to advance streamflow simulation,Flood Operations,FALSE
+10.1002/hyp.15314,https://doi.org/10.1002/hyp.15314,2024,Quantifying the Impacts of Fire-Related Perturbations in WRF-Hydro Terrestrial Water Budget Simulations in California's Feather River Basin,,TRUE
 10.1002/naaq.10327,https://doi.org/10.1002/naaq.10327,2024,Laboratory-bred Longfin Smelt produced offspring in the first year in captivity,SWP - Integrated Science and Engineering,FALSE
 10.1007/s00360-024-01568-y,https://doi.org/10.1007/s00360-024-01568-y,2024,Effects of low temperature on growth and metabolism of larval green sturgeon (Acipenser medirostris) across early ontogeny,SWP - Integrated Science and Engineering,FALSE
 10.1007/s10533-023-01095-y,https://doi.org/10.1007/s10533-023-01095-y,2024,Hot spots and hot moments of greenhouse gas emissions in agricultural peatlands,Multibenefit Initiatives,FALSE
 10.1007/s10592-023-01588-1,https://doi.org/10.1007/s10592-023-01588-1,2024,Evolutionary history of the salt marsh harvest mouse mitogenome is concordant with ancient patterns of sea level rise,SWP - Integrated Science and Engineering,FALSE
 10.1016/j.aqrep.2024.102503,https://doi.org/10.1016/j.aqrep.2024.102503,2024,Impact of salinity and body size on sperm motility in three California smelt species,SWP - Integrated Science and Engineering,FALSE
-10.1016/j.cliser.2024.100485,https://doi.org/10.1016/j.cliser.2024.100485,2024,"A statewide, weather-regime based stochastic weather generator for process-based bottom-up climate risk assessments in California - Part II: Thermodynamic and dynamic climate change scenarios",,FALSE
-10.1016/j.cliser.2024.100489,https://doi.org/10.1016/j.cliser.2024.100489,2024,"A statewide, weather-regime based stochastic weather generator for process-based bottom-up climate risk assessments in California - Part I: Model evaluation",,FALSE
+10.1016/j.cliser.2024.100485,https://doi.org/10.1016/j.cliser.2024.100485,2024,"A statewide, weather-regime based stochastic weather generator for process-based bottom-up climate risk assessments in California - Part II: Thermodynamic and dynamic climate change scenarios",,TRUE
+10.1016/j.cliser.2024.100489,https://doi.org/10.1016/j.cliser.2024.100489,2024,"A statewide, weather-regime based stochastic weather generator for process-based bottom-up climate risk assessments in California - Part I: Model evaluation",,TRUE
 10.1016/j.desal.2023.117273,https://doi.org/10.1016/j.desal.2023.117273,2024,Reverse osmosis desalination combining feed flow reversal with permeate flush for mitigation of mineral scaling,Regional Assistance,FALSE
-10.1016/j.desal.2024.117951,https://doi.org/10.1016/j.desal.2024.117951,2024,Machine learning models of intermittent operation of RO wellhead water treatment for salinity reduction and nitrate removal,,FALSE
+10.1016/j.desal.2024.117951,https://doi.org/10.1016/j.desal.2024.117951,2024,Machine learning models of intermittent operation of RO wellhead water treatment for salinity reduction and nitrate removal,,TRUE
 10.1016/j.engstruct.2024.118589,https://doi.org/10.1016/j.engstruct.2024.118589,2024,Re-anchoring of failed in-situ grouted post-tension anchor rods with high rod to duct area ratios,SWP - Operations and Maintenance,FALSE
 10.1016/j.rse.2024.114000,https://doi.org/10.1016/j.rse.2024.114000,2024,MODIS-based modeling of evapotranspiration from woody vegetation supported by root-zone water storage,Flood Operations,FALSE
-10.1016/j.rse.2024.114123,https://doi.org/10.1016/j.rse.2024.114123,2024,Net fluxes of broadband shortwave and photosynthetically active radiation complement NDVI and near infrared reflectance of vegetation to explain gross photosynthesis variability across ecosystems and climate,,FALSE
+10.1016/j.rse.2024.114123,https://doi.org/10.1016/j.rse.2024.114123,2024,Net fluxes of broadband shortwave and photosynthetically active radiation complement NDVI and near infrared reflectance of vegetation to explain gross photosynthesis variability across ecosystems and climate,,TRUE
 10.1016/j.soildyn.2024.108954,https://doi.org/10.1016/j.soildyn.2024.108954,2024,9th Ishihara lecture: Effects of subsurface heterogeneity on liquefaction-induced ground deformation during earthquakes,SWP - Engineering,FALSE
 10.1021/acsestwater.4c00298,https://doi.org/10.1021/acsestwater.4c00298,2024,Mechanisms of Alleviating Gypsum Scaling by Antiscalants during Membrane Desalination: Implications on Agricultural Drainage Water Reuse,Regional Assistance,FALSE
 10.1029/2023jd039294,https://doi.org/10.1029/2023jd039294,2024,Atmospheric Rivers in Southeast Alaska: Meteorological Conditions Associated With Extreme Precipitation,Flood Operations,FALSE
 10.1029/2023jd040055,https://doi.org/10.1029/2023jd040055,2024,Did Historical Storms Used in Probable Maximum Precipitation (PMP) Estimation Reach Maximum Efficiency? A Large Model Ensemble Approach,Flood Operations,FALSE
-10.1029/2023jd040537,https://doi.org/10.1029/2023jd040537,2024,Anthropogenic Intensification of Cool-Season Precipitation Is Not Yet Detectable Across the Western United States,Flood Operations,TRUE
+10.1029/2023jd040537,https://doi.org/10.1029/2023jd040537,2024,Anthropogenic Intensification of Cool-Season Precipitation Is Not Yet Detectable Across the Western United States,Flood Operations,FALSE
 10.1029/2023ms003774,https://doi.org/10.1029/2023ms003774,2024,A Machine Learning Augmented Data Assimilation Method for High-Resolution Observations,Flood Operations,FALSE
 10.1029/2024gl110326,https://doi.org/10.1029/2024gl110326,2024,Reinterpreting ENSO's Role in Modulating Impactful Precipitation Events in California,Flood Operations,FALSE
-10.1029/2024gl111544,https://doi.org/10.1029/2024gl111544,2024,Influence of Atmospheric Rivers on Alaskan River Ice,,FALSE
+10.1029/2024gl111544,https://doi.org/10.1029/2024gl111544,2024,Influence of Atmospheric Rivers on Alaskan River Ice,,TRUE
 10.1038/s41597-024-03258-4,https://doi.org/10.1038/s41597-024-03258-4,2024,A regionally refined quarter-degree global atmospheric rivers database based on ERA5,Flood Operations,FALSE
 10.1038/s41598-024-67662-x,https://doi.org/10.1038/s41598-024-67662-x,2024,Characterizing the dynamics of multi-scale global high impact weather events,Flood Operations,FALSE
-10.1038/s41612-024-00728-9,https://doi.org/10.1038/s41612-024-00728-9,2024,Hailstone size dichotomy in a warming climate,Flood Operations,TRUE
+10.1038/s41612-024-00728-9,https://doi.org/10.1038/s41612-024-00728-9,2024,Hailstone size dichotomy in a warming climate,Flood Operations,FALSE
 10.1038/s43247-024-01449-w,https://doi.org/10.1038/s43247-024-01449-w,2024,Association of western US compound hydrometeorological extremes with Madden-Julian oscillation and ENSO interaction,Flood Operations,FALSE
 10.1038/s43247-024-01890-x,https://doi.org/10.1038/s43247-024-01890-x,2024,Seasonality and climate modes influence the temporal clustering of unique atmospheric rivers in the Western U.S,Flood Operations,FALSE
 10.1038/s44221-024-00221-w,https://doi.org/10.1038/s44221-024-00221-w,2024,Establishing ecological thresholds and targets for groundwater management,Executive,FALSE
-10.1061/jsendh.steng-12409,https://doi.org/10.1061/jsendh.steng-12409,2024,Experimental Testing of Grouted Posttensioned Anchors with High Rod-to-Duct Area Ratios,,FALSE
-10.1073/pnas.2306775121,https://doi.org/10.1073/pnas.2306775121,2024,A bioenergy-focused versus a reforestation-focused mitigation pathway yields disparate carbon storage and climate responses,Flood Operations,TRUE
+10.1061/jsendh.steng-12409,https://doi.org/10.1061/jsendh.steng-12409,2024,Experimental Testing of Grouted Posttensioned Anchors with High Rod-to-Duct Area Ratios,,TRUE
+10.1073/pnas.2306775121,https://doi.org/10.1073/pnas.2306775121,2024,A bioenergy-focused versus a reforestation-focused mitigation pathway yields disparate carbon storage and climate responses,Flood Operations,FALSE
 10.1080/15481603.2024.2399386,https://doi.org/10.1080/15481603.2024.2399386,2024,A new index for detection of submerged aquatic plants under variable quality water: an extension of the soil-line concept,SWP - Integrated Science and Engineering,FALSE
 10.1093/conphys/coae088,https://doi.org/10.1093/conphys/coae088,2024,Insights from a year of field deployments inform the conservation of an endangered estuarine fish,SWP - Integrated Science and Engineering,FALSE
 10.1093/ornithapp/duae017,https://doi.org/10.1093/ornithapp/duae017,2024,Duckling survival increased with availability of flooded wetland habitat and decreased with salinity concentrations in a brackish marsh,,TRUE
-10.1111/1365-2664.14612,https://doi.org/10.1111/1365-2664.14612,2024,Geese migrating over the Pacific Ocean select altitudes coinciding with offshore wind turbine blades,,FALSE
-10.1111/csp2.13124,https://doi.org/10.1111/csp2.13124,2024,Identifying minimum freshwater habitat conditions for an endangered fish using life cycle analysis,,FALSE
+10.1111/1365-2664.14612,https://doi.org/10.1111/1365-2664.14612,2024,Geese migrating over the Pacific Ocean select altitudes coinciding with offshore wind turbine blades,,TRUE
+10.1111/csp2.13124,https://doi.org/10.1111/csp2.13124,2024,Identifying minimum freshwater habitat conditions for an endangered fish using life cycle analysis,,TRUE
 10.1111/ecog.06939,https://doi.org/10.1111/ecog.06939,2024,"Potential use of poultry farms by wild waterfowl in California's Central Valley varies across space, times of day, and species: implications for influenza transmission risk",,TRUE
 10.1111/fwb.14336,https://doi.org/10.1111/fwb.14336,2024,Forbs from seasonal managed wetlands boost plankton production more than emergent graminoids by supplying novel labile detritus,SWP - Integrated Science and Engineering,FALSE
-10.1139/cgj-2022-0479,https://doi.org/10.1139/cgj-2022-0479,2024,A viscoplastic constitutive model for plastic silts and clays for static slope stability applications,SWP - Engineering,TRUE
-10.1155/2024/5525298,https://doi.org/10.1155/2024/5525298,2024,Mitigating Risk: Predicting H5N1 Avian Influenza Spread with an Empirical Model of Bird Movement,,FALSE
+10.1139/cgj-2022-0479,https://doi.org/10.1139/cgj-2022-0479,2024,A viscoplastic constitutive model for plastic silts and clays for static slope stability applications,SWP - Engineering,FALSE
+10.1155/2024/5525298,https://doi.org/10.1155/2024/5525298,2024,Mitigating Risk: Predicting H5N1 Avian Influenza Spread with an Empirical Model of Bird Movement,,TRUE
 10.1175/bams-d-22-0208.1,https://doi.org/10.1175/bams-d-22-0208.1,2024,From California’s Extreme Drought to Major Flooding Evaluating and Synthesizing: Experimental Seasonal and Subseasonal Forecasts of Landfalling Atmospheric Rivers and Extreme Precipitation during Winter 2022/23,Flood Operations,FALSE
 10.1175/bams-d-22-0249.1,https://doi.org/10.1175/bams-d-22-0249.1,2024,Winter Targeted Observing Periods during the Year of Polar Prediction in the Southern Hemisphere (YOPP-SH),Flood Operations,FALSE
 10.1175/ei-d-24-0003.1,https://doi.org/10.1175/ei-d-24-0003.1,2024,Investigating the Atmospheric Conditions Associated with Impactful Shallow Landslides in California (USA),Flood Operations,FALSE
@@ -127,17 +127,17 @@ doi,doi_url,year,title,division,new
 10.1175/jcli-d-23-0421.1,https://doi.org/10.1175/jcli-d-23-0421.1,2024,Atmospheric Rivers are Responsible for Cyclicity in Sierra Nevada Precipitation,Flood Operations,FALSE
 10.1175/jcli-d-24-0051.1,https://doi.org/10.1175/jcli-d-24-0051.1,2024,How Do Forecast Model Biases Affect Large-Scale Teleconnections That Control Southwest U.S. Precipitation? Part I: S2S Models,Flood Operations,FALSE
 10.1175/jhm-d-22-0155.1,https://doi.org/10.1175/jhm-d-22-0155.1,2024,Local and Object-Based Perspectives on Atmospheric Rivers Making Landfall on the Western North American Coastline,Flood Operations,FALSE
-10.1175/jhm-d-23-0204.1,https://doi.org/10.1175/jhm-d-23-0204.1,2024,A Physically Constrained Model-Based Moisture Amplification Approach for Probable Maximum Precipitation (PMP) Estimation,Flood Operations,TRUE
+10.1175/jhm-d-23-0204.1,https://doi.org/10.1175/jhm-d-23-0204.1,2024,A Physically Constrained Model-Based Moisture Amplification Approach for Probable Maximum Precipitation (PMP) Estimation,Flood Operations,FALSE
 10.1175/mwr-d-23-0111.1,https://doi.org/10.1175/mwr-d-23-0111.1,2024,An Assessment of Dropsonde Sampling Strategies for Atmospheric River Reconnaissance,Flood Operations,FALSE
-10.1175/mwr-d-23-0207.1,https://doi.org/10.1175/mwr-d-23-0207.1,2024,Dropsonde Observations of the Stable Marine Boundary Layer beneath Atmospheric Rivers,Flood Operations,TRUE
+10.1175/mwr-d-23-0207.1,https://doi.org/10.1175/mwr-d-23-0207.1,2024,Dropsonde Observations of the Stable Marine Boundary Layer beneath Atmospheric Rivers,Flood Operations,FALSE
 10.1175/mwr-d-23-0277.1,https://doi.org/10.1175/mwr-d-23-0277.1,2024,Deep Learning of a 200-Member Ensemble with a Limited Historical Training to Improve the Prediction of Extreme Precipitation Events,Flood Operations,FALSE
 10.1175/mwr-d-24-0040.1,https://doi.org/10.1175/mwr-d-24-0040.1,2024,Assessment of the Dynamical Linkages and Flow Evolution Governing Multiple Extreme Weather Events over Western North America in February 2019,Flood Operations,FALSE
 10.1175/waf-d-23-0170.1,https://doi.org/10.1175/waf-d-23-0170.1,2024,Subseasonal Potential Predictability of Horizontal Water Vapor Transport and Precipitation Extremes in the North Pacific,Flood Operations,FALSE
-10.1175/waf-d-24-0070.1,https://doi.org/10.1175/waf-d-24-0070.1,2024,On the Use of Hindcast Skill for Merging NMME Seasonal Forecasts across the Western United States,,FALSE
+10.1175/waf-d-24-0070.1,https://doi.org/10.1175/waf-d-24-0070.1,2024,On the Use of Hindcast Skill for Merging NMME Seasonal Forecasts across the Western United States,,TRUE
 10.1177/87552930231217165,https://doi.org/10.1177/87552930231217165,2024,Small-strain site response of soft soils in the Sacramento-San Joaquin Delta region of California conditioned on VS30 and mHVSR,SWP - Engineering,FALSE
 10.15447/sfews.2024v22iss1art1,https://doi.org/10.15447/sfews.2024v22iss1art1,2024,The Anatomy of a Drought in the Upper San Francisco Estuary: Water Quality and Lower-Trophic Responses to Multi-Year Droughts,SWP - Integrated Science and Engineering,FALSE
-10.15447/sfews.2024v22iss2art2,https://doi.org/10.15447/sfews.2024v22iss2art2,2024,Spatial Patterns of Water Supply and Use in California,,FALSE
-10.15447/sfews.2024v22iss2art4,https://doi.org/10.15447/sfews.2024v22iss2art4,2024,Regional Diversity Trends of Nearshore Fish Assemblages of the Upper San Francisco Estuary,,FALSE
+10.15447/sfews.2024v22iss2art2,https://doi.org/10.15447/sfews.2024v22iss2art2,2024,Spatial Patterns of Water Supply and Use in California,,TRUE
+10.15447/sfews.2024v22iss2art4,https://doi.org/10.15447/sfews.2024v22iss2art4,2024,Regional Diversity Trends of Nearshore Fish Assemblages of the Upper San Francisco Estuary,,TRUE
 10.15447/sfews.2024v22iss4art4,https://doi.org/10.15447/sfews.2024v22iss4art4,2024,Individual-Based Ecological Particle-Tracking Model (ECO-PTM) for Simulating Juvenile Chinook Salmon Migration and Survival Through the Sacramento-San Joaquin Delta,SWP - Model Support,FALSE
 10.3389/frwa.2024.1445722,https://doi.org/10.3389/frwa.2024.1445722,2024,Reconstructing 169 years of historical atmospheric and hydrologic conditions in the American River Watershed through the Watershed Environmental Hydrology Hydro-Climate Model system,Flood Operations,FALSE
 10.3390/hydrology11120211,https://doi.org/10.3390/hydrology11120211,2024,Characterizing Soil and Bedrock Water Use of Native California Vegetation,Sustainable Groundwater Management,FALSE
@@ -148,23 +148,23 @@ doi,doi_url,year,title,division,new
 10.7717/peerj.16453,https://doi.org/10.7717/peerj.16453,2024,Evaluating environmental DNA detection of a rare fish in turbid water using field and experimental approaches,SWP - Integrated Science and Engineering,FALSE
 10.1002/aff2.116,https://doi.org/10.1002/aff2.116,2023,"Size, delta smelt Hypomesus transpacificus over 10 generations in captivity",SWP - Integrated Science and Engineering,FALSE
 10.1002/aff2.91,https://doi.org/10.1002/aff2.91,2023,Vital dye immersion evaluations with juvenile delta smelt,SWP - Integrated Science and Engineering,FALSE
-10.1002/ecs2.4432,https://doi.org/10.1002/ecs2.4432,2023,Waterfowl recently infected with low pathogenic avian influenza exhibit reduced local movement and delayed migration,,FALSE
+10.1002/ecs2.4432,https://doi.org/10.1002/ecs2.4432,2023,Waterfowl recently infected with low pathogenic avian influenza exhibit reduced local movement and delayed migration,,TRUE
 10.1002/nafm.10959,https://doi.org/10.1002/nafm.10959,2023,Lampreys in California (Lampetra spp. and Entosphenus spp.): Mitochondrial phylogenetic analysis reveals previously unrecognized lamprey diversity,SWP - Integrated Science and Engineering,FALSE
 10.1007/s00382-022-06361-7,https://doi.org/10.1007/s00382-022-06361-7,2023,Winter wet-dry weather patterns driving atmospheric rivers and Santa Ana winds provide evidence for increasing wildfire hazard in California,Flood Operations,FALSE
 10.1007/s00382-022-06422-x,https://doi.org/10.1007/s00382-022-06422-x,2023,Extended seasonal prediction of spring precipitation over the Upper Colorado River Basin,Flood Operations,FALSE
 10.1007/s00382-023-06776-w,https://doi.org/10.1007/s00382-023-06776-w,2023,Observed and projected changes in snow accumulation and snowline in California’s snowy mountains,Flood Operations,FALSE
 10.1007/s10980-023-01683-1,https://doi.org/10.1007/s10980-023-01683-1,2023,"Patch size and connectivity predict remnant habitat occupancy by an endangered wetland specialist, the salt marsh harvest mouse",SWP - Integrated Science and Engineering,FALSE
 10.1007/s12237-022-01100-x,https://doi.org/10.1007/s12237-022-01100-x,2023,Relations Between Abiotic and Biotic Environmental Variables and Occupancy of Delta Smelt (Hypomesus transpacificus) in Autumn,Executive,FALSE
-10.1007/s12237-023-01189-8,https://doi.org/10.1007/s12237-023-01189-8,2023,"A Spatiotemporal History of Key Pelagic Fish Species in the San Francisco Estuary, CA",,FALSE
+10.1007/s12237-023-01189-8,https://doi.org/10.1007/s12237-023-01189-8,2023,"A Spatiotemporal History of Key Pelagic Fish Species in the San Francisco Estuary, CA",,TRUE
 10.1016/j.advwatres.2023.104449,https://doi.org/10.1016/j.advwatres.2023.104449,2023,Topographic hydro-conditioning to resolve surface depression storage and ponding in a fully distributed hydrologic model,Flood Operations,FALSE
-10.1016/j.ecss.2023.108391,https://doi.org/10.1016/j.ecss.2023.108391,2023,Nonstationary analysis of tides using higher order stochastic cycles,,FALSE
+10.1016/j.ecss.2023.108391,https://doi.org/10.1016/j.ecss.2023.108391,2023,Nonstationary analysis of tides using higher order stochastic cycles,,TRUE
 10.1016/j.ejrh.2023.101601,https://doi.org/10.1016/j.ejrh.2023.101601,2023,Runoff response to the uncertainty from key water-budget variables in a seasonally snow-covered mountain basin,Flood Operations,FALSE
-10.1016/j.jenvman.2023.118636,https://doi.org/10.1016/j.jenvman.2023.118636,2023,AIMS for wildlife: Developing an automated interactive monitoring system to integrate real-time movement and environmental data for true adaptive management,,FALSE
-10.1016/j.jhydrol.2022.128835,https://doi.org/10.1016/j.jhydrol.2022.128835,2023,Mapping of snow water equivalent by a deep-learning model assimilating snow observations,,FALSE
+10.1016/j.jenvman.2023.118636,https://doi.org/10.1016/j.jenvman.2023.118636,2023,AIMS for wildlife: Developing an automated interactive monitoring system to integrate real-time movement and environmental data for true adaptive management,,TRUE
+10.1016/j.jhydrol.2022.128835,https://doi.org/10.1016/j.jhydrol.2022.128835,2023,Mapping of snow water equivalent by a deep-learning model assimilating snow observations,,TRUE
 10.1016/j.memlet.2023.100062,https://doi.org/10.1016/j.memlet.2023.100062,2023,"RO membrane with a surface tethered polymer brush layer for enhanced rejection of nitrate, boron, and arsenic",Regional Assistance,FALSE
 10.1016/j.scitotenv.2023.165864,https://doi.org/10.1016/j.scitotenv.2023.165864,2023,Effects of vegetation on methylmercury concentrations and loads in a mercury contaminated floodplain,SWP - Integrated Science and Engineering,FALSE
 10.1016/j.soildyn.2022.107668,https://doi.org/10.1016/j.soildyn.2022.107668,2023,System response of an interlayered deposit with a localized graben deformation in the Northridge earthquake,SWP - Engineering,FALSE
-10.1016/j.srs.2023.100105,https://doi.org/10.1016/j.srs.2023.100105,2023,A new variant of the optical trapezoid model (OPTRAM) for remote sensing of soil moisture and water bodies,,FALSE
+10.1016/j.srs.2023.100105,https://doi.org/10.1016/j.srs.2023.100105,2023,A new variant of the optical trapezoid model (OPTRAM) for remote sensing of soil moisture and water bodies,,TRUE
 10.1029/2022gl102091,https://doi.org/10.1029/2022gl102091,2023,Future Atmospheric Rivers and Impacts on Precipitation: Overview of the ARTMIP Tier 2 High-Resolution Global Warming Experiment,Flood Operations,FALSE
 10.1029/2022jd037180,https://doi.org/10.1029/2022jd037180,2023,Global Application of the Atmospheric River Scale,Flood Operations,FALSE
 10.1029/2022jd037360,https://doi.org/10.1029/2022jd037360,2023,Development of a Statistical Subseasonal Forecast Tool to Predict California Atmospheric Rivers and Precipitation Based on MJO and QBO Activity,Flood Operations,FALSE
@@ -174,25 +174,25 @@ doi,doi_url,year,title,division,new
 10.1029/2022ms003495,https://doi.org/10.1029/2022ms003495,2023,Using Deep Learning for an Analysis of Atmospheric Rivers in a High-Resolution Large Ensemble Climate Data Set,Flood Operations,FALSE
 10.1029/2022wr033091,https://doi.org/10.1029/2022wr033091,2023,Using Machine Learning to Identify Hydrologic Signatures With an Encoder-Decoder Framework,Flood Operations,FALSE
 10.1029/2023gh000868,https://doi.org/10.1029/2023gh000868,2023,Investigating the Impact of Irrigation on Malaria Vector Larval Habitats and Transmission Using a Hydrology-Based Model,Flood Operations,FALSE
-10.1029/2023gl102784,https://doi.org/10.1029/2023gl102784,2023,Multiscale Nature of Atmospheric Rivers,,FALSE
+10.1029/2023gl102784,https://doi.org/10.1029/2023gl102784,2023,Multiscale Nature of Atmospheric Rivers,,TRUE
 10.1029/2023gl102892,https://doi.org/10.1029/2023gl102892,2023,The Increasing Role of Seasonal Rainfall in Western U.S. Summer Streamflow,Flood Operations,FALSE
 10.1029/2023gl104606,https://doi.org/10.1029/2023gl104606,2023,Extreme Precipitation-Temperature Scaling in California: The Role of Atmospheric Rivers,,TRUE
 10.1029/2023gl105360,https://doi.org/10.1029/2023gl105360,2023,Subseasonal Prediction of Impactful California Winter Weather in a Hybrid Dynamical-Statistical Framework,Flood Operations,FALSE
-10.1029/2023gl106198,https://doi.org/10.1029/2023gl106198,2023,The Role of Convectively Coupled Equatorial Waves in Sub-Seasonal Predictions,,FALSE
-10.1029/2023jd038693,https://doi.org/10.1029/2023jd038693,2023,Large-Scale Circulation Context for North American West Coast Atmospheric Rivers: Influence of the Subseasonal NPO/WP Teleconnection,,FALSE
-10.1029/2023jd038937,https://doi.org/10.1029/2023jd038937,2023,Evaluating the Representations of Atmospheric Rivers and Their Associated Precipitation in Reanalyses With Satellite Observations,,FALSE
+10.1029/2023gl106198,https://doi.org/10.1029/2023gl106198,2023,The Role of Convectively Coupled Equatorial Waves in Sub-Seasonal Predictions,,TRUE
+10.1029/2023jd038693,https://doi.org/10.1029/2023jd038693,2023,Large-Scale Circulation Context for North American West Coast Atmospheric Rivers: Influence of the Subseasonal NPO/WP Teleconnection,,TRUE
+10.1029/2023jd038937,https://doi.org/10.1029/2023jd038937,2023,Evaluating the Representations of Atmospheric Rivers and Their Associated Precipitation in Reanalyses With Satellite Observations,,TRUE
 10.1029/2023jd039426,https://doi.org/10.1029/2023jd039426,2023,Mesoscale and Synoptic Scale Analysis of Narrow Cold Frontal Rainband During a Landfalling Atmospheric River in California During January 2021,Flood Operations,FALSE
 10.1038/s41467-023-37391-2,https://doi.org/10.1038/s41467-023-37391-2,2023,Carbon-sink potential of continuous alfalfa agriculture lowered by short-term nitrous oxide emission events,Multibenefit Initiatives,FALSE
-10.1038/s41558-023-01599-3,https://doi.org/10.1038/s41558-023-01599-3,2023,More frequent atmospheric rivers slow the seasonal recovery of Arctic sea ice,,FALSE
-10.1061/jggefk.gteng-10984,https://doi.org/10.1061/jggefk.gteng-10984,2023,Effect of Viscoplasticity on Localization in Saturated Clays and Plastic Silts,,FALSE
-10.1061/jwrmd5.wreng-5728,https://doi.org/10.1061/jwrmd5.wreng-5728,2023,Operationalizing Real-Time Monitoring Data in Simulation Models Using the Public Domain HEC-DSSVue Software Platform,,FALSE
-10.1088/1748-9326/aca8bd,https://doi.org/10.1088/1748-9326/aca8bd,2023,Spring heat waves drive record western United States snow melt in 2021,,FALSE
-10.1088/1748-9326/acbaae,https://doi.org/10.1088/1748-9326/acbaae,2023,Federal incentives for community-level climate adaptation: an evaluation of FEMA’s Community Rating System,,FALSE
-10.1111/1365-2656.13919,https://doi.org/10.1111/1365-2656.13919,2023,A life-history spectrum of population responses to simultaneous change in climate and land use,,FALSE
-10.1111/gcb.16594,https://doi.org/10.1111/gcb.16594,2023,"Modeled production, oxidation, and transport processes of wetland methane emissions in temperate, boreal, and Arctic regions",,FALSE
+10.1038/s41558-023-01599-3,https://doi.org/10.1038/s41558-023-01599-3,2023,More frequent atmospheric rivers slow the seasonal recovery of Arctic sea ice,,TRUE
+10.1061/jggefk.gteng-10984,https://doi.org/10.1061/jggefk.gteng-10984,2023,Effect of Viscoplasticity on Localization in Saturated Clays and Plastic Silts,,TRUE
+10.1061/jwrmd5.wreng-5728,https://doi.org/10.1061/jwrmd5.wreng-5728,2023,Operationalizing Real-Time Monitoring Data in Simulation Models Using the Public Domain HEC-DSSVue Software Platform,,TRUE
+10.1088/1748-9326/aca8bd,https://doi.org/10.1088/1748-9326/aca8bd,2023,Spring heat waves drive record western United States snow melt in 2021,,TRUE
+10.1088/1748-9326/acbaae,https://doi.org/10.1088/1748-9326/acbaae,2023,Federal incentives for community-level climate adaptation: an evaluation of FEMA’s Community Rating System,,TRUE
+10.1111/1365-2656.13919,https://doi.org/10.1111/1365-2656.13919,2023,A life-history spectrum of population responses to simultaneous change in climate and land use,,TRUE
+10.1111/gcb.16594,https://doi.org/10.1111/gcb.16594,2023,"Modeled production, oxidation, and transport processes of wetland methane emissions in temperate, boreal, and Arctic regions",,TRUE
 10.1155/2023/9984382,https://doi.org/10.1155/2023/9984382,2023,"Effects of Salinity on Fertilization, Hatching, and Larval Performance of Longfin Smelt Spirinchus thaleichthys",SWP - Integrated Science and Engineering,FALSE
 10.1175/bams-d-22-0021.1,https://doi.org/10.1175/bams-d-22-0021.1,2023,Pacific-North American Teleconnection Tumbles Snowfall Records West of the Cascades during Christmas Week 2021,Flood Operations,FALSE
-10.1175/bams-d-22-0188.1,https://doi.org/10.1175/bams-d-22-0188.1,2023,Toward Probabilistic Post-Fire Debris-Flow Hazard Decision Support,Flood Operations,TRUE
+10.1175/bams-d-22-0188.1,https://doi.org/10.1175/bams-d-22-0188.1,2023,Toward Probabilistic Post-Fire Debris-Flow Hazard Decision Support,Flood Operations,FALSE
 10.1175/jcli-d-22-0255.1,https://doi.org/10.1175/jcli-d-22-0255.1,2023,Understanding and Reducing Warm and Dry Summer Biases in the Central United States: Analytical Modeling to Identify the Mechanisms for CMIP Ensemble Error Spread,Flood Operations,FALSE
 10.1175/jcli-d-23-0081.1,https://doi.org/10.1175/jcli-d-23-0081.1,2023,Regulation of Southwestern United States Precipitation by non-ENSO Teleconnections and the Impact of the Background Flow,Flood Operations,FALSE
 10.1175/jhm-d-22-0044.1,https://doi.org/10.1175/jhm-d-22-0044.1,2023,Improving Confidence in Model-Based Probable Maximum Precipitation: How Important is Model Uncertainty in Storm Reconstruction and Maximization?,Flood Operations,FALSE
@@ -204,147 +204,147 @@ doi,doi_url,year,title,division,new
 10.1175/jhm-d-22-0235.1,https://doi.org/10.1175/jhm-d-22-0235.1,2023,West-WRF 34-Year Reforecast: Description and Validation,Flood Operations,FALSE
 10.1175/mwr-d-22-0124.1,https://doi.org/10.1175/mwr-d-22-0124.1,2023,Impacts of Northeastern Pacific Buoy Surface Pressure Observations,Flood Operations,FALSE
 10.1175/mwr-d-22-0268.1,https://doi.org/10.1175/mwr-d-22-0268.1,2023,Deep Learning Forecast Uncertainty for Precipitation over the Western United States,Flood Operations,FALSE
-10.1175/waf-d-22-0099.1,https://doi.org/10.1175/waf-d-22-0099.1,2023,"Seasonal Forecasting of Precipitation, Temperature, and Snow Mass over the Western United States by Combining Ensemble Postprocessing with Empirical Ocean-Atmosphere Teleconnections",,FALSE
+10.1175/waf-d-22-0099.1,https://doi.org/10.1175/waf-d-22-0099.1,2023,"Seasonal Forecasting of Precipitation, Temperature, and Snow Mass over the Western United States by Combining Ensemble Postprocessing with Empirical Ocean-Atmosphere Teleconnections",,TRUE
 10.1175/waf-d-23-0025.1,https://doi.org/10.1175/waf-d-23-0025.1,2023,Impacts of Dropsonde Observations on Forecasts of Atmospheric Rivers and Associated Precipitation in the NCEP GFS and ECMWF IFS Models,Flood Operations,FALSE
-10.1371/journal.pone.0286151,https://doi.org/10.1371/journal.pone.0286151,2023,"Nest attendance, incubation constancy, and onset of incubation in dabbling ducks",,FALSE
+10.1371/journal.pone.0286151,https://doi.org/10.1371/journal.pone.0286151,2023,"Nest attendance, incubation constancy, and onset of incubation in dabbling ducks",,TRUE
 10.15447/sfews.2023v21iss1art2,https://doi.org/10.15447/sfews.2023v21iss1art2,2023,The Flood Risk and Water-Supply Implications of Seasonal Precipitation Reconstructions in Northern California,,TRUE
-10.15447/sfews.2023v21iss3art4,https://doi.org/10.15447/sfews.2023v21iss3art4,2023,Priority Bird Conservation Areas in California’s Sacramento-San Joaquin Delta,,FALSE
+10.15447/sfews.2023v21iss3art4,https://doi.org/10.15447/sfews.2023v21iss3art4,2023,Priority Bird Conservation Areas in California’s Sacramento-San Joaquin Delta,,TRUE
 10.15447/sfews.2023v21iss4art2,https://doi.org/10.15447/sfews.2023v21iss4art2,2023,Proofing Field and Laboratory Species Identification Procedures Developed for the Non-Native Osmerid Species Wakasagi (Hypomesus nipponensis) Using SHERLOCK-Based Genetic Verification,SWP - Integrated Science and Engineering,FALSE
-10.3389/fevo.2023.1232704,https://doi.org/10.3389/fevo.2023.1232704,2023,"Movement behavior, habitat selection, and functional responses to habitat availability among four species of wintering waterfowl in California",,FALSE
-10.3389/fevo.2023.703946,https://doi.org/10.3389/fevo.2023.703946,2023,"Predicting near-term, out-of-sample fish passage, guidance, and movement across diverse river environments by cognitively relating momentary behavioral decisions to multiscale memories of past hydrodynamic experiences",,FALSE
-10.3390/atmos14121832,https://doi.org/10.3390/atmos14121832,2023,Performance of the PERSIANN Family of Products over the Mekong River Basin and Their Application for the Analysis of Trends in Extreme Precipitation Indices,Flood Operations,TRUE
-10.3390/w15040762,https://doi.org/10.3390/w15040762,2023,Post-Wildfire Debris Flow and Large Woody Debris Transport Modeling from the North Complex Fire to Lake Oroville,,FALSE
+10.3389/fevo.2023.1232704,https://doi.org/10.3389/fevo.2023.1232704,2023,"Movement behavior, habitat selection, and functional responses to habitat availability among four species of wintering waterfowl in California",,TRUE
+10.3389/fevo.2023.703946,https://doi.org/10.3389/fevo.2023.703946,2023,"Predicting near-term, out-of-sample fish passage, guidance, and movement across diverse river environments by cognitively relating momentary behavioral decisions to multiscale memories of past hydrodynamic experiences",,TRUE
+10.3390/atmos14121832,https://doi.org/10.3390/atmos14121832,2023,Performance of the PERSIANN Family of Products over the Mekong River Basin and Their Application for the Analysis of Trends in Extreme Precipitation Indices,Flood Operations,FALSE
+10.3390/w15040762,https://doi.org/10.3390/w15040762,2023,Post-Wildfire Debris Flow and Large Woody Debris Transport Modeling from the North Complex Fire to Lake Oroville,,TRUE
 10.3390/w15050847,https://doi.org/10.3390/w15050847,2023,Field Evaluation of UF Filtration Pretreatment Impact on RO Membrane Scaling,Regional Assistance,FALSE
 10.3390/w15132320,https://doi.org/10.3390/w15132320,2023,Physics-Informed Neural Networks-Based Salinity Modeling in the Sacramento-San Joaquin Delta of California,SWP - Model Support,FALSE
 10.3390/w15132482,https://doi.org/10.3390/w15132482,2023,Salinity Modeling Using Deep Learning with Data Augmentation and Transfer Learning,SWP - Model Support,FALSE
 10.3733/ca.2023a0001,https://doi.org/10.3733/ca.2023a0001,2023,Long-term reduced tillage and winter cover crops can improve soil quality without depleting moisture,Regional Assistance,FALSE
-10.51492/cfwj.109.9,https://doi.org/10.51492/cfwj.109.9,2023,Ceratonova shasta infection in lower Feather River Chinook juveniles and trends in water-borne spore stages,SWP - Operations and Maintenance,TRUE
-10.1002/ece3.8541,https://doi.org/10.1002/ece3.8541,2022,A niche for null models in adaptive resource management,,FALSE
+10.51492/cfwj.109.9,https://doi.org/10.51492/cfwj.109.9,2023,Ceratonova shasta infection in lower Feather River Chinook juveniles and trends in water-borne spore stages,SWP - Operations and Maintenance,FALSE
+10.1002/ece3.8541,https://doi.org/10.1002/ece3.8541,2022,A niche for null models in adaptive resource management,,TRUE
 10.1002/ece3.9121,https://doi.org/10.1002/ece3.9121,2022,Dietary characterization of the endangered salt marsh harvest mouse and sympatric rodents using DNA metabarcoding,SWP - Integrated Science and Engineering,FALSE
-10.1002/ece3.9329,https://doi.org/10.1002/ece3.9329,2022,Predator movements in relation to habitat features reveal vulnerability of duck nests to predation,,FALSE
+10.1002/ece3.9329,https://doi.org/10.1002/ece3.9329,2022,Predator movements in relation to habitat features reveal vulnerability of duck nests to predation,,TRUE
 10.1002/ecy.3552,https://doi.org/10.1002/ecy.3552,2022,Megafires and thick smoke portend big problems for migratory birds,SWP - Integrated Science and Engineering,FALSE
-10.1002/jwmg.22314,https://doi.org/10.1002/jwmg.22314,2022,Postbreeding movements and molting ecology of female gadwalls and mallards,,FALSE
+10.1002/jwmg.22314,https://doi.org/10.1002/jwmg.22314,2022,Postbreeding movements and molting ecology of female gadwalls and mallards,,TRUE
 10.1002/rra.4032,https://doi.org/10.1002/rra.4032,2022,Experimental evaluation of louver guidance efficiency for green sturgeon (Acipenser medirostris),SWP - Integrated Science and Engineering,FALSE
 10.1007/s00382-021-05944-0,https://doi.org/10.1007/s00382-021-05944-0,2022,Causal effect of the tropical Pacific sea surface temperature on the Upper Colorado River Basin spring precipitation,Flood Operations,FALSE
 10.1007/s10592-022-01446-6,https://doi.org/10.1007/s10592-022-01446-6,2022,Landscape genetics of an endangered salt marsh endemic: Identifying population continuity and barriers to dispersal,SWP - Integrated Science and Engineering,FALSE
 10.1007/s10641-022-01273-1,https://doi.org/10.1007/s10641-022-01273-1,2022,"Quantifying the effects of tides, river flow, and barriers on movements of Chinook Salmon smolts at junctions in the Sacramento - San Joaquin River Delta using multistate models",SWP - Model Support,FALSE
-10.1007/s12237-021-00977-4,https://doi.org/10.1007/s12237-021-00977-4,2022,"Monitoring Vegetation Dynamics at a Tidal Marsh Restoration Site: Integrating Field Methods, Remote Sensing and Modeling",,FALSE
+10.1007/s12237-021-00977-4,https://doi.org/10.1007/s12237-021-00977-4,2022,"Monitoring Vegetation Dynamics at a Tidal Marsh Restoration Site: Integrating Field Methods, Remote Sensing and Modeling",,TRUE
 10.1007/s12237-021-01024-y,https://doi.org/10.1007/s12237-021-01024-y,2022,"Spatial Heterogeneity in Prey Availability, Feeding Success, and Dietary Selectivity for the Threatened Longfin Smelt",SWP - Integrated Science and Engineering,FALSE
 10.1007/s12237-022-01079-5,https://doi.org/10.1007/s12237-022-01079-5,2022,Efficacy and Fate of Fluridone Applications for Control of Invasive Submersed Aquatic Vegetation in the Estuarine Environment of the Sacramento-San Joaquin Delta,SWP - Integrated Science and Engineering,FALSE
 10.1016/j.apgeochem.2022.105268,https://doi.org/10.1016/j.apgeochem.2022.105268,2022,"Groundwater recharge timing based on 14C and 2H within Indian Wells Valley, California, USA",Regional Assistance,FALSE
 10.1016/j.desal.2022.115762,https://doi.org/10.1016/j.desal.2022.115762,2022,Scale up of polyamide reverse osmosis membranes surface modification with tethered poly(acrylic acid) for fabrication of low fouling spiral-wound elements,Regional Assistance,FALSE
 10.1016/j.ecss.2022.107988,https://doi.org/10.1016/j.ecss.2022.107988,2022,"The increase of cyanobacteria and benthic diatoms over 43 years in upper San Francisco Estuary, California",SWP - Integrated Science and Engineering,FALSE
-10.1016/j.jhydrol.2022.127431,https://doi.org/10.1016/j.jhydrol.2022.127431,2022,Assessing multi-year-drought vulnerability in dense Mediterranean-climate forests using water-balance-based indicators,,FALSE
+10.1016/j.jhydrol.2022.127431,https://doi.org/10.1016/j.jhydrol.2022.127431,2022,Assessing multi-year-drought vulnerability in dense Mediterranean-climate forests using water-balance-based indicators,,TRUE
 10.1016/j.jhydrol.2022.127999,https://doi.org/10.1016/j.jhydrol.2022.127999,2022,Estimating soil water flux from single-depth soil moisture data,Regional Assistance,FALSE
 10.1016/j.quaint.2019.12.003,https://doi.org/10.1016/j.quaint.2019.12.003,2022,Impact of extreme wet and dry years on the persistence of Microcystis harmful algal blooms in San Francisco Estuary,SWP - Integrated Science and Engineering,FALSE
 10.1016/j.seppur.2022.120490,https://doi.org/10.1016/j.seppur.2022.120490,2022,Fouling resistant and performance tunable ultrafiltration membranes via surface graft polymerization induced by atmospheric pressure air plasma,Regional Assistance,FALSE
 10.1029/2021ea002059,https://doi.org/10.1029/2021ea002059,2022,Investigation of Springtime Cloud Influence on Regional Climate and Its Implication in Runoff Decline in Upper Colorado River Basin,Flood Operations,FALSE
 10.1029/2021ef002537,https://doi.org/10.1029/2021ef002537,2022,Atmospheric River Precipitation Enhanced by Climate Change: A Case Study of the Storm That Contributed to California's Oroville Dam Crisis,Flood Operations,FALSE
-10.1029/2021gb007179,https://doi.org/10.1029/2021gb007179,2022,"Biophysical Controls of Ecosystem-Scale Methane Fluxes From a Subtropical Estuarine Mangrove: Multiscale, Nonlinearity, Asynchrony and Causality",,FALSE
+10.1029/2021gb007179,https://doi.org/10.1029/2021gb007179,2022,"Biophysical Controls of Ecosystem-Scale Methane Fluxes From a Subtropical Estuarine Mangrove: Multiscale, Nonlinearity, Asynchrony and Causality",,TRUE
 10.1029/2021gl095362,https://doi.org/10.1029/2021gl095362,2022,A Climatology of Narrow Cold-Frontal Rainbands in Southern California,Flood Operations,FALSE
-10.1029/2021jd036155,https://doi.org/10.1029/2021jd036155,2022,An Overview of ARTMIP's Tier 2 Reanalysis Intercomparison: Uncertainty in the Detection of Atmospheric Rivers and Their Associated Precipitation,,FALSE
+10.1029/2021jd036155,https://doi.org/10.1029/2021jd036155,2022,An Overview of ARTMIP's Tier 2 Reanalysis Intercomparison: Uncertainty in the Detection of Atmospheric Rivers and Their Associated Precipitation,,TRUE
 10.1029/2021wr029954,https://doi.org/10.1029/2021wr029954,2022,"Precipitation Estimates and Orographic Gradients Using Snow, Temperature, and Humidity Measurements From a Wireless-Sensor Network",Flood Operations,FALSE
 10.1029/2021wr031439,https://doi.org/10.1029/2021wr031439,2022,Improved Imaging of the Large-Scale Structure of a Groundwater System With Airborne Electromagnetic Data,Regional Assistance,FALSE
 10.1029/2022gl099582,https://doi.org/10.1029/2022gl099582,2022,The Unprecedented Character of California's 20th Century Enhanced Hydroclimatic Variability in a 600-Year Context,Regional Assistance,FALSE
 10.1029/2022gl100381,https://doi.org/10.1029/2022gl100381,2022,Modulation of Atmospheric Rivers by the Arctic Stratospheric Polar Vortex,Flood Operations,FALSE
-10.1029/2022jg006977,https://doi.org/10.1029/2022jg006977,2022,Detecting Hot Spots of Methane Flux Using Footprint-Weighted Flux Maps,,FALSE
-10.1038/s41558-022-01518-y,https://doi.org/10.1038/s41558-022-01518-y,2022,Asymmetric emergence of low-to-no snow in the midlatitudes of the American Cordillera,,FALSE
-10.1038/s41598-022-07650-1,https://doi.org/10.1038/s41598-022-07650-1,2022,"Using Sentinel-1 and GRACE satellite data to monitor the hydrological variations within the Tulare Basin, California",,FALSE
-10.1061/(asce)gt.1943-5606.0002663,https://doi.org/10.1061/(asce)gt.1943-5606.0002663,2022,Nonlinear Dynamic Analyses of Perris Dam Using Transition Probability to Model Interbedded Alluvial Strata,SWP - Engineering,TRUE
+10.1029/2022jg006977,https://doi.org/10.1029/2022jg006977,2022,Detecting Hot Spots of Methane Flux Using Footprint-Weighted Flux Maps,,TRUE
+10.1038/s41558-022-01518-y,https://doi.org/10.1038/s41558-022-01518-y,2022,Asymmetric emergence of low-to-no snow in the midlatitudes of the American Cordillera,,TRUE
+10.1038/s41598-022-07650-1,https://doi.org/10.1038/s41598-022-07650-1,2022,"Using Sentinel-1 and GRACE satellite data to monitor the hydrological variations within the Tulare Basin, California",,TRUE
+10.1061/(asce)gt.1943-5606.0002663,https://doi.org/10.1061/(asce)gt.1943-5606.0002663,2022,Nonlinear Dynamic Analyses of Perris Dam Using Transition Probability to Model Interbedded Alluvial Strata,SWP - Engineering,FALSE
 10.1061/(asce)gt.1943-5606.0002799,https://doi.org/10.1061/(asce)gt.1943-5606.0002799,2022,Influence of Particle Size and Gradation on Liquefaction Potential and Dynamic Response,,TRUE
-10.1061/(asce)gt.1943-5606.0002869,https://doi.org/10.1061/(asce)gt.1943-5606.0002869,2022,System Response of an Interlayered Deposit with Spatially Distributed Ground Deformations in the Chi-Chi Earthquake,SWP - Engineering,TRUE
-10.1061/(asce)he.1943-5584.0002159,https://doi.org/10.1061/(asce)he.1943-5584.0002159,2022,Maximization of Historical Storm Events over Seven Watersheds in Central/Southern Sierra Nevada by Means of Atmospheric Boundary Condition Shifting and Relative Humidity Optimization Methods,Flood Operations,TRUE
+10.1061/(asce)gt.1943-5606.0002869,https://doi.org/10.1061/(asce)gt.1943-5606.0002869,2022,System Response of an Interlayered Deposit with Spatially Distributed Ground Deformations in the Chi-Chi Earthquake,SWP - Engineering,FALSE
+10.1061/(asce)he.1943-5584.0002159,https://doi.org/10.1061/(asce)he.1943-5584.0002159,2022,Maximization of Historical Storm Events over Seven Watersheds in Central/Southern Sierra Nevada by Means of Atmospheric Boundary Condition Shifting and Relative Humidity Optimization Methods,Flood Operations,FALSE
 10.1071/wf22065,https://doi.org/10.1071/wf22065,2022,Autumn precipitation: the competition with Santa Ana winds in determining fire outcomes in southern California,Flood Operations,FALSE
 10.1093/jhered/esac021,https://doi.org/10.1093/jhered/esac021,2022,"Reference Genome of the Northwestern Pond Turtle, Actinemys marmorata",SWP - Integrated Science and Engineering,FALSE
-10.1098/rspb.2022.1312,https://doi.org/10.1098/rspb.2022.1312,2022,Avian influenza antibody prevalence increases with mercury contamination in wild waterfowl,,FALSE
-10.1111/1365-2656.13807,https://doi.org/10.1111/1365-2656.13807,2022,Density-dependence produces spurious relationships among demographic parameters in a harvested species,,FALSE
-10.1111/1752-1688.12921,https://doi.org/10.1111/1752-1688.12921,2022,Impacts of Sea-Level Rise on Hypoxia and Phytoplankton Production in Chesapeake Bay: Model Prediction and Assessment,,FALSE
-10.1111/gcb.15974,https://doi.org/10.1111/gcb.15974,2022,A novel approach to partitioning evapotranspiration into evaporation and transpiration in flooded ecosystems,,FALSE
-10.1111/tbed.14445,https://doi.org/10.1111/tbed.14445,2022,Pathways for avian influenza virus spread: GPS reveals wild waterfowl in commercial livestock facilities and connectivity with the natural wetland landscape,,FALSE
+10.1098/rspb.2022.1312,https://doi.org/10.1098/rspb.2022.1312,2022,Avian influenza antibody prevalence increases with mercury contamination in wild waterfowl,,TRUE
+10.1111/1365-2656.13807,https://doi.org/10.1111/1365-2656.13807,2022,Density-dependence produces spurious relationships among demographic parameters in a harvested species,,TRUE
+10.1111/1752-1688.12921,https://doi.org/10.1111/1752-1688.12921,2022,Impacts of Sea-Level Rise on Hypoxia and Phytoplankton Production in Chesapeake Bay: Model Prediction and Assessment,,TRUE
+10.1111/gcb.15974,https://doi.org/10.1111/gcb.15974,2022,A novel approach to partitioning evapotranspiration into evaporation and transpiration in flooded ecosystems,,TRUE
+10.1111/tbed.14445,https://doi.org/10.1111/tbed.14445,2022,Pathways for avian influenza virus spread: GPS reveals wild waterfowl in commercial livestock facilities and connectivity with the natural wetland landscape,,TRUE
 10.1126/sciadv.abm8237,https://doi.org/10.1126/sciadv.abm8237,2022,Future bioenergy expansion could alter carbon sequestration potential and exacerbate water stress in the United States,Flood Operations,FALSE
-10.1126/sciadv.abq0995,https://doi.org/10.1126/sciadv.abq0995,2022,Climate change is increasing the risk of a California megaflood,,FALSE
-10.1130/ges02468.1,https://doi.org/10.1130/ges02468.1,2022,"Seismostratigraphic analysis of Lake Cahuilla sedimentation cycles and fault displacement history beneath the Salton Sea, California, USA",,FALSE
+10.1126/sciadv.abq0995,https://doi.org/10.1126/sciadv.abq0995,2022,Climate change is increasing the risk of a California megaflood,,TRUE
+10.1130/ges02468.1,https://doi.org/10.1130/ges02468.1,2022,"Seismostratigraphic analysis of Lake Cahuilla sedimentation cycles and fault displacement history beneath the Salton Sea, California, USA",,TRUE
 10.1175/bams-d-20-0292.1,https://doi.org/10.1175/bams-d-20-0292.1,2022,Illustrating Ensemble Predictability across Scales Associated with the 13-15 February 2019 Atmospheric River Event,Flood Operations,FALSE
 10.1175/bams-d-21-0130.1,https://doi.org/10.1175/bams-d-21-0130.1,2022,Advances in the Prediction of MJO Teleconnections in the S2S Forecast Systems,Flood Operations,FALSE
-10.1175/bams-d-21-0252.1,https://doi.org/10.1175/bams-d-21-0252.1,2022,Why Seasonal Prediction of California Winter Precipitation Is Challenging,,FALSE
+10.1175/bams-d-21-0252.1,https://doi.org/10.1175/bams-d-21-0252.1,2022,Why Seasonal Prediction of California Winter Precipitation Is Challenging,,TRUE
 10.1175/jcli-d-21-0168.1,https://doi.org/10.1175/jcli-d-21-0168.1,2022,Large-Scale Environments of Successive Atmospheric River Events Leading to Compound Precipitation Extremes in California,Flood Operations,FALSE
 10.1175/jcli-d-21-0445.1,https://doi.org/10.1175/jcli-d-21-0445.1,2022,Future Changes of PNA-like MJO Teleconnections in CMIP6 Models: Underlying Mechanisms and Uncertainty,Flood Operations,FALSE
 10.1175/jhm-d-21-0119.1,https://doi.org/10.1175/jhm-d-21-0119.1,2022,"Summarizing Relationships among Landfalling Atmospheric Rivers, Integrated Water Vapor Transport, and California Watershed Precipitation 1982-2019",Flood Operations,FALSE
-10.1175/jhm-d-21-0235.1,https://doi.org/10.1175/jhm-d-21-0235.1,2022,A New Methodology to Produce More Skillful United States Cool-Season Precipitation Forecasts,,FALSE
+10.1175/jhm-d-21-0235.1,https://doi.org/10.1175/jhm-d-21-0235.1,2022,A New Methodology to Produce More Skillful United States Cool-Season Precipitation Forecasts,,TRUE
 10.1175/jhm-d-22-0066.1,https://doi.org/10.1175/jhm-d-22-0066.1,2022,"Performance of New Near-Real-Time PERSIANN Product (PDIR-Now) for Atmospheric River Events over the Russian River Basin, California",Flood Operations,FALSE
 10.1175/jpo-d-21-0272.1,https://doi.org/10.1175/jpo-d-21-0272.1,2022,Ocean Surface Salinity Response to Atmospheric River Precipitation in the California Current System,Flood Operations,FALSE
-10.1175/mwr-d-22-0114.1,https://doi.org/10.1175/mwr-d-22-0114.1,2022,A Prognostic-Stochastic and Scale-Adaptive Cumulus Convection Closure for Improved Tropical Variability and Convective Gray-Zone Representation in NOAA’s Unified Forecast System (UFS),,FALSE
+10.1175/mwr-d-22-0114.1,https://doi.org/10.1175/mwr-d-22-0114.1,2022,A Prognostic-Stochastic and Scale-Adaptive Cumulus Convection Closure for Improved Tropical Variability and Convective Gray-Zone Representation in NOAA’s Unified Forecast System (UFS),,TRUE
 10.1175/waf-d-21-0074.1,https://doi.org/10.1175/waf-d-21-0074.1,2022,Demonstrating a Probabilistic Quantitative Precipitation Estimate for Evaluating Precipitation Forecasts in Complex Terrain,Regional Assistance,FALSE
 10.1175/waf-d-21-0114.1,https://doi.org/10.1175/waf-d-21-0114.1,2022,Evaluating GFS and ECMWF Ensemble Forecasts of Integrated Water Vapor Transport along the U.S. West Coast,Flood Operations,FALSE
-10.1177/87552930221082965,https://doi.org/10.1177/87552930221082965,2022,"Region-specific linear site amplification model for peaty organic soil sites in Hokkaido, Japan",Multibenefit Initiatives,TRUE
-10.1186/s40462-022-00324-7,https://doi.org/10.1186/s40462-022-00324-7,2022,Machine learned daily life history classification using low frequency tracking data and automated modelling pipelines: application to North American waterfowl,SWP - Integrated Science and Engineering,TRUE
+10.1177/87552930221082965,https://doi.org/10.1177/87552930221082965,2022,"Region-specific linear site amplification model for peaty organic soil sites in Hokkaido, Japan",Multibenefit Initiatives,FALSE
+10.1186/s40462-022-00324-7,https://doi.org/10.1186/s40462-022-00324-7,2022,Machine learned daily life history classification using low frequency tracking data and automated modelling pipelines: application to North American waterfowl,SWP - Integrated Science and Engineering,FALSE
 10.15447/sfews.2022v20iss1art4,https://doi.org/10.15447/sfews.2022v20iss1art4,2022,Investigation of Molecular Pathogen Screening Assays for Use in Delta Smelt,SWP - Integrated Science and Engineering,FALSE
-10.3389/fenvs.2022.1020243,https://doi.org/10.3389/fenvs.2022.1020243,2022,"Statistical evaluation of the similarity of characteristics in springs of the California Desert, United States",,FALSE
-10.3389/ffgc.2022.674348,https://doi.org/10.3389/ffgc.2022.674348,2022,Utilizing Novel Field and Data Exploration Methods to Explore Hot Moments in High-Frequency Soil Nitrous Oxide Emissions Data: Opportunities and Challenges,Multibenefit Initiatives,TRUE
+10.3389/fenvs.2022.1020243,https://doi.org/10.3389/fenvs.2022.1020243,2022,"Statistical evaluation of the similarity of characteristics in springs of the California Desert, United States",,TRUE
+10.3389/ffgc.2022.674348,https://doi.org/10.3389/ffgc.2022.674348,2022,Utilizing Novel Field and Data Exploration Methods to Explore Hot Moments in High-Frequency Soil Nitrous Oxide Emissions Data: Opportunities and Challenges,Multibenefit Initiatives,FALSE
 10.3389/frwa.2022.744278,https://doi.org/10.3389/frwa.2022.744278,2022,A Method for Analysis of Spatial Uncertainty in Image Based Surface Velocimetry,SWP - Integrated Science and Engineering,FALSE
 10.3390/ani12121478,https://doi.org/10.3390/ani12121478,2022,Captive Rearing of Longfin Smelt Spirinchus thaleichthys: First Attempt of Weaning Cultured Juveniles to Dry Feed,SWP - Integrated Science and Engineering,FALSE
 10.3390/atmos13091495,https://doi.org/10.3390/atmos13091495,2022,Evaluation of GNSS Radio Occultation Profiles in the Vicinity of Atmospheric Rivers,Flood Operations,FALSE
-10.3390/hydrology9090155,https://doi.org/10.3390/hydrology9090155,2022,Decline in Seasonal Snow during a Projected 20-Year Dry Spell,,FALSE
+10.3390/hydrology9090155,https://doi.org/10.3390/hydrology9090155,2022,Decline in Seasonal Snow during a Projected 20-Year Dry Spell,,TRUE
 10.3390/membranes12121287,https://doi.org/10.3390/membranes12121287,2022,Calcium Sulfate and Calcium Carbonate Scaling of Thin-Film Composite Polyamide Reverse Osmosis Membranes with Surface-Tethered Polyacrylic Acid Chains,Regional Assistance,FALSE
 10.3390/rs14153675,https://doi.org/10.3390/rs14153675,2022,The Application of PERSIANN Family Datasets for Hydrological Modeling,Flood Operations,FALSE
-10.3390/w14132030,https://doi.org/10.3390/w14132030,2022,Multi-Location Emulation of a Process-Based Salinity Model Using Machine Learning,,FALSE
-10.3390/w14152384,https://doi.org/10.3390/w14152384,2022,"Developing a Decision Support System for Regional Agricultural Nonpoint Salinity Pollution Management: Application to the San Joaquin River, California",,FALSE
+10.3390/w14132030,https://doi.org/10.3390/w14132030,2022,Multi-Location Emulation of a Process-Based Salinity Model Using Machine Learning,,TRUE
+10.3390/w14152384,https://doi.org/10.3390/w14152384,2022,"Developing a Decision Support System for Regional Agricultural Nonpoint Salinity Pollution Management: Application to the San Joaquin River, California",,TRUE
 10.3390/w14223628,https://doi.org/10.3390/w14223628,2022,Novel Salinity Modeling Using Deep Learning for the Sacramento-San Joaquin Delta of California,SWP - Model Support,FALSE
 10.51492/cfwj.108.21,https://doi.org/10.51492/cfwj.108.21,2022,Incorporating expanded sampling into an alternative abundance index for the Fall Midwater Trawl survey,,TRUE
-10.5194/soil-8-177-2022,https://doi.org/10.5194/soil-8-177-2022,2022,Long-term impact of cover crop and reduced disturbance tillage on soil pore size distribution and soil water storage,,FALSE
-10.7589/jwd-d-21-00059,https://doi.org/10.7589/jwd-d-21-00059,2022,PARASITES OF AN ENDANGERED HARVEST MOUSE (REITHRODONTOMYS RAVIVENTRIS HALICOETES) IN A NORTHERN CALIFORNIA MARSH,SWP - Integrated Science and Engineering,TRUE
+10.5194/soil-8-177-2022,https://doi.org/10.5194/soil-8-177-2022,2022,Long-term impact of cover crop and reduced disturbance tillage on soil pore size distribution and soil water storage,,TRUE
+10.7589/jwd-d-21-00059,https://doi.org/10.7589/jwd-d-21-00059,2022,PARASITES OF AN ENDANGERED HARVEST MOUSE (REITHRODONTOMYS RAVIVENTRIS HALICOETES) IN A NORTHERN CALIFORNIA MARSH,SWP - Integrated Science and Engineering,FALSE
 10.1002/eap.2243,https://doi.org/10.1002/eap.2243,2021,Resistance and resilience of pelagic and littoral fishes to drought in the San Francisco Estuary,SWP - Integrated Science and Engineering,FALSE
 10.1002/ece3.7245,https://doi.org/10.1002/ece3.7245,2021,Interrupted incubation: How dabbling ducks respond when flushed from the nest,SWP - Integrated Science and Engineering,FALSE
 10.1002/ece3.7561,https://doi.org/10.1002/ece3.7561,2021,Nocturnal incubation recess and flushing behavior by duck hens,SWP - Integrated Science and Engineering,FALSE
 10.1002/ece3.8115,https://doi.org/10.1002/ece3.8115,2021,Migration stopover ecology of Cinnamon Teal in western North America,SWP - Integrated Science and Engineering,FALSE
-10.1002/ecs2.3366,https://doi.org/10.1002/ecs2.3366,2021,Seasonal impoundment alters patterns of tidal wetland plant diversity across spatial scales,,FALSE
+10.1002/ecs2.3366,https://doi.org/10.1002/ecs2.3366,2021,Seasonal impoundment alters patterns of tidal wetland plant diversity across spatial scales,,TRUE
 10.1002/tafs.10271,https://doi.org/10.1002/tafs.10271,2021,"Juvenile Chinook Salmon Survival, Travel Time, and Floodplain Use Relative to Riverine Channels in the Sacramento-San Joaquin River Delta",SWP - Integrated Science and Engineering,FALSE
 10.1007/s10452-021-09863-4,https://doi.org/10.1007/s10452-021-09863-4,2021,Growth and reproductive rates of the dominant copepod Pseudodiaptomus forbesi in response to environmental factors and habitat type in the northern San Francisco Estuary,SWP - Integrated Science and Engineering,FALSE
 10.1007/s10641-021-01119-2,https://doi.org/10.1007/s10641-021-01119-2,2021,"Juvenile Chinook salmon use of sandbar willows in a large-scale, simulated riparian floodplain: microhabitat and energetics",Flood Operations,FALSE
 10.1007/s12237-020-00880-4,https://doi.org/10.1007/s12237-020-00880-4,2021,Managed Wetlands Can Benefit Juvenile Chinook Salmon in a Tidal Marsh,SWP - Integrated Science and Engineering,FALSE
 10.1007/s12237-021-00896-4,https://doi.org/10.1007/s12237-021-00896-4,2021,Complex Tidal Marsh Dynamics Structure Fish Foraging Patterns in the San Francisco Estuary,Regional Assistance,FALSE
 10.1016/j.agrformet.2020.108215,https://doi.org/10.1016/j.agrformet.2020.108215,2021,Remotely sensed phenological heterogeneity of restored wetlands: linking vegetation structure and function,Multibenefit Initiatives,FALSE
-10.1016/j.aquaculture.2021.736502,https://doi.org/10.1016/j.aquaculture.2021.736502,2021,Effects of temperature on hatching and growth performance of embryos and yolk-sac larvae of a threatened estuarine fish: Longfin smelt (Spirinchus thaleichthys),SWP - Integrated Science and Engineering,TRUE
+10.1016/j.aquaculture.2021.736502,https://doi.org/10.1016/j.aquaculture.2021.736502,2021,Effects of temperature on hatching and growth performance of embryos and yolk-sac larvae of a threatened estuarine fish: Longfin smelt (Spirinchus thaleichthys),SWP - Integrated Science and Engineering,FALSE
 10.1016/j.coastaleng.2021.103984,https://doi.org/10.1016/j.coastaleng.2021.103984,2021,"Drivers of extreme water levels in a large, urban, high-energy coastal estuary - A case study of the San Francisco Bay",Regional Assistance,FALSE
-10.1016/j.desal.2021.115129,https://doi.org/10.1016/j.desal.2021.115129,2021,Modeling UF fouling and backwash in seawater RO feedwater treatment using neural networks with evolutionary algorithm and Bayesian binary classification,,FALSE
+10.1016/j.desal.2021.115129,https://doi.org/10.1016/j.desal.2021.115129,2021,Modeling UF fouling and backwash in seawater RO feedwater treatment using neural networks with evolutionary algorithm and Bayesian binary classification,,TRUE
 10.1016/j.envpol.2020.115808,https://doi.org/10.1016/j.envpol.2020.115808,2021,Mercury exposure in mammalian mesopredators inhabiting a brackish marsh,SWP - Integrated Science and Engineering,FALSE
 10.1016/j.jenvman.2021.113170,https://doi.org/10.1016/j.jenvman.2021.113170,2021,Informing wetland management with waterfowl movement and sanctuary use responses to human-induced disturbance,SWP - Integrated Science and Engineering,FALSE
-10.1016/j.jenvman.2021.113562,https://doi.org/10.1016/j.jenvman.2021.113562,2021,Restoring wetlands on intensive agricultural lands modifies nitrogen cycling microbial communities and reduces N2O production potential,,FALSE
+10.1016/j.jenvman.2021.113562,https://doi.org/10.1016/j.jenvman.2021.113562,2021,Restoring wetlands on intensive agricultural lands modifies nitrogen cycling microbial communities and reduces N2O production potential,,TRUE
 10.1016/j.jhydrol.2021.126445,https://doi.org/10.1016/j.jhydrol.2021.126445,2021,Dynamical downscaling of global reanalysis data for high-resolution spatial modeling of snow accumulation/melting at the central/southern Sierra Nevada watersheds,Flood Operations,FALSE
 10.1016/j.memsci.2021.119135,https://doi.org/10.1016/j.memsci.2021.119135,2021,Evidence of solution-diffusion-with-defects in an engineering-scale pressure retarded osmosis system,Planning,FALSE
 10.1016/j.memsci.2021.119180,https://doi.org/10.1016/j.memsci.2021.119180,2021,Tuning the hydraulic permeability and molecular weight cutoff (MWCO) of surface nano-structured ultrafiltration membranes,Regional Assistance,FALSE
 10.1016/j.soilbio.2021.108235,https://doi.org/10.1016/j.soilbio.2021.108235,2021,Interactive effects of temperature and redox on soil carbon and iron cycling,Multibenefit Initiatives,FALSE
 10.1016/j.watres.2020.116766,https://doi.org/10.1016/j.watres.2020.116766,2021,Desupersaturation of RO concentrate and gypsum removal via seeded precipitation in a fluidized bed crystallizer,Regional Assistance,FALSE
 10.1021/acsestwater.1c00017,https://doi.org/10.1021/acsestwater.1c00017,2021,"Urban Stormwater Runoff: A Major Pathway for Anthropogenic Particles, Black Rubbery Fragments, and Other Types of Microplastics to Urban Receiving Waters",,TRUE
-10.1029/2020jd033775,https://doi.org/10.1029/2020jd033775,2021,"Evaluation of Atmospheric Boundary Layer Height From Wind Profiling Radar and Slab Models and Its Responses to Seasonality of Land Cover, Subsidence, and Advection",,FALSE
+10.1029/2020jd033775,https://doi.org/10.1029/2020jd033775,2021,"Evaluation of Atmospheric Boundary Layer Height From Wind Profiling Radar and Slab Models and Its Responses to Seasonality of Land Cover, Subsidence, and Advection",,TRUE
 10.1029/2020wr029279,https://doi.org/10.1029/2020wr029279,2021,Instantaneous River-Wide Water Surface Velocity Field Measurements at Centimeter Scales Using Infrared Quantitative Image Velocimetry,SWP - Integrated Science and Engineering,FALSE
 10.1029/2021gl093357,https://doi.org/10.1029/2021gl093357,2021,Representation of Dropsonde-Observed Atmospheric River Conditions in Reanalyses,Multibenefit Initiatives,FALSE
 10.1029/2021jd034813,https://doi.org/10.1029/2021jd034813,2021,Influence of Dust on Precipitation During Landfalling Atmospheric Rivers in an Idealized Framework,Flood Operations,FALSE
-10.1029/2021jd034848,https://doi.org/10.1029/2021jd034848,2021,Improving Seasonal Prediction of California Winter Precipitation Using Canonical Correlation Analysis,,FALSE
+10.1029/2021jd034848,https://doi.org/10.1029/2021jd034848,2021,Improving Seasonal Prediction of California Winter Precipitation Using Canonical Correlation Analysis,,TRUE
 10.1029/2021jd034865,https://doi.org/10.1029/2021jd034865,2021,Multi-GNSS Airborne Radio Occultation Observations as a Complement to Dropsondes in Atmospheric River Reconnaissance,Flood Operations,FALSE
 10.1029/2021jd035403,https://doi.org/10.1029/2021jd035403,2021,Evaluating the Meteorological Conditions Associated With Dusty Atmospheric Rivers,Flood Operations,FALSE
-10.1029/2021jg006573,https://doi.org/10.1029/2021jg006573,2021,"Tidal and Nontidal Marsh Restoration: A Trade-Off Between Carbon Sequestration, Methane Emissions, and Soil Accretion",,FALSE
+10.1029/2021jg006573,https://doi.org/10.1029/2021jg006573,2021,"Tidal and Nontidal Marsh Restoration: A Trade-Off Between Carbon Sequestration, Methane Emissions, and Soil Accretion",,TRUE
 10.1029/2021wr029699,https://doi.org/10.1029/2021wr029699,2021,Exploring the Model Space of Airborne Electromagnetic Data to Delineate Large-Scale Structure and Heterogeneity Within an Aquifer System,Sustainable Groundwater Management,FALSE
-10.1038/s43247-021-00225-4,https://doi.org/10.1038/s43247-021-00225-4,2021,Training machine learning models on climate model output yields skillful interpretable seasonal precipitation forecasts,Flood Operations,TRUE
-10.1061/(asce)gt.1943-5606.0002610,https://doi.org/10.1061/(asce)gt.1943-5606.0002610,2021,Using Conditional Random Fields for a Spatially Variable Liquefiable Foundation Layer in Nonlinear Dynamic Analyses of Embankments,SWP - Engineering,TRUE
-10.1061/(asce)gt.1943-5606.0002684,https://doi.org/10.1061/(asce)gt.1943-5606.0002684,2021,System Response of an Interlayered Deposit with Spatially Preferential Liquefaction Manifestations,SWP - Engineering,TRUE
-10.1061/(asce)wr.1943-5452.0001348,https://doi.org/10.1061/(asce)wr.1943-5452.0001348,2021,Estimating Agricultural Groundwater Withdrawals with Energy Data,Multibenefit Initiatives,TRUE
-10.1061/(asce)wr.1943-5452.0001410,https://doi.org/10.1061/(asce)wr.1943-5452.0001410,2021,Establishing a Range of Extreme Precipitation Estimates in California for Planning in the Face of Climate Change,Planning,TRUE
-10.1061/(asce)wr.1943-5452.0001445,https://doi.org/10.1061/(asce)wr.1943-5452.0001445,2021,Enhanced Artificial Neural Networks for Salinity Estimation and Forecasting in the Sacramento-San Joaquin Delta of California,SWP - Modeling Support Office,TRUE
+10.1038/s43247-021-00225-4,https://doi.org/10.1038/s43247-021-00225-4,2021,Training machine learning models on climate model output yields skillful interpretable seasonal precipitation forecasts,Flood Operations,FALSE
+10.1061/(asce)gt.1943-5606.0002610,https://doi.org/10.1061/(asce)gt.1943-5606.0002610,2021,Using Conditional Random Fields for a Spatially Variable Liquefiable Foundation Layer in Nonlinear Dynamic Analyses of Embankments,SWP - Engineering,FALSE
+10.1061/(asce)gt.1943-5606.0002684,https://doi.org/10.1061/(asce)gt.1943-5606.0002684,2021,System Response of an Interlayered Deposit with Spatially Preferential Liquefaction Manifestations,SWP - Engineering,FALSE
+10.1061/(asce)wr.1943-5452.0001348,https://doi.org/10.1061/(asce)wr.1943-5452.0001348,2021,Estimating Agricultural Groundwater Withdrawals with Energy Data,Multibenefit Initiatives,FALSE
+10.1061/(asce)wr.1943-5452.0001410,https://doi.org/10.1061/(asce)wr.1943-5452.0001410,2021,Establishing a Range of Extreme Precipitation Estimates in California for Planning in the Face of Climate Change,Planning,FALSE
+10.1061/(asce)wr.1943-5452.0001445,https://doi.org/10.1061/(asce)wr.1943-5452.0001445,2021,Enhanced Artificial Neural Networks for Salinity Estimation and Forecasting in the Sacramento-San Joaquin Delta of California,SWP - Modeling Support Office,FALSE
 10.1111/1365-2664.13845,https://doi.org/10.1111/1365-2664.13845,2021,Waterfowl use of wetland habitats informs wetland restoration designs for multi-species benefits,SWP - Integrated Science and Engineering,FALSE
-10.1111/1752-1688.12971,https://doi.org/10.1111/1752-1688.12971,2021,"A Basin-Scale Approach to Estimating Recharge in the Desert: Anza-Cahuilla Groundwater Basin, CA",,FALSE
-10.1111/acv.12697,https://doi.org/10.1111/acv.12697,2021,Megafire causes persistent loss of an old-forest species,,FALSE
+10.1111/1752-1688.12971,https://doi.org/10.1111/1752-1688.12971,2021,"A Basin-Scale Approach to Estimating Recharge in the Desert: Anza-Cahuilla Groundwater Basin, CA",,TRUE
+10.1111/acv.12697,https://doi.org/10.1111/acv.12697,2021,Megafire causes persistent loss of an old-forest species,,TRUE
 10.1111/biom.13267,https://doi.org/10.1111/biom.13267,2021,Improving inference for nonlinear state-space models of animal population dynamics given biased sequential life stage data,,TRUE
-10.1111/gcb.15661,https://doi.org/10.1111/gcb.15661,2021,Identifying dominant environmental predictors of freshwater wetland methane fluxes across diurnal to seasonal time scales,,FALSE
+10.1111/gcb.15661,https://doi.org/10.1111/gcb.15661,2021,Identifying dominant environmental predictors of freshwater wetland methane fluxes across diurnal to seasonal time scales,,TRUE
 10.1111/gcb.15802,https://doi.org/10.1111/gcb.15802,2021,Hot moments drive extreme nitrous oxide and methane emissions from agricultural peatlands,Multibenefit Initiatives,FALSE
 10.1139/cjfas-2020-0251,https://doi.org/10.1139/cjfas-2020-0251,2021,Disentangling risks to an endangered fish: Using a state-space life cycle model to separate natural mortality from anthropogenic losses,,TRUE
 10.1139/cjfas-2021-0005,https://doi.org/10.1139/cjfas-2021-0005,2021,"Genome-wide analysis reveals regional patterns of drift, structure, and gene flow in longfin smelt (Spirinchus thaleichthys) in the northeastern pacific",SWP - Integrated Science and Engineering,FALSE
-10.1175/bams-d-19-0183.1,https://doi.org/10.1175/bams-d-19-0183.1,2021,West coast forecast challenges and development of atmospheric river reconnaissance,Flood Operations,TRUE
-10.1175/bams-d-19-0287.1,https://doi.org/10.1175/bams-d-19-0287.1,2021,Data gaps within atmospheric rivers over the northeastern pacific,Flood Operations,TRUE
+10.1175/bams-d-19-0183.1,https://doi.org/10.1175/bams-d-19-0183.1,2021,West coast forecast challenges and development of atmospheric river reconnaissance,Flood Operations,FALSE
+10.1175/bams-d-19-0287.1,https://doi.org/10.1175/bams-d-19-0287.1,2021,Data gaps within atmospheric rivers over the northeastern pacific,Flood Operations,FALSE
 10.1175/jcli-d-20-0391.1,https://doi.org/10.1175/jcli-d-20-0391.1,2021,Monthly modulations of ENSO teleconnections: Implications for potential predictability in North America,Flood Operations,FALSE
-10.1175/jcli-d-20-0824.1,https://doi.org/10.1175/jcli-d-20-0824.1,2021,Long-lead seasonal prediction of streamflow over the upper colorado river basin: The role of the pacific sea surface temperature and beyond,,FALSE
+10.1175/jcli-d-20-0824.1,https://doi.org/10.1175/jcli-d-20-0824.1,2021,Long-lead seasonal prediction of streamflow over the upper colorado river basin: The role of the pacific sea surface temperature and beyond,,TRUE
 10.1175/jhm-d-20-0122.1,https://doi.org/10.1175/jhm-d-20-0122.1,2021,Quantifying the Potential of AQPI Gap-Filling Radar Network for Streamflow Simulation through a WRF-Hydro Experiment,,TRUE
-10.1175/jhm-d-20-0212.1,https://doi.org/10.1175/jhm-d-20-0212.1,2021,An Extreme-Preserving Long-Term Gridded Daily Precipitation Dataset for the Conterminous United States,Flood Operations,TRUE
+10.1175/jhm-d-20-0212.1,https://doi.org/10.1175/jhm-d-20-0212.1,2021,An Extreme-Preserving Long-Term Gridded Daily Precipitation Dataset for the Conterminous United States,Flood Operations,FALSE
 10.1175/jhm-d-20-0219.1,https://doi.org/10.1175/jhm-d-20-0219.1,2021,Evaluation of the subseasonal forecast skill of floods associated with atmospheric rivers in coastal western U.S. watersheds,Flood Operations,FALSE
 10.1175/mwr-d-20-0212.1,https://doi.org/10.1175/mwr-d-20-0212.1,2021,The influence of antecedent atmospheric river conditions on extratropical cyclogenesis,Flood Operations,FALSE
 10.1175/mwr-d-20-0364.1,https://doi.org/10.1175/mwr-d-20-0364.1,2021,Modulation of atmospheric rivers by mesoscale frontal waves and latent heating: Comparison of two U.S. West Coast events,Flood Operations,FALSE
@@ -355,7 +355,7 @@ doi,doi_url,year,title,division,new
 10.15447/sfews.2021v19iss1art1,https://doi.org/10.15447/sfews.2021v19iss1art1,2021,Statistical Evaluation of Behavior and Population Dynamics Models that Predict Movement and Proportional Entrainment Loss of Adult Delta Smelt in the Sacramento-San Joaquin River Delta,SWP - Integrated Science and Engineering,FALSE
 10.15447/sfews.2021v19iss1art3,https://doi.org/10.15447/sfews.2021v19iss1art3,2021,Modeling Delta Smelt Distribution for Hypothesized Swimming Behaviors,,TRUE
 10.15447/sfews.2021v19iss1art5,https://doi.org/10.15447/sfews.2021v19iss1art5,2021,Re-Examining Factors That Affect Delta Smelt (Hypomesus transpacificus) Entrainment at the State Water Project and Central Valley Project in the Sacramento-San Joaquin Delta,SWP - Integrated Science and Engineering,FALSE
-10.15447/sfews.2021v19iss2art4,https://doi.org/10.15447/sfews.2021v19iss2art4,2021,Effects of Tidally Varying River Flow on Entrainment of Juvenile Salmon into Sutter and Steamboat Sloughs,,FALSE
+10.15447/sfews.2021v19iss2art4,https://doi.org/10.15447/sfews.2021v19iss2art4,2021,Effects of Tidally Varying River Flow on Entrainment of Juvenile Salmon into Sutter and Steamboat Sloughs,,TRUE
 10.15447/sfews.2021v19iss2art5,https://doi.org/10.15447/sfews.2021v19iss2art5,2021,Examining Retention-at-Length of Pelagic Fishes Caught in the Fall Midwater Trawl Survey,SWP - Integrated Science and Engineering,FALSE
 10.15447/sfews.2021v19iss2art6,https://doi.org/10.15447/sfews.2021v19iss2art6,2021,Use of the SmeltCam as an Efficient Fish-Sampling Alternative within the San Francisco Estuary,SWP - Integrated Science and Engineering,FALSE
 10.15447/sfews.2021v19iss3art3,https://doi.org/10.15447/sfews.2021v19iss3art3,2021,Use of a Managed Flow Pulse as Food Web Support for Estuarine Habitat,SWP - Integrated Science and Engineering,FALSE
@@ -366,65 +366,65 @@ doi,doi_url,year,title,division,new
 10.2166/nh.2020.267,https://doi.org/10.2166/nh.2020.267,2021,Analysis of topographic controls on depletion curves derived from airborne lidar snow depth data,Flood Operations,FALSE
 10.3389/fenvs.2021.642906,https://doi.org/10.3389/fenvs.2021.642906,2021,UAV to Inform Restoration: A Case Study From a California Tidal Marsh,Regional Assistance,FALSE
 10.3389/fmicb.2021.632264,https://doi.org/10.3389/fmicb.2021.632264,2021,"Covariance of Phytoplankton, Bacteria, and Zooplankton Communities Within Microcystis Blooms in San Francisco Estuary",SWP - Integrated Science and Engineering,FALSE
-10.3390/w13192661,https://doi.org/10.3390/w13192661,2021,"Comparison of deterministic and statistical models for water quality compliance forecasting in the San Joaquin river basin, California",,FALSE
+10.3390/w13192661,https://doi.org/10.3390/w13192661,2021,"Comparison of deterministic and statistical models for water quality compliance forecasting in the San Joaquin river basin, California",,TRUE
 10.51492/cfwj.cesasi.20,https://doi.org/10.51492/cfwj.cesasi.20,2021,Population ecology and survivorship of San Joaquin antelope squirrels in grazed and control plots in the San Joaquin Desert of California,,TRUE
 10.1002/ece3.6078,https://doi.org/10.1002/ece3.6078,2020,"Timing, frequency, and duration of incubation recesses in dabbling ducks",SWP - Integrated Science and Engineering,FALSE
 10.1002/etc.4659,https://doi.org/10.1002/etc.4659,2020,"Determining the Exposure Pathway and Impacts of Microcystis on Threadfin Shad, Dorosoma petenense, in San Francisco Estuary",SWP - Integrated Science and Engineering,FALSE
-10.1002/hyp.13749,https://doi.org/10.1002/hyp.13749,2020,From drought to flood: A water balance analysis of the Tuolumne River basin during extreme conditions (2015-2017),,FALSE
-10.1002/nafm.10391,https://doi.org/10.1002/nafm.10391,2020,Limitations of Active Removal to Manage Predatory Fish Populations,SWP - Operations and Maintenance,TRUE
+10.1002/hyp.13749,https://doi.org/10.1002/hyp.13749,2020,From drought to flood: A water balance analysis of the Tuolumne River basin during extreme conditions (2015-2017),,TRUE
+10.1002/nafm.10391,https://doi.org/10.1002/nafm.10391,2020,Limitations of Active Removal to Manage Predatory Fish Populations,SWP - Operations and Maintenance,FALSE
 10.1007/s00267-020-01326-0,https://doi.org/10.1007/s00267-020-01326-0,2020,Brackish Tidal Marsh Management and the Ecology of a Declining Freshwater Turtle,SWP - Integrated Science and Engineering,FALSE
-10.1007/s10021-019-00430-5,https://doi.org/10.1007/s10021-019-00430-5,2020,"Effect of Drought-Induced Salinization on Wetland Methane Emissions, Gross Ecosystem Productivity, and Their Interactions",Multibenefit Initiatives,TRUE
+10.1007/s10021-019-00430-5,https://doi.org/10.1007/s10021-019-00430-5,2020,"Effect of Drought-Induced Salinization on Wetland Methane Emissions, Gross Ecosystem Productivity, and Their Interactions",Multibenefit Initiatives,FALSE
 10.1007/s10236-019-01333-8,https://doi.org/10.1007/s10236-019-01333-8,2020,Simulating vegetation effects on flows in 3D using an unstructured grid model: model development and validation,,TRUE
 10.1007/s10584-020-02655-z,https://doi.org/10.1007/s10584-020-02655-z,2020,Vulnerability and risk: climate change and water supply from California’s Central Valley water system,Planning,FALSE
-10.1007/s12237-019-00672-5,https://doi.org/10.1007/s12237-019-00672-5,2020,Spawning Microhabitat Selection in Wild-Caught Delta Smelt Hypomesus transpacificus under Laboratory Conditions,SWP - Integrated Science and Engineering,TRUE
+10.1007/s12237-019-00672-5,https://doi.org/10.1007/s12237-019-00672-5,2020,Spawning Microhabitat Selection in Wild-Caught Delta Smelt Hypomesus transpacificus under Laboratory Conditions,SWP - Integrated Science and Engineering,FALSE
 10.1016/j.anbehav.2020.04.013,https://doi.org/10.1016/j.anbehav.2020.04.013,2020,Good prospects: high-resolution telemetry data suggests novel brood site selection behaviour in waterfowl,SWP - Integrated Science and Engineering,FALSE
 10.1016/j.apenergy.2020.114746,https://doi.org/10.1016/j.apenergy.2020.114746,2020,Solar thermal wastewater evaporation for brine management and low pressure steam using the XCPC,Regional Assistance,FALSE
-10.1016/j.atmosres.2020.104895,https://doi.org/10.1016/j.atmosres.2020.104895,2020,"Raindrop size distribution and microphysical characteristics of a great rainstorm in 2016 in Beijing, China",,FALSE
-10.1016/j.envpol.2020.114750,https://doi.org/10.1016/j.envpol.2020.114750,2020,UV light and temperature induced fluridone degradation in water and sediment and potential transport into aquifer,,FALSE
+10.1016/j.atmosres.2020.104895,https://doi.org/10.1016/j.atmosres.2020.104895,2020,"Raindrop size distribution and microphysical characteristics of a great rainstorm in 2016 in Beijing, China",,TRUE
+10.1016/j.envpol.2020.114750,https://doi.org/10.1016/j.envpol.2020.114750,2020,UV light and temperature induced fluridone degradation in water and sediment and potential transport into aquifer,,TRUE
 10.1016/j.geoderma.2020.114202,https://doi.org/10.1016/j.geoderma.2020.114202,2020,Soil temperature survey in a mountain basin,Planning,FALSE
 10.1016/j.jhydrol.2019.124478,https://doi.org/10.1016/j.jhydrol.2019.124478,2020,Information content of spatially distributed ground-based measurements for hydrologic-parameter calibration in mixed rain-snow mountain headwaters,,TRUE
-10.1016/j.scitotenv.2020.136960,https://doi.org/10.1016/j.scitotenv.2020.136960,2020,Experimental harvesting of wetland plants to evaluate trade-offs between reducing methane emissions and removing nutrients accumulated to the biomass in constructed wetlands,,FALSE
-10.1029/2019jg005380,https://doi.org/10.1029/2019jg005380,2020,Wildfire-Smoke Aerosols Lead to Increased Light Use Efficiency Among Agricultural and Restored Wetland Land Uses in California's Central Valley,,FALSE
+10.1016/j.scitotenv.2020.136960,https://doi.org/10.1016/j.scitotenv.2020.136960,2020,Experimental harvesting of wetland plants to evaluate trade-offs between reducing methane emissions and removing nutrients accumulated to the biomass in constructed wetlands,,TRUE
+10.1029/2019jg005380,https://doi.org/10.1029/2019jg005380,2020,Wildfire-Smoke Aerosols Lead to Increased Light Use Efficiency Among Agricultural and Restored Wetland Land Uses in California's Central Valley,,TRUE
 10.1029/2020ea001129,https://doi.org/10.1029/2020ea001129,2020,Observations of an Extreme Atmospheric River Storm With a Diverse Sensor Network,Flood Operations,FALSE
 10.1029/2020gl087609,https://doi.org/10.1029/2020gl087609,2020,Four Atmospheric Circulation Regimes Over the North Pacific and Their Relationship to California Precipitation on Daily to Seasonal Timescales,Flood Operations,FALSE
-10.1029/2020jd033655,https://doi.org/10.1029/2020jd033655,2020,Subseasonal-to-Seasonal Hindcast Skill Assessment of Ridging Events Related to Drought Over the Western United States,,FALSE
+10.1029/2020jd033655,https://doi.org/10.1029/2020jd033655,2020,Subseasonal-to-Seasonal Hindcast Skill Assessment of Ridging Events Related to Drought Over the Western United States,,TRUE
 10.1029/2020wr027072,https://doi.org/10.1029/2020wr027072,2020,Freezing Level Forecast Error Can Consume Reservoir Flood Control Storage: Potentials for Lake Oroville and New Bullards Bar Reservoirs in California,Flood Operations,FALSE
-10.1061/(asce)gt.1943-5606.0002212,https://doi.org/10.1061/(asce)gt.1943-5606.0002212,2020,"Closure to ""axisymmetric Simulations of Cone Penetration in Saturated Clay"" by Diane M. Moug, Ross W. Boulanger, Jason T. DeJong, and Robert A. Jaeger",SWP - Engineering,TRUE
-10.1061/(asce)gt.1943-5606.0002372,https://doi.org/10.1061/(asce)gt.1943-5606.0002372,2020,Accounting for Spatial Variability in Nonlinear Dynamic Analyses of Embankment Dams on Liquefiable Deposits,SWP - Engineering,TRUE
+10.1061/(asce)gt.1943-5606.0002212,https://doi.org/10.1061/(asce)gt.1943-5606.0002212,2020,"Closure to ""axisymmetric Simulations of Cone Penetration in Saturated Clay"" by Diane M. Moug, Ross W. Boulanger, Jason T. DeJong, and Robert A. Jaeger",SWP - Engineering,FALSE
+10.1061/(asce)gt.1943-5606.0002372,https://doi.org/10.1061/(asce)gt.1943-5606.0002372,2020,Accounting for Spatial Variability in Nonlinear Dynamic Analyses of Embankment Dams on Liquefiable Deposits,SWP - Engineering,FALSE
 10.1080/01919512.2020.1712187,https://doi.org/10.1080/01919512.2020.1712187,2020,Evaluation of Four Dissolved Ozone Residual Meters’ Performance and Disinfection Credits in Potable Reuse Applications,Regional Assistance,FALSE
-10.1080/02626667.2020.1757677,https://doi.org/10.1080/02626667.2020.1757677,2020,An experiment on reservoir representation schemes to improve hydrologic prediction: coupling the national water model with the HEC-ResSim,,FALSE
-10.1093/jmammal/gyz183,https://doi.org/10.1093/jmammal/gyz183,2020,Demography of the salt marsh harvest mouse (Reithrodontomys raviventris halicoetes) and associated rodents in tidal and managed wetlands,SWP - Integrated Science and Engineering,TRUE
-10.1111/1365-2656.13228,https://doi.org/10.1111/1365-2656.13228,2020,Changes in climate and land use interact to create an ecological trap in a migratory species,,FALSE
+10.1080/02626667.2020.1757677,https://doi.org/10.1080/02626667.2020.1757677,2020,An experiment on reservoir representation schemes to improve hydrologic prediction: coupling the national water model with the HEC-ResSim,,TRUE
+10.1093/jmammal/gyz183,https://doi.org/10.1093/jmammal/gyz183,2020,Demography of the salt marsh harvest mouse (Reithrodontomys raviventris halicoetes) and associated rodents in tidal and managed wetlands,SWP - Integrated Science and Engineering,FALSE
+10.1111/1365-2656.13228,https://doi.org/10.1111/1365-2656.13228,2020,Changes in climate and land use interact to create an ecological trap in a migratory species,,TRUE
 10.1111/1752-1688.12822,https://doi.org/10.1111/1752-1688.12822,2020,A Long View of Southern California Water Supply: Perfect Droughts Revisited,Executive,FALSE
 10.1111/1755-0998.13186,https://doi.org/10.1111/1755-0998.13186,2020,Rapid and accurate species identification for ecological studies and monitoring using CRISPR-based SHERLOCK,SWP - Integrated Science and Engineering,FALSE
 10.1111/gcb.14807,https://doi.org/10.1111/gcb.14807,2020,How eddy covariance flux measurements have contributed to our understanding of Global Change Biology,,TRUE
 10.1111/jai.13990,https://doi.org/10.1111/jai.13990,2020,"Experimental assessment of predation risk for juvenile green sturgeon, Acipenser medirostris, by two predatory fishes",,TRUE
 10.1111/jfb.14143,https://doi.org/10.1111/jfb.14143,2020,Lamprey (Entosphenus sp. and Lampetra sp.) estuarine occupancy is regionally variable and constrained by temperature,,TRUE
 10.1111/nyas.14368,https://doi.org/10.1111/nyas.14368,2020,A multimodel evaluation of the water vapor budget in atmospheric rivers,,TRUE
-10.1175/jamc-d-19-0194.1,https://doi.org/10.1175/jamc-d-19-0194.1,2020,A new satellite-based global climatology of dust aerosol optical depth,Flood Operations,TRUE
+10.1175/jamc-d-19-0194.1,https://doi.org/10.1175/jamc-d-19-0194.1,2020,A new satellite-based global climatology of dust aerosol optical depth,Flood Operations,FALSE
 10.1175/jcli-d-19-0126.1,https://doi.org/10.1175/jcli-d-19-0126.1,2020,Statistical relationship between atmospheric rivers and extratropical cyclones and anticyclones,,TRUE
 10.1175/jcli-d-19-0439.1,https://doi.org/10.1175/jcli-d-19-0439.1,2020,"Ridging associated with Drought across the Western and Southwestern United States: Characteristics, trends, and predictability sources",,TRUE
 10.1175/jcli-d-20-0059.1,https://doi.org/10.1175/jcli-d-20-0059.1,2020,Dusty atmospheric rivers: Characteristics and origins,Flood Operations,FALSE
 10.1175/jhm-d-18-0212.1,https://doi.org/10.1175/jhm-d-18-0212.1,2020,Skill of rain-snow level forecasts for landfalling atmospheric rivers: A multimodel assessment using california’s network of vertically profiling radars,Flood Operations,FALSE
-10.1175/jhm-d-19-0160.1,https://doi.org/10.1175/jhm-d-19-0160.1,2020,On the uncertainty of high-resolution hourly quantitative precipitation estimates in California,,FALSE
+10.1175/jhm-d-19-0160.1,https://doi.org/10.1175/jhm-d-19-0160.1,2020,On the uncertainty of high-resolution hourly quantitative precipitation estimates in California,,TRUE
 10.1175/jhm-d-19-0242.1,https://doi.org/10.1175/jhm-d-19-0242.1,2020,Floods due to atmospheric rivers along the u.S. west coast: The role of antecedent soil moisture in a warming climate,Flood Operations,FALSE
 10.1175/jhm-d-20-0048.1,https://doi.org/10.1175/jhm-d-20-0048.1,2020,The observed water vapor budget in an atmospheric river over the northeast pacific,Flood Operations,FALSE
 10.1175/mwr-d-19-0248.1,https://doi.org/10.1175/mwr-d-19-0248.1,2020,Dropsonde observations of the ageostrophy within the pre-cold-frontal low-level jet associated with atmospheric rivers,Flood Operations,FALSE
-10.1175/mwr-d-19-0278.1,https://doi.org/10.1175/mwr-d-19-0278.1,2020,GPM satellite radar observations of precipitation mechanisms in atmospheric rivers,,FALSE
-10.1175/mwr-d-20-0096.1,https://doi.org/10.1175/mwr-d-20-0096.1,2020,Using artificial neural networks for generating probabilistic subseasonal precipitation forecasts over california,,FALSE
-10.1175/waf-d-19-0241.1,https://doi.org/10.1175/waf-d-19-0241.1,2020,Present and past sea surface temperatures: A recipe for better seasonal climate forecasts,,FALSE
-10.1175/waf-d-20-0012.1,https://doi.org/10.1175/waf-d-20-0012.1,2020,Observations and predictability of a high-impact narrow cold-frontal rainband over Southern California on 2 February 2019,,FALSE
+10.1175/mwr-d-19-0278.1,https://doi.org/10.1175/mwr-d-19-0278.1,2020,GPM satellite radar observations of precipitation mechanisms in atmospheric rivers,,TRUE
+10.1175/mwr-d-20-0096.1,https://doi.org/10.1175/mwr-d-20-0096.1,2020,Using artificial neural networks for generating probabilistic subseasonal precipitation forecasts over california,,TRUE
+10.1175/waf-d-19-0241.1,https://doi.org/10.1175/waf-d-19-0241.1,2020,Present and past sea surface temperatures: A recipe for better seasonal climate forecasts,,TRUE
+10.1175/waf-d-20-0012.1,https://doi.org/10.1175/waf-d-20-0012.1,2020,Observations and predictability of a high-impact narrow cold-frontal rainband over Southern California on 2 February 2019,,TRUE
 10.1175/waf-d-20-0049.1,https://doi.org/10.1175/waf-d-20-0049.1,2020,Forecast errors and uncertainties in atmospheric rivers,Flood Operations,FALSE
 10.1371/journal.pone.0216019,https://doi.org/10.1371/journal.pone.0216019,2020,Detrital food web contributes to aquatic ecosystem productivity and rapid salmon growth in a managed floodplain,SWP - Integrated Science and Engineering,FALSE
 10.15447/sfews.2020v18iss2art4,https://doi.org/10.15447/sfews.2020v18iss2art4,2020,Comparing and integrating fish surveys in the San Francisco estuary: Why diverse long-term monitoring programs are important,SWP - Integrated Science and Engineering,FALSE
 10.15447/sfews.2020v18iss3art4,https://doi.org/10.15447/sfews.2020v18iss3art4,2020,Farm to fish: Lessons from a multi-year study on agricultural floodplain habitat,SWP - Integrated Science and Engineering,FALSE
-10.3389/fenvs.2020.564603,https://doi.org/10.3389/fenvs.2020.564603,2020,Vegetation vs. Anoxic Controls on Degradation of Plant Litter in a Restored Wetland,,FALSE
-10.3389/ffgc.2020.539429,https://doi.org/10.3389/ffgc.2020.539429,2020,Hydrologic Response of Sierra Nevada Mixed-Conifer Headwater Catchments to Vegetation Treatments and Wildfire in a Warming Climate,,FALSE
+10.3389/fenvs.2020.564603,https://doi.org/10.3389/fenvs.2020.564603,2020,Vegetation vs. Anoxic Controls on Degradation of Plant Litter in a Restored Wetland,,TRUE
+10.3389/ffgc.2020.539429,https://doi.org/10.3389/ffgc.2020.539429,2020,Hydrologic Response of Sierra Nevada Mixed-Conifer Headwater Catchments to Vegetation Treatments and Wildfire in a Warming Climate,,TRUE
 10.3390/land9110454,https://doi.org/10.3390/land9110454,2020,"Park, fish, salt and marshes: Participatory mapping and design in a watery uncommons",SWP - Integrated Science and Engineering,FALSE
 10.3390/su12166362,https://doi.org/10.3390/su12166362,2020,Policy-driven sustainable saline drainage disposal and forage production in the Western San Joaquin Valley of California,Regional Assistance,FALSE
 10.3390/w12092481,https://doi.org/10.3390/w12092481,2020,Effect of fluvial discharges and remote non-tidal residuals on compound flood forecasting in San Francisco Bay,Regional Assistance,FALSE
-10.3996/062019-jfwm-051,https://doi.org/10.3996/062019-jfwm-051,2020,Intrinsic prey preference and selection of the giant gartersnake: A threatened predator in a nonnative prey-dominated community,,FALSE
-10.5194/hess-24-4317-2020,https://doi.org/10.5194/hess-24-4317-2020,2020,Climate elasticity of evapotranspiration shifts the water balance of Mediterranean climates during multi-year droughts,,FALSE
+10.3996/062019-jfwm-051,https://doi.org/10.3996/062019-jfwm-051,2020,Intrinsic prey preference and selection of the giant gartersnake: A threatened predator in a nonnative prey-dominated community,,TRUE
+10.5194/hess-24-4317-2020,https://doi.org/10.5194/hess-24-4317-2020,2020,Climate elasticity of evapotranspiration shifts the water balance of Mediterranean climates during multi-year droughts,,TRUE
 10.5194/hess-24-5317-2020,https://doi.org/10.5194/hess-24-5317-2020,2020,Technical note: Precipitation-phase partitioning at landscape scales to regional scales,Flood Operations,FALSE
 10.1002/1438-390x.1015,https://doi.org/10.1002/1438-390x.1015,2019,Estimating relationships between size and fecundity in the threatened giant garter snake in seminatural and agricultural wetlands,,TRUE
 10.1002/ece3.5146,https://doi.org/10.1002/ece3.5146,2019,"Sitting ducklings: Timing of hatch, nest departure, and predation risk for dabbling duck broods",,TRUE
