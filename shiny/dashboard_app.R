@@ -222,6 +222,7 @@ app_css <- "
   .panel-left {
     flex: 0 0 40%;
     min-width: 0;
+    overflow: hidden;
     transition: flex-basis 0.25s ease;
   }
   .panel-right {
@@ -466,6 +467,7 @@ ui <- fluidPage(
         var btn      = document.getElementById('btn_chat_toggle');
         btn.innerHTML = isOpen ? 'Close chat' : 'Ask the data &#10022;';
         btn.classList.toggle('is-open', isOpen);
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 260);
       });
     "))
   ),
