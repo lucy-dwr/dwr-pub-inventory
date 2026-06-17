@@ -12,6 +12,9 @@ library(ellmer)
 if (basename(getwd()) == "shiny") setwd("..")
 .ROOT <- getwd()
 
+source(file.path(.ROOT, "R", "load_pipeline_config.R"))
+pipeline_config <- load_pipeline_config(file.path(.ROOT, "config", "pipeline.yml"))
+
 # ── Load data ──────────────────────────────────────────────────────────────────
 pubs_raw <- arrow::read_parquet(file.path(.ROOT, "data/generated/dwr_publications.parquet"))
 
@@ -814,13 +817,16 @@ server <- function(input, output, session) {
 
   # Create one ellmer chat object per session with the system prompt.
   # Use chat_openai_compatible to match the pubclassify pipeline's provider.
+  llm_key <- Sys.getenv("PUBCLASSIFY_LLM_KEY", unset = "")
+  if (!nzchar(llm_key)) {
+    stop("Dashboard chat requires PUBCLASSIFY_LLM_KEY in the environment.", call. = FALSE)
+  }
   chat_obj <- ellmer::chat_openai_compatible(
-    base_url      = Sys.getenv("PUBCLASSIFY_LLM_BASE_URL",
-                               unset = "https://customeruat.sda.state.ca.gov/api/v1"),
+    base_url      = pipeline_config$llm$base_url,
     system_prompt = chat_system_prompt,
-    api_key       = Sys.getenv("PUBCLASSIFY_LLM_KEY",
-                               unset = Sys.getenv("OPENAI_API_KEY")),
-    model         = Sys.getenv("PUBCLASSIFY_LLM_MODEL", unset = "Anthropic Claude Sonnet 4.5"),
+    credentials   = NULL,
+    api_headers   = c(Authorization = paste("Bearer", llm_key)),
+    model         = pipeline_config$llm$model,
     echo          = "none"
   )
 

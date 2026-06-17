@@ -48,13 +48,11 @@ append_accepted_publications <- function(
     ))
 
     if (nrow(to_append) > 0L) {
-      # Align column sets before binding
-      only_in_existing  <- setdiff(names(existing),   names(to_append))
-      only_in_new       <- setdiff(names(to_append),  names(existing))
-      existing          <- dplyr::mutate(existing,
-                             dplyr::across(dplyr::all_of(only_in_new),      ~NA))
-      to_append         <- dplyr::mutate(to_append,
-                             dplyr::across(dplyr::all_of(only_in_existing), ~NA))
+      # Align column sets before binding (across() can't add new columns)
+      only_in_existing  <- setdiff(names(existing),  names(to_append))
+      only_in_new       <- setdiff(names(to_append), names(existing))
+      for (col in only_in_new)      existing[[col]]  <- NA
+      for (col in only_in_existing) to_append[[col]] <- NA
       combined <- dplyr::bind_rows(existing, to_append)
     } else {
       combined <- existing
