@@ -2,6 +2,7 @@ library(shiny)
 library(dplyr)
 library(readr)
 library(arrow)
+library(yaml)
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 if (basename(getwd()) == "shiny") setwd("..")
@@ -60,7 +61,13 @@ save_decision <- function(record_key, doi, decision, refresh_id) {
 # Determine current refresh_id from the queue data if available, else env var
 current_refresh_id <- function() {
   if ("harvest_id" %in% names(pubs) && nrow(pubs) > 0L) pubs$harvest_id[[1L]]
-  else Sys.getenv("DWR_REFRESH_ID", unset = format(Sys.Date(), "%Y-%m-%d"))
+  else {
+    cfg <- yaml::read_yaml(file.path(.ROOT, "config", "pipeline.yml"))
+    id <- cfg$refresh$id
+    if (is.null(id) || length(id) == 0L || is.na(id)) id <- ""
+    id <- trimws(as.character(id[[1L]]))
+    if (nzchar(id)) id else format(Sys.Date(), "%Y-%m-%d")
+  }
 }
 
 REFRESH_ID <- current_refresh_id()
