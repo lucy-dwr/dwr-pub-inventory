@@ -18,7 +18,7 @@ targets::tar_source("R/")
 # ── Operator workflow ──────────────────────────────────────────────────────────
 #
 # 1. Start a refresh (set scopus.allow_api_calls: true first):
-#      targets::tar_make(funder_review_queue_file, author_review_queue_file)
+#      targets::tar_make(names = c(funder_review_queue_file, author_review_queue_file))
 #      Then set scopus.allow_api_calls back to false.
 #
 # 2a. Review funder candidates (confirms DWR funding):
@@ -35,7 +35,7 @@ targets::tar_source("R/")
 #      shiny::runApp("shiny/affiliation_review_app.R")
 #
 # 4. Publish updated inventory:
-#      targets::tar_make()
+#      targets::tar_make(names = c(dashboard_csv, dashboard_parquet, refresh_log_completed))
 #
 # Refresh modes (set refresh.default_mode in config/pipeline.yml):
 #   new_records_only   — publish only records not already accepted (default)
@@ -292,15 +292,17 @@ list(
       funder_drops <- read_drops(pipeline_config$paths$funding_review_decisions)
       author_drops <- read_drops(pipeline_config$paths$author_review_decisions)
 
-      dplyr::mutate(combined,
-        query_source = dplyr::case_when(
-          .data$record_key %in% funder_drops &
-            .data$query_source == "funder; affiliation" ~ "affiliation",
-          .data$record_key %in% author_drops &
-            .data$query_source == "funder; affiliation" ~ "funder",
-          TRUE ~ .data$query_source
-        )
-      )
+      combined |>
+        dplyr::mutate(
+          query_source = dplyr::case_when(
+            .data$record_key %in% funder_drops &
+              .data$query_source == "funder; affiliation" ~ "affiliation",
+            .data$record_key %in% author_drops &
+              .data$query_source == "funder; affiliation" ~ "funder",
+            TRUE ~ .data$query_source
+          )
+        ) |>
+        dplyr::select(-dplyr::any_of(c("funders", "grant_numbers")))
     }
   ),
 
@@ -375,11 +377,40 @@ list(
   ),
 
   targets::tar_target(
+    geo_system_prompt_file,
+    pipeline_config$paths$geo_system_prompt,
+    format = "file"
+  ),
+
+  targets::tar_target(
+    geo_user_template_file,
+    pipeline_config$paths$geo_user_template,
+    format = "file"
+  ),
+
+  targets::tar_target(
+    institution_geo_lookup_file,
+    {
+      build_institution_geo_lookup(
+        affiliation_lookup_path = affiliation_lookup_file,
+        output_path             = pipeline_config$paths$institution_geo_lookup,
+        system_prompt_path      = geo_system_prompt_file,
+        user_template_path      = geo_user_template_file,
+        model                   = pipeline_config$llm$model,
+        base_url                = pipeline_config$llm$base_url
+      )
+      pipeline_config$paths$institution_geo_lookup
+    },
+    format = "file"
+  ),
+
+  targets::tar_target(
     pubs_canonicalized,
     if (nrow(pubs_to_publish) == 0L) {
       pubs_to_publish
     } else {
-      apply_affiliation_lookup(pubs_to_publish, affiliation_lookup_file)
+      apply_affiliation_lookup(pubs_to_publish, affiliation_lookup_file) |>
+        join_institution_countries(institution_geo_lookup_file)
     }
   ),
 
@@ -405,10 +436,12 @@ list(
       message("pubs_classified: no new records to classify.")
       pubs_canonicalized
     } else {
-      pubclassify::pc_classify(
+      classify_publications(
         pubs                  = pubs_canonicalized,
         taxonomy              = taxonomy,
+        provider              = pipeline_config$llm$provider,
         model                 = pipeline_config$llm$model,
+        base_url              = pipeline_config$llm$base_url,
         system_prompt         = system_prompt,
         classify_instructions = classify_instr
       )
@@ -470,7 +503,7 @@ list(
       collapse_list_col <- function(x) {
         vapply(x, function(v) paste(unlist(v), collapse = "; "), character(1L))
       }
-      list_cols <- intersect(c("authors", "affiliations", "funders", "grant_numbers"), names(pubs))
+      list_cols <- intersect(c("authors", "affiliations", "affiliation_countries"), names(pubs))
       flat <- dplyr::mutate(pubs, dplyr::across(dplyr::all_of(list_cols), collapse_list_col))
       dir.create(dirname(pipeline_config$paths$dashboard_csv), recursive = TRUE, showWarnings = FALSE)
       readr::write_csv(flat, pipeline_config$paths$dashboard_csv)
