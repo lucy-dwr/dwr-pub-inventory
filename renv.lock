@@ -2582,42 +2582,13 @@
     "pubclassify": {
       "Package": "pubclassify",
       "Version": "0.0.0.9000",
-      "Source": "Local",
-      "Title": "Retrieve and Classify Bibliometric Publication Metadata",
-      "Authors@R": "person(\"Lucy\", \"Andrews\", , \"lucy.andrews@water.ca.gov\", role = c(\"aut\", \"cre\"))",
-      "Description": "Retrieve peer-reviewed publication metadata from bibliometric APIs including OpenAlex, Scopus, and Crossref, with support for classifying publications into user-defined scholarly field taxonomies using large language models.",
-      "License": "MIT + file LICENSE",
-      "Encoding": "UTF-8",
-      "Roxygen": "list(markdown = TRUE)",
-      "RoxygenNote": "7.3.3",
-      "Depends": [
-        "R (>= 4.1.0)"
-      ],
-      "Imports": [
-        "cli",
-        "dplyr",
-        "ellmer",
-        "httr2",
-        "jsonlite",
-        "rlang",
-        "tibble"
-      ],
-      "Suggests": [
-        "ggplot2",
-        "httptest2",
-        "knitr",
-        "readr",
-        "rmarkdown",
-        "testthat (>= 3.0.0)",
-        "tidyr",
-        "withr"
-      ],
-      "VignetteBuilder": "knitr",
-      "Config/testthat/edition": "3",
-      "Author": "Lucy Andrews [aut, cre]",
-      "Maintainer": "Lucy Andrews <lucy.andrews@water.ca.gov>",
-      "RemoteType": "local",
-      "RemoteUrl": "/Users/lucyandrews/Desktop/pubclassify"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "lucy-dwr",
+      "RemoteRepo": "pubclassify",
+      "RemoteRef": "main",
+      "RemoteSha": "fbda3f49a833f0982891c101f6d507a507cfc78e"
     },
     "purrr": {
       "Package": "purrr",

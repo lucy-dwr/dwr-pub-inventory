@@ -34,7 +34,11 @@ targets::tar_source("R/")
 #      targets::tar_make(affiliation_lookup_file)
 #      shiny::runApp("shiny/affiliation_review_app.R")
 #
-# 4. Publish updated inventory:
+# 4a. Publish accepted records and update funding division lookup:
+#      targets::tar_make(names = c(accepted_publications_updated, funding_division_lookup_updated))
+#      Then fill division for rows where new == TRUE in data/lookups/funding_division_lookup.csv.
+#
+# 4b. Rebuild dashboard exports and complete the refresh log:
 #      targets::tar_make(names = c(dashboard_csv, dashboard_parquet, refresh_log_completed))
 #
 # Refresh modes (set refresh.default_mode in config/pipeline.yml):

@@ -51,10 +51,15 @@ Durable lookup tables. Most are built by pipeline targets and then reviewed via 
 affiliation_lookup.csv          # raw affiliation string → canonical institution name
 author_division_lookup.csv      # DWR employee name × year → division (from HR data)
 dwr_org_lookup.csv              # canonical division name aliases
-funding_division_lookup.csv     # accepted funder publication → DWR division
+funding_division_lookup.csv     # accepted funder publication → manually assigned DWR division
 institution_geo_lookup.csv      # canonical institution name → country, US state
 institution_reference.txt       # one canonical name per line; used as LLM context
 ```
+
+After kept funder publications are published, the pipeline prepends any new rows
+to `funding_division_lookup.csv`. Fill the `division` column manually for rows
+where `new == TRUE`, then rerun the dashboard export targets so the final
+inventory includes `funding_division`.
 
 ---
 
