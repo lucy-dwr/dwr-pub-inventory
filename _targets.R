@@ -17,9 +17,9 @@ targets::tar_source("R/")
 
 # ── Operator workflow ──────────────────────────────────────────────────────────
 #
-# 1. Start a refresh:
-#      Sys.setenv(DWR_REFRESH_ID = "2026-06-08")   # optional — defaults to today
+# 1. Start a refresh (set scopus.allow_api_calls: true first):
 #      targets::tar_make(funder_review_queue_file, author_review_queue_file)
+#      Then set scopus.allow_api_calls back to false.
 #
 # 2a. Review funder candidates (confirms DWR funding):
 #      shiny::runApp("shiny/funder_review_app.R")
@@ -27,12 +27,19 @@ targets::tar_source("R/")
 # 2b. Review author affiliation candidates (confirms DWR authorship):
 #      shiny::runApp("shiny/author_review_app.R")
 #
-# 3. Publish updated inventory:
+# 2c. Resolve confirmed DWR authors with missing divisions:
+#      shiny::runApp("shiny/author_division_resolution_app.R")
+#
+# 3. Build/refresh affiliation lookup; review unresolved rows:
+#      targets::tar_make(affiliation_lookup_file)
+#      shiny::runApp("shiny/affiliation_review_app.R")
+#
+# 4. Publish updated inventory:
 #      targets::tar_make()
 #
-# Refresh modes (set DWR_REFRESH_MODE):
-#   new_records_only   — classify only newly harvested records (default)
-#   reclassify_all     — reclassify every record in pubs_flagged
+# Refresh modes (set refresh.default_mode in config/pipeline.yml):
+#   new_records_only   — publish only records not already accepted (default)
+#   reclassify_all     — reprocess every reviewed record in pubs_contribution_flagged
 
 list(
 
@@ -70,7 +77,7 @@ list(
   targets::tar_target(
     refresh_id,
     {
-      id <- create_refresh_id()
+      id <- create_refresh_id(pipeline_config)
       init_refresh_log(id, log_path = pipeline_config$paths$refresh_log)
       id
     }
@@ -80,24 +87,30 @@ list(
 
   targets::tar_target(
     pubs_funding,
-    pubclassify::pc_search_scopus(
-      query       = pipeline_config$scopus$searches$funder$query,
-      field       = pipeline_config$scopus$searches$funder$field,
-      doc_type    = unlist(pipeline_config$scopus$doc_types),
-      auto_fetch  = pipeline_config$scopus$auto_fetch,
-      max_results = pipeline_config$scopus$max_results
-    )
+    {
+      require_scopus_api_allowed(pipeline_config)
+      pubclassify::pc_search_scopus(
+        query       = pipeline_config$scopus$searches$funder$query,
+        field       = pipeline_config$scopus$searches$funder$field,
+        doc_type    = unlist(pipeline_config$scopus$doc_types),
+        auto_fetch  = pipeline_config$scopus$auto_fetch,
+        max_results = pipeline_config$scopus$max_results
+      )
+    }
   ),
 
   targets::tar_target(
     pubs_affiliation,
-    pubclassify::pc_search_scopus(
-      query       = pipeline_config$scopus$searches$affiliation$query,
-      field       = pipeline_config$scopus$searches$affiliation$field,
-      doc_type    = unlist(pipeline_config$scopus$doc_types),
-      auto_fetch  = pipeline_config$scopus$auto_fetch,
-      max_results = pipeline_config$scopus$max_results
-    )
+    {
+      require_scopus_api_allowed(pipeline_config)
+      pubclassify::pc_search_scopus(
+        query       = pipeline_config$scopus$searches$affiliation$query,
+        field       = pipeline_config$scopus$searches$affiliation$field,
+        doc_type    = unlist(pipeline_config$scopus$doc_types),
+        auto_fetch  = pipeline_config$scopus$auto_fetch,
+        max_results = pipeline_config$scopus$max_results
+      )
+    }
   ),
 
   # ── Phase 1 & 2: Assign record keys and attach harvest metadata ───────────
@@ -153,6 +166,23 @@ list(
       harvests_dir = pipeline_config$paths$harvests_dir
     ),
     format = "file"
+  ),
+
+  # Local review/publish phases read the saved harvest snapshot directly. This
+  # prevents prompt, lookup, or review changes from re-running Scopus after the
+  # intentional harvest phase has completed.
+  targets::tar_target(
+    local_harvest_candidates_file,
+    resolve_harvest_candidates_file(
+      refresh_id,
+      harvests_dir = pipeline_config$paths$harvests_dir
+    ),
+    format = "file"
+  ),
+
+  targets::tar_target(
+    pubs_harvest_candidates_local,
+    arrow::read_parquet(local_harvest_candidates_file)
   ),
 
   # ── Phase 5: Build the manual-review queue ────────────────────────────────
@@ -226,7 +256,7 @@ list(
   targets::tar_target(
     pubs_funding_reviewed,
     apply_review_decisions(
-      dplyr::filter(pubs_harvest_candidates,
+      dplyr::filter(pubs_harvest_candidates_local,
                     grepl("funder", .data$query_source, fixed = TRUE)),
       funding_review_decisions_file
     )
@@ -235,7 +265,7 @@ list(
   targets::tar_target(
     pubs_affiliation_reviewed,
     apply_review_decisions(
-      dplyr::filter(pubs_harvest_candidates,
+      dplyr::filter(pubs_harvest_candidates_local,
                     grepl("affiliation", .data$query_source, fixed = TRUE)),
       author_review_decisions_file
     )
@@ -248,7 +278,7 @@ list(
   # the _reviewed targets above.
 
   targets::tar_target(
-    pubs_combined,
+    pubs_reviewed,
     {
       combined <- dplyr::bind_rows(pubs_funding_reviewed, pubs_affiliation_reviewed) |>
         dplyr::distinct(.data$record_key, .keep_all = TRUE)
@@ -275,62 +305,108 @@ list(
   ),
 
   targets::tar_target(
-    pubs_flagged,
-    flag_dwr_contributions(pubs_combined)
+    pubs_contribution_flagged,
+    flag_dwr_contributions(pubs_reviewed)
   ),
 
   # ── Phase 8: Filter to records not yet in the accepted-publications table ──
 
   # Side-reads data/generated/accepted_publications.parquet without creating a formal
   # targets dependency (which would cause a cycle). The filter is only
-  # bypassed when DWR_REFRESH_MODE=reclassify_all.
+  # bypassed when refresh.default_mode is reclassify_all.
   targets::tar_target(
-    pubs_to_classify,
+    pubs_to_publish,
     {
-      refresh_mode <- Sys.getenv("DWR_REFRESH_MODE", unset = pipeline_config$refresh$default_mode)
+      refresh_mode <- pipeline_config$refresh$default_mode
       if (refresh_mode == "reclassify_all") {
-        message("pubs_to_classify: reclassify_all mode — classifying all ", nrow(pubs_flagged), " records.")
-        pubs_flagged
+        message("pubs_to_publish: reclassify_all mode — reprocessing all ", nrow(pubs_contribution_flagged), " reviewed record(s).")
+        pubs_contribution_flagged
       } else {
         if (file.exists(pipeline_config$paths$accepted_publications)) {
           already_accepted <- arrow::read_parquet(pipeline_config$paths$accepted_publications)$record_key
-          new_only <- dplyr::filter(pubs_flagged, !.data$record_key %in% already_accepted)
+          new_only <- dplyr::filter(pubs_contribution_flagged, !.data$record_key %in% already_accepted)
           message(sprintf(
-            "pubs_to_classify: new_records_only mode — %d new record(s) to classify (%d already accepted).",
+            "pubs_to_publish: new_records_only mode — %d new record(s) to publish (%d already accepted).",
             nrow(new_only), length(already_accepted)
           ))
           new_only
         } else {
-          pubs_flagged
+          pubs_contribution_flagged
         }
       }
+    }
+  ),
+
+  # ── Affiliation lookup maintenance and canonicalization ──────────────────
+
+  targets::tar_target(
+    institution_reference_txt,
+    pipeline_config$paths$institution_reference,
+    format = "file"
+  ),
+
+  targets::tar_target(
+    affiliation_system_prompt_file,
+    pipeline_config$paths$affiliation_system_prompt,
+    format = "file"
+  ),
+
+  targets::tar_target(
+    affiliation_user_template_file,
+    pipeline_config$paths$affiliation_user_template,
+    format = "file"
+  ),
+
+  targets::tar_target(
+    affiliation_lookup_file,
+    {
+      build_affiliation_lookup(
+        pubs_to_publish,
+        output_path = pipeline_config$paths$affiliation_lookup,
+        reference_path = institution_reference_txt,
+        system_prompt_path = affiliation_system_prompt_file,
+        user_template_path = affiliation_user_template_file,
+        model = pipeline_config$llm$model,
+        base_url = pipeline_config$llm$base_url
+      )
+      pipeline_config$paths$affiliation_lookup
+    },
+    format = "file"
+  ),
+
+  targets::tar_target(
+    pubs_canonicalized,
+    if (nrow(pubs_to_publish) == 0L) {
+      pubs_to_publish
+    } else {
+      apply_affiliation_lookup(pubs_to_publish, affiliation_lookup_file)
     }
   ),
 
   # ── Classification ────────────────────────────────────────────────────────
 
   targets::tar_target(
-    system_prompt_file,
-    pipeline_config$paths$system_prompt,
+    classify_system_prompt_file,
+    pipeline_config$paths$classify_system_prompt,
     format = "file"
   ),
   targets::tar_target(
     classify_instr_file,
-    pipeline_config$paths$classify_instructions,
+    pipeline_config$paths$classify_user_instructions,
     format = "file"
   ),
 
-  targets::tar_target(system_prompt,  readr::read_file(system_prompt_file)),
+  targets::tar_target(system_prompt,  readr::read_file(classify_system_prompt_file)),
   targets::tar_target(classify_instr, readr::read_file(classify_instr_file)),
 
   targets::tar_target(
     pubs_classified,
-    if (nrow(pubs_to_classify) == 0L) {
+    if (nrow(pubs_canonicalized) == 0L) {
       message("pubs_classified: no new records to classify.")
-      pubs_to_classify
+      pubs_canonicalized
     } else {
       pubclassify::pc_classify(
-        pubs                  = pubs_to_classify,
+        pubs                  = pubs_canonicalized,
         taxonomy              = taxonomy,
         model                 = pipeline_config$llm$model,
         system_prompt         = system_prompt,
@@ -339,29 +415,16 @@ list(
     }
   ),
 
-  # ── Affiliation canonicalization ──────────────────────────────────────────
-
-  targets::tar_target(affiliation_lookup_csv, pipeline_config$paths$affiliation_lookup, format = "file"),
-
-  targets::tar_target(
-    pubs_canonicalized,
-    if (nrow(pubs_classified) == 0L) {
-      pubs_classified
-    } else {
-      apply_affiliation_lookup(pubs_classified, affiliation_lookup_csv)
-    }
-  ),
-
   # ── Enrich with taxonomy top-level category ───────────────────────────────
 
   targets::tar_target(
-    pubs_enriched,
+    pubs_with_taxonomy_category,
     {
       category_lookup <- dplyr::select(taxonomy_raw, pc_category = category, pc_field = field)
-      if (nrow(pubs_canonicalized) == 0L || !"pc_field" %in% names(pubs_canonicalized)) {
-        pubs_canonicalized
+      if (nrow(pubs_classified) == 0L || !"pc_field" %in% names(pubs_classified)) {
+        pubs_classified
       } else {
-        dplyr::left_join(pubs_canonicalized, category_lookup, by = "pc_field") |>
+        dplyr::left_join(pubs_classified, category_lookup, by = "pc_field") |>
           dplyr::relocate(pc_category, .before = pc_field)
       }
     }
@@ -372,7 +435,7 @@ list(
   targets::tar_target(
     accepted_publications_updated,
     append_accepted_publications(
-      pubs_enriched,
+      pubs_with_taxonomy_category,
       refresh_id,
       accepted_path = pipeline_config$paths$accepted_publications
     ),
@@ -395,7 +458,7 @@ list(
   # ── Phase 9: Export dashboard dataset from accepted records ──────────────
 
   targets::tar_target(
-    output_csv,
+    dashboard_csv,
     {
       pubs <- arrow::read_parquet(accepted_publications_updated) |>
         join_funding_division(funding_division_lookup_updated) |>
@@ -409,15 +472,15 @@ list(
       }
       list_cols <- intersect(c("authors", "affiliations", "funders", "grant_numbers"), names(pubs))
       flat <- dplyr::mutate(pubs, dplyr::across(dplyr::all_of(list_cols), collapse_list_col))
-      dir.create(dirname(pipeline_config$paths$output_csv), recursive = TRUE, showWarnings = FALSE)
-      readr::write_csv(flat, pipeline_config$paths$output_csv)
-      pipeline_config$paths$output_csv
+      dir.create(dirname(pipeline_config$paths$dashboard_csv), recursive = TRUE, showWarnings = FALSE)
+      readr::write_csv(flat, pipeline_config$paths$dashboard_csv)
+      pipeline_config$paths$dashboard_csv
     },
     format = "file"
   ),
 
   targets::tar_target(
-    output_parquet,
+    dashboard_parquet,
     {
       pubs <- arrow::read_parquet(accepted_publications_updated) |>
         join_funding_division(funding_division_lookup_updated) |>
@@ -426,9 +489,9 @@ list(
           pipeline_config$paths$dwr_org_lookup,
           author_division_decisions_file
         )
-      dir.create(dirname(pipeline_config$paths$output_parquet), recursive = TRUE, showWarnings = FALSE)
-      arrow::write_parquet(pubs, pipeline_config$paths$output_parquet)
-      pipeline_config$paths$output_parquet
+      dir.create(dirname(pipeline_config$paths$dashboard_parquet), recursive = TRUE, showWarnings = FALSE)
+      arrow::write_parquet(pubs, pipeline_config$paths$dashboard_parquet)
+      pipeline_config$paths$dashboard_parquet
     },
     format = "file"
   ),
@@ -445,9 +508,9 @@ list(
       complete_refresh_log(
         refresh_id               = refresh_id,
         log_path                 = pipeline_config$paths$refresh_log,
-        n_funder_candidates      = nrow(pubs_funding),
-        n_affiliation_candidates = nrow(pubs_affiliation),
-        n_new_candidates         = nrow(funder_review_queue),
+        n_funder_candidates      = sum(grepl("funder", pubs_harvest_candidates_local$query_source, fixed = TRUE)),
+        n_affiliation_candidates = sum(grepl("affiliation", pubs_harvest_candidates_local$query_source, fixed = TRUE)),
+        n_new_candidates         = nrow(pubs_to_publish),
         n_reviewed               = nrow(this_refresh),
         n_kept                   = sum(this_refresh$decision == "keep",   na.rm = TRUE),
         n_dropped                = sum(this_refresh$decision == "drop",   na.rm = TRUE),

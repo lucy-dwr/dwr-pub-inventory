@@ -1,11 +1,26 @@
 #' Create or retrieve the current refresh identifier
 #'
-#' Returns the value of the `DWR_REFRESH_ID` environment variable if set;
-#' otherwise defaults to today's date in `YYYY-MM-DD` format.
+#' Returns a config-defined refresh identifier when present. Empty config values
+#' default to today's date in `YYYY-MM-DD` format.
+#'
+#' @param pipeline_config Loaded pipeline configuration.
+#'
+#' @return Character refresh identifier.
 
-create_refresh_id <- function() {
-  id <- Sys.getenv("DWR_REFRESH_ID", unset = "")
-  if (nzchar(id)) id else format(Sys.Date(), "%Y-%m-%d")
+create_refresh_id <- function(pipeline_config = NULL) {
+  cfg_id <- NULL
+  if (!is.null(pipeline_config)) {
+    cfg_id <- pipeline_config$refresh$id
+  }
+  if (is.null(cfg_id) || length(cfg_id) == 0L || is.na(cfg_id)) {
+    cfg_id <- ""
+  }
+  cfg_id <- trimws(as.character(cfg_id[[1L]]))
+  if (nzchar(cfg_id)) {
+    return(cfg_id)
+  }
+
+  format(Sys.Date(), "%Y-%m-%d")
 }
 
 #' Initialise a row in the refresh log for a new refresh cycle

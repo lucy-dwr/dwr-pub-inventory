@@ -1,9 +1,10 @@
 llm:
-  base_url: https://customeruat.sda.state.ca.gov/api/v1
+  base_url: https://stage.cus.gcp.cda.state.ca.gov/api/v1
   provider: openai-compatible
   model: Anthropic Claude Sonnet 4.6
 
 scopus:
+  allow_api_calls: false
   doc_types:
     - article
     - review
@@ -18,19 +19,23 @@ scopus:
       field: affiliation
 
 refresh:
+  id:
   default_mode: new_records_only
 
 paths:
   taxonomy: taxonomy/dwr_disciplines_taxonomy.csv
-  system_prompt: prompts/system_prompt.txt
-  classify_instructions: prompts/classify_instructions.txt
+  classify_system_prompt: prompts/classify_system_prompt.txt
+  classify_user_instructions: prompts/classify_user_instructions.txt
+  affiliation_system_prompt: prompts/affiliation_system_prompt.txt
+  affiliation_user_template: prompts/affiliation_user_template.txt
   funding_review_decisions: data/decisions/funding_review_decisions.csv
   funder_review_queue: data/queues/funder_review_queue.parquet
   accepted_publications: data/generated/accepted_publications.parquet
   harvests_dir: data/harvests
+  institution_reference: data/lookups/institution_reference.txt
   affiliation_lookup: data/lookups/affiliation_lookup.csv
-  output_csv: data/generated/dwr_publications.csv
-  output_parquet: data/generated/dwr_publications.parquet
+  dashboard_csv: data/generated/dwr_publications.csv
+  dashboard_parquet: data/generated/dwr_publications.parquet
   refresh_log: data/refresh_log.csv
   funding_division_lookup: data/lookups/funding_division_lookup.csv
   author_review_decisions: data/decisions/author_review_decisions.csv
