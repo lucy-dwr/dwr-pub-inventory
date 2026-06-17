@@ -1,7 +1,7 @@
 # DWR Publication Inventory - Implementation Notes
 
 This document summarizes the current implementation and the remaining planned
-work. For operator instructions, see `README.md` and `REFRESH_WORKFLOW.md`.
+work. For operator instructions, see `README.md`.
 
 ## Current Architecture
 
@@ -16,8 +16,9 @@ The pipeline:
 5. Builds separate funder and author review queues.
 6. Applies review decisions from durable CSV files.
 7. Flags DWR contribution types.
-8. Classifies new records into the DWR taxonomy.
-9. Canonicalizes affiliations through `data/lookups/affiliation_lookup.csv`.
+8. Maintains and applies the affiliation lookup through
+   `data/lookups/affiliation_lookup.csv`.
+9. Classifies new canonicalized records into the DWR taxonomy.
 10. Appends accepted records to `data/generated/accepted_publications.parquet`.
 11. Updates the keep-only funding division lookup.
 12. Joins funding and author division fields into dashboard exports.
@@ -25,8 +26,8 @@ The pipeline:
 ## Operator Workflow
 
 ```r
-# Optional; defaults to today's date
-Sys.setenv(DWR_REFRESH_ID = "2026-06-08")
+# In config/pipeline.yml, set scopus.allow_api_calls: true for an intentional harvest.
+# Optionally set refresh.id; blank defaults to today's date.
 
 # Build both review queues
 targets::tar_make(funder_review_queue_file, author_review_queue_file)
@@ -40,11 +41,13 @@ shiny::runApp("shiny/author_review_app.R")
 # Resolve any confirmed DWR authors with missing divisions
 shiny::runApp("shiny/author_division_resolution_app.R")
 
+# Build/refresh affiliation lookup; review unresolved rows before publishing
+targets::tar_make(affiliation_lookup_file)
+shiny::runApp("shiny/affiliation_review_app.R")
+
 # Publish accepted records and dashboard exports
 targets::tar_make()
 ```
-
-The full publish step requires `data/lookups/affiliation_lookup.csv` to exist.
 
 ## Key Source Files
 
@@ -68,9 +71,12 @@ The full publish step requires `data/lookups/affiliation_lookup.csv` to exist.
 | `R/apply_affiliation_lookup.R` | Affiliation canonicalization |
 | `R/build_affiliation_lookup.R` | Affiliation lookup generation |
 | `R/build_institution_reference.R` | Institution reference list generation |
+| `R/require_scopus_api_allowed.R` | Guard Scopus API calls behind config flag |
+| `R/resolve_harvest_candidates_file.R` | Locate saved harvest candidates for a refresh |
 | `shiny/funder_review_app.R` | Funder review app |
 | `shiny/author_review_app.R` | Author review app |
 | `shiny/author_division_resolution_app.R` | Missing author division resolution app |
+| `shiny/affiliation_review_app.R` | Unresolved affiliation review app |
 | `shiny/dashboard_app.R` | Dashboard app |
 
 ## Key Data Files
@@ -123,7 +129,7 @@ Confirmed DWR authors with unresolved divisions are handled in
 ### Overlap Records
 
 Records found by both searches are reviewed independently for funding and
-authorship. In `_targets.R`, `pubs_combined` adjusts `query_source` for overlap
+authorship. In `_targets.R`, `pubs_reviewed` adjusts `query_source` for overlap
 records when only one side is dropped, so contribution flags remain accurate.
 
 ## Author Division Assignment
@@ -172,7 +178,11 @@ enhancements.
 
 ## Known Prerequisites And Gaps
 
-- `data/lookups/affiliation_lookup.csv` is required for the full publish pipeline.
+- `data/lookups/affiliation_lookup.csv` is maintained by the
+  `affiliation_lookup_file` target. The target prepends new raw affiliation
+  strings with `new = TRUE`, sends only those new strings to the LLM, and keeps
+  reviewed canonical names available as prompt context. Review the CSV, use
+  `Unknown` for unresolved affiliations, and set `new = FALSE` before publishing.
 - `data/lookups/author_division_lookup.csv` is required locally but ignored by Git.
 - `refresh_log_completed` currently records funder-oriented review counts; it
   does not separately record author review counts.

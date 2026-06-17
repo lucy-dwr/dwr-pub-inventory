@@ -14,6 +14,8 @@ publication datasets for downstream use.
   candidates and per-author DWR affiliation status.
 - `shiny/author_division_resolution_app.R`: division assignment for confirmed
   DWR authors whose division could not be resolved automatically.
+- `shiny/affiliation_review_app.R`: manual review of unresolved canonical
+  institution assignments with DOI/title context and canonical-name browsing.
 - `shiny/dashboard_app.R`: dashboard for browsing the final exported inventory.
 
 ## Refresh Workflow
@@ -24,8 +26,21 @@ review queues, durable decision files, and a durable accepted publications table
 
 ### 1. Build Review Queues
 
+Scopus API calls are disabled by default. To intentionally refresh harvested
+records, temporarily set this in `config/pipeline.yml`:
+
+```yaml
+scopus:
+  allow_api_calls: true
+
+refresh:
+  id: 2026-06-15
+  default_mode: new_records_only
+```
+
+Then run:
+
 ```r
-Sys.setenv(DWR_REFRESH_ID = "2026-06-15")  # optional; defaults to today's date
 targets::tar_make(funder_review_queue_file, author_review_queue_file)
 ```
 
@@ -34,6 +49,10 @@ harvest snapshot under `data/harvests/`, and writes the current review queues:
 
 - `data/queues/funder_review_queue.parquet`
 - `data/queues/author_review_queue.parquet`
+
+Set `scopus.allow_api_calls` back to `false` after the harvest step. This keeps
+local review, affiliation lookup, and publish work from accidentally hitting
+Scopus. Leave `refresh.id` blank to default to today's date.
 
 ### 2. Review Candidates
 
@@ -69,25 +88,50 @@ running:
 shiny::runApp("shiny/author_division_resolution_app.R")
 ```
 
-### 3. Publish The Updated Inventory
+### 3. Refresh The Affiliation Lookup
+
+Before publishing, run the lookup-maintenance target:
+
+```r
+targets::tar_make(affiliation_lookup_file)
+```
+
+This prepends any previously unseen raw affiliation strings to
+`data/lookups/affiliation_lookup.csv`. The durable lookup has one row per
+publication/raw-affiliation occurrence, with DOI and title context. Raw strings
+are still clustered before LLM canonicalization for efficiency, and unresolved
+LLM results are retained as `canonical = "Unknown"` with `new = TRUE`.
+
+Review unresolved rows in the affiliation review app:
+
+```r
+shiny::runApp("shiny/affiliation_review_app.R")
+```
+
+The app defaults to `Unknown` and `new` rows, provides autocomplete from
+established canonical institution names, and includes a searchable canonical
+institution browser. Set each reviewed row's canonical value and save it; saved
+rows are marked `new = FALSE`.
+
+### 4. Publish The Updated Inventory
 
 ```r
 targets::tar_make()
 ```
 
-This applies review decisions, classifies records that are not already in the
-accepted publications table, canonicalizes affiliations, appends newly accepted
+This applies review decisions, canonicalizes affiliations, classifies records
+that are not already in the accepted publications table, appends newly accepted
 records to `data/generated/accepted_publications.parquet`, updates the keep-only
 funding division lookup, joins funding and author division fields, and writes
 dashboard exports.
 
-The full publish step expects `data/lookups/affiliation_lookup.csv` to exist
-because `affiliation_lookup_csv` is a file target. Rebuild it with
-`R/build_affiliation_lookup.R` when the lookup is missing or stale.
+The full publish step updates `data/lookups/affiliation_lookup.csv` before
+canonicalization and stops if any lookup rows are still marked `new = TRUE`.
 
 ### Refresh Modes
 
-Set `DWR_REFRESH_MODE` before running `targets::tar_make()`:
+Set `refresh.default_mode` in `config/pipeline.yml` before running
+`targets::tar_make()`:
 
 | Mode | Behavior |
 |------|----------|
@@ -126,13 +170,17 @@ R/
   apply_affiliation_lookup.R            # Canonicalize affiliation strings
   build_affiliation_lookup.R            # Build affiliation lookup table
   build_institution_reference.R         # Build institution reference list
+  require_scopus_api_allowed.R          # Guard Scopus API calls behind config flag
+  resolve_harvest_candidates_file.R     # Locate saved harvest candidates for a refresh
 
 taxonomy/
   dwr_disciplines_taxonomy.csv          # DWR field taxonomy
 
 prompts/
-  system_prompt.txt                     # LLM system prompt for classification
-  classify_instructions.txt             # LLM classification instructions
+  classify_system_prompt.txt            # LLM system prompt for disciplinary classification
+  classify_user_instructions.txt        # LLM user instructions for disciplinary classification
+  affiliation_system_prompt.txt         # LLM system prompt for affiliation canonicalization
+  affiliation_user_template.txt         # LLM user template for affiliation canonicalization
 
 data/
   refresh_log.csv                       # One row per refresh cycle with counts
@@ -144,12 +192,12 @@ data/
     funding_division_lookup.csv         # Kept funder records with division assignments
     dwr_org_lookup.csv                  # Raw org label to canonical division mapping
     institution_reference.txt           # Institution reference list for lookup generation
-    affiliation_lookup.csv              # Canonical institution name lookup; may be absent until rebuilt
+    affiliation_lookup.csv              # Occurrence-level canonical institution review table
     author_division_lookup.csv          # Required local HR-derived lookup; ignored by Git
   generated/
     accepted_publications.parquet       # Durable source of truth; generated by pipeline
-    dwr_publications.csv                # Dashboard export, list columns collapsed
-    dwr_publications.parquet            # Dashboard export, native list columns
+    dwr_publications.csv                # dashboard_csv target; list columns collapsed
+    dwr_publications.parquet            # dashboard_parquet target; native list columns
   queues/
     funder_review_queue.parquet         # Generated funder review queue; ignored by Git
     author_review_queue.parquet         # Generated author review queue; ignored by Git
@@ -159,6 +207,7 @@ shiny/                                  # Review and visualization apps
   funder_review_app.R
   author_review_app.R
   author_division_resolution_app.R
+  affiliation_review_app.R
   dashboard_app.R
   www/
     dwr-logo-new.png                    # Dashboard logo asset
@@ -210,3 +259,67 @@ to the repository; it is not published on GitHub for personnel privacy reasons.
 - `data/generated/dwr_publications.parquet`: full-fidelity dashboard export used by
   `shiny/dashboard_app.R`. Includes native list columns plus joined division
   fields.
+
+## Data Reference
+
+### Stable Record Keys
+
+`record_key` is assigned by `R/add_record_keys.R` using this priority:
+
+```text
+Scopus EID
+normalized DOI
+hash(normalized title + year + first author + journal)
+```
+
+The key lets review decisions survive changes in file order and supports records that have no DOI.
+
+### `data/refresh_log.csv`
+
+One row per refresh cycle. Columns:
+
+```text
+refresh_id, started_at, completed_at, scopus_query_date
+n_funder_candidates, n_affiliation_candidates, n_new_candidates
+n_reviewed, n_kept, n_dropped, n_unsure, n_accepted, notes
+```
+
+Review counts are currently funder-oriented; author-specific counts are not separately recorded.
+
+### `data/generated/accepted_publications.parquet`
+
+Records appended by `append_accepted_publications()` receive these provenance fields:
+
+```text
+accepted_at, accepted_refresh_id
+first_seen_at, last_seen_at, last_metadata_refresh_id, record_status
+```
+
+### Review Decisions Schemas
+
+`data/decisions/funding_review_decisions.csv` and `data/decisions/author_review_decisions.csv`
+share the same schema:
+
+```text
+record_key, doi, decision, reviewed_at, review_refresh_id, review_notes
+```
+
+`data/decisions/author_division_decisions.csv` has additional author-level fields:
+
+```text
+record_key, doi, author_name, decision, reviewed_at
+review_refresh_id, division, division_rule, year
+```
+
+Rows with `decision == "dwr"` and a non-empty `division` populate the `author_division` export column.
+
+### `data/lookups/funding_division_lookup.csv`
+
+Schema:
+
+```text
+doi, doi_url, year, title, division, new
+```
+
+Only funder records with an explicit `keep` decision are included. `new == TRUE` flags
+current-refresh rows with a blank `division` still needing assignment.
