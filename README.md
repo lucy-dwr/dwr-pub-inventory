@@ -46,7 +46,12 @@ shiny::runApp("shiny/author_division_resolution_app.R")
 targets::tar_make(affiliation_lookup_file)
 shiny::runApp("shiny/affiliation_review_app.R")
 
-# Publish accepted records, dashboard exports, and the refresh log.
+# Publish accepted records and update the funding division lookup.
+targets::tar_make(names = c(accepted_publications_updated, funding_division_lookup_updated))
+
+# In data/lookups/funding_division_lookup.csv, fill division for rows where new == TRUE.
+
+# Rebuild dashboard exports and complete the refresh log.
 targets::tar_make(names = c(dashboard_csv, dashboard_parquet, refresh_log_completed))
 ```
 
@@ -96,6 +101,14 @@ control:
 There is also an application for viewing the publication inventory in a dashboard:
 
 - `shiny/dashboard_app.R`: dashboard for browsing the final exported inventory.
+  The dashboard includes an LLM-powered chat assistant ("Ask the data") that
+  accepts natural-language questions about the inventory. The assistant can
+  filter the dashboard view on behalf of the user, return frequency breakdowns,
+  describe trends over time, search across titles and abstracts, retrieve paper
+  details, summarize a selected set of papers, and format citations. It uses the
+  same LLM backend and `PUBCLASSIFY_LLM_KEY` credential as the pipeline. See
+  [`shiny/README.md`](shiny/README.md) and [`docs/CHAT_TOOLS.md`](docs/CHAT_TOOLS.md)
+  for details.
 
 To run an application, use `shiny`:
 
@@ -162,6 +175,12 @@ shiny::runApp("shiny/funder_review_app.R")
 
 Funder decisions are written to `data/decisions/funding_review_decisions.csv` with
 `keep`, `drop`, or `unsure` decisions keyed by `record_key`.
+
+Kept funder records also need a DWR funding division assignment. This is not done
+in the Shiny app. During the publish step, the pipeline syncs kept funder records
+into `data/lookups/funding_division_lookup.csv`. After that sync, manually fill
+the `division` column for rows where `new == TRUE` by retrieving contract numbers
+and associated divisions from SAP, then rerun the dashboard export targets so `funding_division` is populated in the final outputs.
 
 #### Authored
 
@@ -307,20 +326,33 @@ Rscript scripts/patch_classify_na.R
 ```
 
 This classifies any `accepted_publications.parquet` rows with `NA` `pc_field` and
-patches the file in place. Afterwards, run `targets::tar_make()` to refresh the
-dashboard exports (fast — no Scopus or affiliation LLM calls).
+patches the file in place. Afterwards, run
+`targets::tar_make(names = c(dashboard_csv, dashboard_parquet))` to refresh the
+dashboard exports.
 
 ### 5. Publish The Updated Inventory
+
+```r
+targets::tar_make(names = c(accepted_publications_updated, funding_division_lookup_updated))
+```
+
+This applies review decisions, canonicalizes affiliations, classifies records
+that are not already in the accepted publications table, appends newly accepted
+records to `data/generated/accepted_publications.parquet`, and updates the
+keep-only funding division lookup.
+
+Open `data/lookups/funding_division_lookup.csv` and fill the `division` column
+for any current-refresh rows where `new == TRUE`. These rows are kept funder
+records that need a manual DWR division assignment before the dashboard exports
+are final. Leave `new` unchanged; the pipeline recalculates it on the next run.
+
+Then rebuild the dashboard exports and complete the refresh log:
 
 ```r
 targets::tar_make(names = c(dashboard_csv, dashboard_parquet, refresh_log_completed))
 ```
 
-This applies review decisions, canonicalizes affiliations, classifies records
-that are not already in the accepted publications table, appends newly accepted
-records to `data/generated/accepted_publications.parquet`, updates the keep-only
-funding division lookup, joins funding and author division fields, and writes
-dashboard exports.
+This joins funding and author division fields and writes dashboard exports.
 
 The targeted publish step uses the saved harvest snapshot for the current
 `refresh.id`, so it can run after `scopus.allow_api_calls` has been set back to
@@ -432,7 +464,7 @@ renv.lock                               # R dependency lockfile
 - `data/lookups/funding_division_lookup.csv`: manual lookup for funder-query records
   with explicit `keep` decisions in `data/decisions/funding_review_decisions.csv`.
   Newly accepted current-refresh rows are prepended; `new == TRUE` means the
-  row still needs a funding division assignment from the current refresh.
+  row still needs a manual funding division assignment from the current refresh.
 - `data/generated/dwr_publications.csv`: dashboard export with list columns collapsed to
   semicolon-delimited strings. Includes `funding_division`, `author_division`,
   and `affiliation_countries` when available.

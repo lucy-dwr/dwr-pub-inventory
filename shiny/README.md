@@ -62,12 +62,48 @@ Only rows where `reviewed_at` is NA are shown by default. Saving a row marks it 
 
 ### 5. `dashboard_app.R` — Publication inventory dashboard
 
-**When to use:** Any time, for exploration. Displays the final accepted publications with filters by year, division, science category, and contribution type. Includes an LLM chat interface for natural-language queries over the inventory.
+**When to use:** Any time, for exploration. Displays the final accepted publications with filters by year, division, science category, and contribution type. Includes an LLM chat assistant for natural-language queries over the inventory.
 
 **Reads:** `data/generated/dwr_publications.parquet`
 **Writes:** nothing
 
-Requires `ellmer` and `shinychat` packages for the chat feature. If those are not installed, remove the chat panel from the UI.
+#### Filters
+
+The left panel provides filter controls for year range, science category and field, DWR division, contribution type (Sole Author / Lead Author / Co-Author / Funder), and author affiliation. A keyword box searches across title, abstract, and author names. All filters update the publication table and charts in real time.
+
+#### Chat assistant
+
+The "Ask the data" button opens a chat sidebar powered by an LLM. The assistant operates on the current filtered view and can answer questions, run breakdowns, and control the dashboard filters — all through natural language.
+
+The assistant uses the same LLM backend configured in `config/pipeline.yml` (`llm.base_url` and `llm.model`) and the same API key (`PUBCLASSIFY_LLM_KEY`). Each user session creates a fresh chat context; conversation history does not persist across page reloads.
+
+The chat is built on the `ellmer` and `shinychat` packages. `ellmer` manages the LLM connection and tool call dispatch; `shinychat` provides the Shiny UI widget. Tool call/response cards are hidden from the chat pane — only the assistant's final text responses are shown.
+
+The assistant has twelve tools. Some tools update the live dashboard (UI-driving tools); others query the current filtered view and return text answers (query tools).
+
+**UI-driving tools** — these directly modify the Shiny filter controls:
+
+| Tool | What it does |
+|------|-------------|
+| `set_filters` | Sets keyword, year range, science category/field, division, contribution type, or affiliation filters. Multiple parameters can be set in one call. |
+| `reset_filters` | Clears all filters and returns the dashboard to its default state. |
+| `filter_to_papers` | Pins the dashboard to a specific set of papers by record key — typically used after `find_papers` when the user wants to see those results in the table. |
+
+**Query tools** — these read the current filtered view (or the full inventory) and return a text answer:
+
+| Tool | What it does |
+|------|-------------|
+| `count_by` | Returns a ranked frequency table for a single dimension: year, science field/category, division, contribution type, journal, affiliation, or country. |
+| `get_trend` | Returns year-by-year publication counts, optionally broken out by contribution type or division. |
+| `compare_periods` | Splits the current view at a given year and compares counts and field distributions before and after. |
+| `find_papers` | Full-text keyword search across title, abstract, and author fields across the entire inventory (not just the current filtered view). Returns a numbered list of matching papers. |
+| `get_paper_detail` | Returns full metadata (title, authors, year, journal, abstract, science field, division, DOI) for a specific paper identified by title fragment or DOI. |
+| `synthesize_selection` | Retrieves titles and abstracts for all currently visible papers so the LLM can summarize themes or answer questions about that set. Capped at 300 papers. |
+| `get_author_stats` | Returns the most prolific DWR authors in the current view, with total and lead/sole-author counts. |
+| `get_collaboration_stats` | Returns the external institutions most frequently appearing as co-author affiliations in the current view. |
+| `cite_papers` | Formats citations for the current filtered selection, sorted by year or title. |
+
+See [`docs/CHAT_TOOLS.md`](../docs/CHAT_TOOLS.md) for more detail on each tool's parameters and example prompts.
 
 ---
 
