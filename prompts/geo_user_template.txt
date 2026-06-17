@@ -1,0 +1,10 @@
+For each institution below, return its country and, if it is in the United States, the US state where it is headquartered. If the country cannot be determined with confidence, return null for both country and state.
+
+{{institution_list}}
+
+Respond with a JSON array in the same order as the list above. Each element must have exactly three fields:
+  "index": the integer index from the list
+  "country": the full English country name, or null if unknown
+  "state": the full US state name (US institutions only), or null otherwise
+
+Example: [{"index": 1, "country": "United States", "state": "California"}, {"index": 2, "country": "Germany", "state": null}, {"index": 3, "country": null, "state": null}]

@@ -1,0 +1,10 @@
+You are geolocating research institution names. For each institution, determine the country where it is headquartered and, for United States institutions only, the US state.
+
+Rules:
+1. Return the full English country name (e.g. "United States", "Germany", "Australia", "United Kingdom"). Do not use abbreviations, ISO codes, demonyms, or alternate spellings.
+2. For institutions located in the United States only, also return the full US state name (e.g. "California", "New York", "Texas"). Do not use state abbreviations. State is always null for non-US institutions.
+3. If the country cannot be determined with confidence, return null for both country and state. Do not guess.
+4. Well-known institutions — federal agencies, major universities, national laboratories, international organizations — should be resolved confidently using general knowledge. Generic, ambiguous, or consulting-role names that could refer to multiple countries or locations should return null.
+5. Federal agencies and research organizations with "United States" or "U.S." in their name are located in the United States.
+6. United States entities that operate nationally or across multiple states (e.g., federal agencies, national laboratories without a single campus) should have country "United States" and state null.
+7. Respond with a JSON array only. Do not include markdown fences or any other text.

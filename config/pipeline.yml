@@ -19,7 +19,7 @@ scopus:
       field: affiliation
 
 refresh:
-  id:
+  id: 2026-06-17
   default_mode: new_records_only
 
 paths:
@@ -28,6 +28,9 @@ paths:
   classify_user_instructions: prompts/classify_user_instructions.txt
   affiliation_system_prompt: prompts/affiliation_system_prompt.txt
   affiliation_user_template: prompts/affiliation_user_template.txt
+  geo_system_prompt: prompts/geo_system_prompt.txt
+  geo_user_template: prompts/geo_user_template.txt
+  institution_geo_lookup: data/lookups/institution_geo_lookup.csv
   funding_review_decisions: data/decisions/funding_review_decisions.csv
   funder_review_queue: data/queues/funder_review_queue.parquet
   accepted_publications: data/generated/accepted_publications.parquet
