@@ -1,0 +1,16 @@
+Identify the canonical organization or institution name for each cluster of affiliation strings below. Each cluster groups strings that likely refer to the same organization.
+
+{{cluster_blocks}}
+
+Respond with a JSON array only. Do not include any other text or markdown. Each element must have exactly two fields:
+  "cluster_id": the cluster number (integer)
+  "canonical": the canonical organization name, or "Unknown"
+
+Examples:
+- "Sacramento Zoo" -> "Sacramento Zoo"
+- "University of California, Davis" -> "University of California, Davis"
+- "Department of Environmental Science, Policy, and Management, University of California, Berkeley" -> "University of California, Berkeley"
+- "Conservation Science Partners" -> "Conservation Science Partners"
+- "Consulting Environmental Biologist" -> "Unknown"
+
+Example JSON: [{"cluster_id": 1, "canonical": "University of California, Davis"}, ...]

@@ -1,0 +1,39 @@
+You are canonicalizing organization names from publication affiliation metadata. Your task is to identify the single canonical organization or institution represented by each cluster of affiliation strings.
+
+Canonicalization rules:
+1. Return the canonical organization or institution name represented by the affiliation string. The organization may be a university, government agency, nonprofit, zoo, museum, company, research institute, laboratory, water agency, or other named organization.
+2. If the string is already a clear standalone organization name, return that name cleaned and standardized. Do not return Unknown merely because it is not academic. Examples: "Sacramento Zoo" -> "Sacramento Zoo"; "Conservation Science Partners" -> "Conservation Science Partners"; "Delta Stewardship Council" -> "Delta Stewardship Council".
+3. For universities that are part of multi-campus systems, return the campus-specific official name when a campus or location is present. Preserve the official naming style for that system. Examples: "UC Davis" -> "University of California, Davis"; "University of California Davis" -> "University of California, Davis"; "UT Austin" -> "University of Texas at Austin"; "University of Texas, Austin" -> "University of Texas at Austin"; "Texas A&M University, College Station" -> "Texas A&M University"; "University of Washington, Seattle" -> "University of Washington".
+4. Do not invent campus qualifiers when the raw string only names the system or university generally. Examples: "University of California" -> "University of California"; "California State University" -> "California State University".
+5. If the string names a department, school, lab, center, institute, program, address, city, or country within a parent organization, return the parent organization or campus-specific parent. Examples: "School of Veterinary Medicine, University of California, Davis" -> "University of California, Davis"; "Department of Civil and Environmental Engineering, University of Washington" -> "University of Washington"; "Ira A. Fulton Schools of Engineering, Arizona State University" -> "Arizona State University".
+6. Apply these known rollups exactly when the raw affiliation string names one of these subunits or obvious variants:
+   - "Scripps Institution of Oceanography", "Scripps Oceanography", and "UCSD Scripps" -> "University of California, San Diego".
+   - "Center for Western Weather and Water Extremes" and "CW3E" -> "University of California, San Diego".
+   - "San Diego Supercomputer Center" -> "University of California, San Diego".
+   - "Berkeley Food Institute" -> "University of California, Berkeley".
+   - "University of California Cooperative Extension", "UC Cooperative Extension", "UCCE", "University of California Division of Agriculture and Natural Resources", "UC Agriculture and Natural Resources", and "University of California Kearney Agricultural Research and Extension Center" -> "University of California Agriculture and Natural Resources".
+   - "Byrd Polar and Climate Research Center" -> "The Ohio State University".
+   - "Harvard Medical School" -> "Harvard University".
+   - "Virginia Institute of Marine Science" -> "William & Mary".
+   - "McGovern Institute" -> "Massachusetts Institute of Technology".
+   - "International Research Institute for Climate and Society" -> "Columbia University".
+7. Preserve these distinctive institutes, laboratories, and centers as standalone canonical organizations rather than rolling them up to a parent university:
+   - "Cooperative Institute for Research in Environmental Sciences".
+   - "Cooperative Institute for Research in the Atmosphere".
+   - "Jet Propulsion Laboratory".
+   - "Lawrence Berkeley National Laboratory".
+   - "Lawrence Livermore National Laboratory".
+   - "Johns Hopkins University Applied Physics Laboratory".
+   - "University of Maryland Center for Environmental Science".
+   - "Lamont-Doherty Earth Observatory".
+8. For government agencies, return the full agency name when recognizable. Spell out "United States" in canonical names rather than using "U.S." Examples: "USGS" -> "United States Geological Survey"; "USFWS" -> "United States Fish and Wildlife Service"; "USACE" -> "United States Army Corps of Engineers"; "U.S. Naval Research Laboratory" -> "United States Naval Research Laboratory".
+9. Apply these federal agency subunit rules exactly:
+   - "NOAA Fisheries", "NOAA National Marine Fisheries Service", "National Marine Fisheries Service", "NOAA Northwest Fisheries Science Center", "NOAA Southwest Fisheries Science Center", "NOAA Pacific Islands Fisheries Science Center", and fisheries science center variants -> "National Oceanic and Atmospheric Administration National Marine Fisheries Service".
+   - "National Weather Service", "NOAA/National Weather Service", "NOAA/NWS", and NWS office or regional headquarters variants -> "National Oceanic and Atmospheric Administration National Weather Service".
+   - "USDA Forest Service" and Forest Service research station variants -> "United States Forest Service".
+   - "USDA", "USDA Agricultural Research Service", "USDA ARS", "USDA Natural Resources Conservation Service", "USDA APHIS", and "USDA National Agricultural Statistics Service" -> "United States Department of Agriculture".
+10. Do not force every United States federal agency to begin with "United States" if the commonly used full name does not use it. Examples: "NOAA" -> "National Oceanic and Atmospheric Administration"; "NASA" -> "National Aeronautics and Space Administration"; "National Park Service" -> "National Park Service"; "Bureau of Reclamation" -> "Bureau of Reclamation".
+11. Use the provided reference list as preferred spelling when it matches, but it is not a closed vocabulary. If a recognizable organization is absent from the reference list, still return the best canonical organization name.
+12. Return "Unknown" only when no organization can be identified, the string is only a generic role or descriptor, or the cluster clearly combines multiple unrelated organizations with no single parent organization. Examples: "Consulting Environmental Biologist" -> "Unknown"; "Faculty of Arts and Sciences" -> "Unknown" unless a parent organization is present.
+
+{{reference_section}}
