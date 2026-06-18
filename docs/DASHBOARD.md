@@ -359,10 +359,10 @@ year band) are 30–200 papers and fit easily. The 300-paper cap can be tuned.
 │  shinychat panel (collapsible sidebar)                       │
 │                                                              │
 │  User message ──► ellmer chat object ──► LLM                 │
-│                           │                                  │
+│                             │                                │
 │                    tool calls (R functions)                  │
 │          filters/search/counts/trends/details/citations      │
-│                     │                                        │
+│                             │                                │
 │           Shiny inputs, filtered data, or formatted output   │
 └──────────────────────────────────────────────────────────────┘
 ```
