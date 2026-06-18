@@ -7,6 +7,10 @@ library(arrow)
 library(stringr)
 library(shinychat)
 library(ellmer)
+library(leaflet)
+library(rnaturalearth)
+library(sf)
+library(visNetwork)
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 if (basename(getwd()) == "shiny") setwd("..")
@@ -17,6 +21,29 @@ pipeline_config <- load_pipeline_config(file.path(.ROOT, "config", "pipeline.yml
 
 # ── Load data ──────────────────────────────────────────────────────────────────
 pubs_raw <- arrow::read_parquet(file.path(.ROOT, "data/generated/dwr_publications.parquet"))
+
+refresh_log_path <- file.path(.ROOT, "data/refresh_log.csv")
+.dataset_updated_label <- tryCatch({
+  rl <- read.csv(refresh_log_path, stringsAsFactors = FALSE)
+  completed <- as.POSIXct(rl$completed_at[nzchar(rl$completed_at) & !is.na(rl$completed_at)],
+                          format = "%Y-%m-%d %H:%M:%S")
+  dt <- as.Date(max(completed, na.rm = TRUE))
+  format(dt, "%m/%d/%Y")
+}, error = function(e) "12/10/2025")
+
+# ── Geo lookup & map polygons (loaded once at startup) ─────────────────────────
+geo_lookup_raw <- read.csv(
+  file.path(.ROOT, "data/lookups/institution_geo_lookup.csv"),
+  stringsAsFactors = FALSE
+)
+geo_lookup <- geo_lookup_raw[
+  as.logical(geo_lookup_raw$resolved) & !is.na(geo_lookup_raw$country), , drop = FALSE
+]
+world_sf  <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf") |>
+  dplyr::filter(iso_a3 != "USA")
+states_sf <- rnaturalearth::ne_states(
+  country = "United States of America", returnclass = "sf"
+)
 
 # Graceful fallback if pipeline hasn't been rebuilt yet
 if (!"pc_category" %in% names(pubs_raw)) pubs_raw$pc_category <- NA_character_
@@ -39,6 +66,119 @@ pubs <- pubs_raw |>
       TRUE           ~ NA_character_
     )
   )
+
+# ── Country name harmonization: LLM names → Natural Earth admin names ──────────
+.harmonize_country <- function(x) {
+  mapping <- c(
+    "United States" = "United States of America",
+    "Tanzania"      = "United Republic of Tanzania",
+    "Hong Kong"     = "Hong Kong S.A.R."
+  )
+  ifelse(!is.na(x) & x %in% names(mapping), mapping[x], x)
+}
+
+# ── Geo base tables (built once at startup from full pubs) ─────────────────────
+# geo_country_base: one (record_key, country) row per unique country per paper,
+# sourced from the pre-computed affiliation_countries list column.
+geo_country_base <- {
+  rows <- lapply(seq_len(nrow(pubs)), function(i) {
+    ctrs <- unique(na.omit(unlist(pubs$affiliation_countries[[i]])))
+    ctrs <- ctrs[nzchar(trimws(ctrs))]
+    if (length(ctrs) == 0L) return(NULL)
+    data.frame(record_key = pubs$record_key[i], country = ctrs,
+               stringsAsFactors = FALSE)
+  })
+  do.call(rbind, Filter(Negate(is.null), rows))
+}
+
+# geo_inst_base: one (record_key, canonical, country, state) row per
+# institution per paper, joined through the institution geo lookup.
+# Used for US state counts and institution popup lists.
+geo_inst_base <- {
+  rows <- lapply(seq_len(nrow(pubs)), function(i) {
+    affs <- unique(na.omit(unlist(pubs$affiliations[[i]])))
+    affs <- affs[nzchar(trimws(affs))]
+    if (length(affs) == 0L) return(NULL)
+    matched <- geo_lookup[geo_lookup$canonical %in% affs, , drop = FALSE]
+    if (nrow(matched) == 0L) return(NULL)
+    data.frame(
+      record_key = pubs$record_key[i],
+      canonical  = matched$canonical,
+      country    = matched$country,
+      state      = matched$state,
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, Filter(Negate(is.null), rows))
+}
+
+# ── Publishing Network: constants, base tables, reverse lookups ────────────────
+.DWR_NODE <- "California Department of Water Resources"
+
+# Confirmed DWR authors (for People mode highlighting)
+dwr_author_names <- tryCatch({
+  adf <- read.csv(
+    file.path(.ROOT, "data/decisions/author_division_decisions.csv"),
+    stringsAsFactors = FALSE
+  )
+  unique(adf$author_name[tolower(trimws(adf$decision)) == "dwr"])
+}, error = function(e) character(0L))
+
+# Institution → country for node coloring (reuses geo_lookup already loaded)
+inst_country_map <- setNames(geo_lookup$country, geo_lookup$canonical)
+
+# Produce all ordered (smaller, larger) pairs from a vector; cap at 30 items
+.make_node_pairs <- function(items, record_key, year, contribution_type, pc_field) {
+  items <- unique(na.omit(items))
+  items <- head(items[nzchar(trimws(items)) & items != "Unknown"], 30L)
+  if (length(items) < 2L) return(NULL)
+  idx <- combn(seq_along(items), 2L)
+  a <- items[idx[1L, ]]
+  b <- items[idx[2L, ]]
+  swap <- a > b
+  tmp <- a[swap]; a[swap] <- b[swap]; b[swap] <- tmp
+  data.frame(
+    node_a            = a,
+    node_b            = b,
+    record_key        = record_key,
+    year              = year,
+    contribution_type = contribution_type,
+    pc_field          = pc_field,
+    stringsAsFactors  = FALSE
+  )
+}
+
+network_inst_base <- {
+  rows <- lapply(seq_len(nrow(pubs)), function(i)
+    .make_node_pairs(unlist(pubs$affiliations[[i]]),
+                     pubs$record_key[i], pubs$year[i],
+                     pubs$contribution_type[i], pubs$pc_field[i]))
+  do.call(rbind, Filter(Negate(is.null), rows))
+}
+
+network_author_base <- {
+  rows <- lapply(seq_len(nrow(pubs)), function(i)
+    .make_node_pairs(unlist(pubs$authors[[i]]),
+                     pubs$record_key[i], pubs$year[i],
+                     pubs$contribution_type[i], pubs$pc_field[i]))
+  do.call(rbind, Filter(Negate(is.null), rows))
+}
+
+# Fast reverse lookup: node label → vector of record_keys containing it
+.build_node_lookup <- function(list_col, record_keys) {
+  rows <- lapply(seq_along(list_col), function(i) {
+    items <- unique(na.omit(unlist(list_col[[i]])))
+    items <- items[nzchar(trimws(items))]
+    if (length(items) == 0L) return(NULL)
+    data.frame(node = items, record_key = record_keys[i], stringsAsFactors = FALSE)
+  })
+  df <- do.call(rbind, Filter(Negate(is.null), rows))
+  if (is.null(df) || nrow(df) == 0L) return(list())
+  split(df$record_key, df$node)
+}
+
+inst_to_records   <- .build_node_lookup(pubs$affiliations, pubs$record_key)
+author_to_records <- .build_node_lookup(pubs$authors,      pubs$record_key)
 
 # ── Filter choices (built once) ────────────────────────────────────────────────
 all_affiliations <- sort(unique(na.omit(unlist(pubs_raw$affiliations))))
@@ -402,6 +542,126 @@ app_css <- "
     text-align: right; padding: 9px 28px;
     font-size: 0.71rem;
   }
+
+  /* ── Tab navigation ── */
+  .nav-tabs {
+    background: white; padding: 0 24px;
+    border-bottom: 2px solid #dde3ea;
+    margin-bottom: 0;
+  }
+  .nav-tabs .nav-link {
+    color: #4a6080; font-size: 0.80rem;
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; border: none !important;
+    border-radius: 0 !important; padding: 10px 18px;
+    border-bottom: 3px solid transparent !important;
+  }
+  .nav-tabs .nav-link:hover {
+    color: #1a2f4a; background: none !important;
+    border-bottom-color: #7dc3d0 !important;
+  }
+  .nav-tabs .nav-link.active {
+    color: #1a2f4a !important; background: none !important;
+    border-bottom: 3px solid #4a9cad !important;
+  }
+  .tab-content > .tab-pane { padding: 0; }
+  .tab-content > .active  { display: block; }
+
+  /* ── Map controls bar ── */
+  .map-ctrls-bar {
+    background: white; padding: 10px 24px;
+    display: flex; align-items: stretch;
+    border-bottom: 1px solid #dde3ea;
+  }
+  /* Left: label + slider, bottom-justified, takes remaining space */
+  .map-yr-group {
+    flex: 0 0 380px; display: flex; flex-direction: column;
+    justify-content: flex-end; padding-right: 32px;
+  }
+  .map-yr-group .yr-label {
+    font-size: 0.76rem; font-weight: 600; color: #4a6080; margin-bottom: 2px;
+  }
+  /* Right: dropdown + button, bottom-aligned, fixed to right edge */
+  .map-right-group {
+    flex-shrink: 0; display: flex; align-items: flex-end; gap: 16px;
+  }
+  .map-ctrls-bar .form-group,
+  .map-ctrls-bar .mb-3 { margin-bottom: 0 !important; }
+  .map-ctrls-bar label { font-size: 0.76rem; font-weight: 600; color: #4a6080; margin-bottom: 2px; }
+  .map-ctrls-bar .ct-wrap { width: 200px; }
+  .map-ctrls-bar .selectize-input,
+  .map-ctrls-bar .form-control { font-size: 0.81rem; }
+  /* match button height to selectize input */
+  .map-ctrls-bar .btn-dwr {
+    height: 38px; padding-top: 0; padding-bottom: 0;
+    display: inline-flex; align-items: center;
+  }
+  /* hide slider grid ticks, endpoint labels, and individual handle bubbles */
+  .map-ctrls-bar .irs--shiny .irs-grid-text,
+  .map-ctrls-bar .irs--shiny .irs-grid-pol,
+  .map-ctrls-bar .irs--shiny .irs-min,
+  .map-ctrls-bar .irs--shiny .irs-max,
+  .map-ctrls-bar .irs--shiny .irs-from,
+  .map-ctrls-bar .irs--shiny .irs-to { display: none; }
+
+  /* ── Map notes bar ── */
+  .map-notes-bar {
+    background: white; padding: 7px 24px;
+    border-top: 1px solid #dde3ea;
+    display: flex; gap: 24px; flex-wrap: wrap;
+    font-size: 0.76rem; color: #4a6080;
+  }
+  .map-note-item { display: flex; align-items: flex-start; gap: 6px; }
+  .map-note-lbl  { font-weight: 700; color: #1a2f4a; white-space: nowrap; }
+
+  /* ── Network tab controls bar ── */
+  .net-ctrls-bar {
+    background: white; padding: 10px 24px;
+    border-bottom: 1px solid #dde3ea;
+  }
+  .net-ctrls-row {
+    display: flex; align-items: flex-end; gap: 36px; flex-wrap: wrap;
+  }
+  .net-yr-group   { flex: 0 0 300px; }
+  .net-ct-group   { flex: 0 0 175px; }
+  .net-fld-group  { flex: 0 0 200px; }
+  .net-topn-group { flex: 0 0 190px; }
+  .net-yr-group .yr-label {
+    font-size: 0.76rem; font-weight: 600; color: #4a6080; margin-bottom: 2px;
+  }
+  .net-ctrls-bar .form-group,
+  .net-ctrls-bar .mb-3 { margin-bottom: 0 !important; }
+  .net-ctrls-bar label {
+    font-size: 0.76rem; font-weight: 600; color: #4a6080; margin-bottom: 2px;
+  }
+  .net-ctrls-bar .selectize-input,
+  .net-ctrls-bar .form-control { font-size: 0.81rem; }
+  .net-ctrls-bar .btn-dwr {
+    height: 38px; padding-top: 0; padding-bottom: 0;
+    display: inline-flex; align-items: center;
+  }
+  .net-ctrls-bar .irs--shiny .irs-grid-text:not(.dwr-decade),
+  .net-ctrls-bar .irs--shiny .irs-grid-pol:not(.dwr-decade-pol),
+  .net-ctrls-bar .irs--shiny .irs-min,
+  .net-ctrls-bar .irs--shiny .irs-max,
+  .net-ctrls-bar .irs--shiny .irs-from,
+  .net-ctrls-bar .irs--shiny .irs-to { display: none; }
+  /* Network mode radio: inline, compact */
+  .net-mode-group .shiny-input-container { margin-bottom: 0; }
+  .net-mode-group .shiny-options-group   { display: flex; gap: 16px; margin-top: 2px; }
+  .net-mode-group .radio                 { display: inline-flex; align-items: center; margin: 0; }
+  .net-mode-group .radio label           { font-size: 0.81rem !important; font-weight: 400 !important; }
+  .net-mode-group > .control-label {
+    font-size: 0.76rem; font-weight: 600; color: #4a6080;
+    display: block; margin-bottom: 2px;
+  }
+
+  /* ── Network stats / note bar ── */
+  .net-stats-bar {
+    background: white; padding: 6px 24px;
+    border-top: 1px solid #dde3ea;
+    font-size: 0.76rem; color: #4a6080;
+  }
 "
 
 # ── UI ─────────────────────────────────────────────────────────────────────────
@@ -469,6 +729,11 @@ ui <- fluidPage(
         btn.classList.toggle('is-open', isOpen);
         setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 260);
       });
+
+      // ── Map tab: trigger leaflet resize when tab becomes visible ─────────────
+      $(document).on('shown.bs.tab', function() {
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
+      });
     "))
   ),
 
@@ -493,120 +758,175 @@ ui <- fluidPage(
     )
   ),
 
-  # ── Controls bar ────────────────────────────────────────────────────────────
-  div(class = "ctrls-bar",
-    div(class = "kw-wrap",
-      textInput("keyword", label = NULL,
-        placeholder = "\u25bc  Enter Keyword Search", width = "100%")
-    ),
-    div(class = "ctrls-spacer"),
-    actionButton("btn_sci",   "Science Category & Field Classification", class = "btn-dwr"),
-    actionButton("btn_about", "About the Inventory",                     class = "btn-dwr"),
-    actionButton("btn_reset", "Reset",                                   class = "btn-dwr"),
-    tags$button(
-      id    = "btn_chat_toggle",
-      class = "btn-dwr btn-chat-toggle",
-      HTML("Ask the data &#10022;")
-    )
-  ),
+  # ── Tabs ─────────────────────────────────────────────────────────────────────
+  tabsetPanel(
+    id = "main_tabs", type = "tabs",
 
-  # ── Main content ─────────────────────────────────────────────────────────────
-  div(class = "main-wrap",
-    div(class = "main-layout",
+    # ── Dashboard tab ──────────────────────────────────────────────────────────
+    tabPanel("Dashboard",
 
-      # ── Left panel ──────────────────────────────────────────────────────────
-      div(class = "panel-left",
-        # Featured article
-        div(class = "pcrd", uiOutput("featured_ui")),
-
-        # Science Category pie chart
-        div(class = "pcrd",
-          div(class = "pcrd-title", "Science Category"),
-          uiOutput("cat_filter_badge"),
-          plotlyOutput("pie_category", height = "310px")
+      div(class = "ctrls-bar",
+        div(class = "kw-wrap",
+          textInput("keyword", label = NULL,
+            placeholder = "▼  Enter Keyword Search", width = "100%")
         ),
-
-        # Articles by Division
-        div(class = "pcrd",
-          div(class = "pcrd-title", "Articles by Division"),
-          plotlyOutput("bar_division", height = "500px")
+        div(class = "ctrls-spacer"),
+        actionButton("btn_sci",   "Science Category & Field Classification", class = "btn-dwr"),
+        actionButton("btn_about", "About the Inventory",                     class = "btn-dwr"),
+        actionButton("btn_reset", "Reset",                                   class = "btn-dwr"),
+        tags$button(
+          id    = "btn_chat_toggle",
+          class = "btn-dwr btn-chat-toggle",
+          HTML("Ask the data &#10022;")
         )
       ),
 
-      # ── Right panel ─────────────────────────────────────────────────────────
-      div(class = "panel-right",
-        # Filter dropdowns
-        div(class = "pcrd filt-row",
-          fluidRow(
-            column(3,
-              selectInput("f_div", "Division",
-                choices = division_choices, width = "100%")
+      div(class = "main-wrap",
+        div(class = "main-layout",
+
+          div(class = "panel-left",
+            div(class = "pcrd", uiOutput("featured_ui")),
+            div(class = "pcrd",
+              div(class = "pcrd-title", "Science Category"),
+              uiOutput("cat_filter_badge"),
+              plotlyOutput("pie_category", height = "310px")
             ),
-            column(3,
-              selectInput("f_field", "Science Field",
-                choices = field_choices, width = "100%")
-            ),
-            column(3,
-              selectInput("f_contrib", "Contribution Type",
-                choices = c("All", CONTRIB_LEVELS), width = "100%")
-            ),
-            column(3,
-              selectInput("f_affil", "Author Affiliation",
-                choices = c("All", all_affiliations), width = "100%")
-            )
-          )
-        ),
-
-        # Paper selection banner (shown when filter_to_papers is active)
-        uiOutput("papers_filter_banner"),
-
-        # Summary stat boxes
-        uiOutput("stat_boxes"),
-
-        # Publications by Year chart + year slider
-        div(class = "pcrd",
-          div(class = "pcrd-title", "Publications by Year and Contribution"),
-          sliderInput("year_range", NULL,
-            min   = year_min,
-            max   = year_max,
-            value = YEAR_DEFAULT,
-            step  = 1, sep = "", width = "100%"
-          ),
-          plotlyOutput("bar_year", height = "240px")
-        ),
-
-        # Article table
-        div(class = "pcrd",
-          DT::dataTableOutput("article_table")
-        )
-      ),
-
-      # ── Chat sidebar ─────────────────────────────────────────────────────────
-      div(class = "chat-sidebar",
-        div(class = "chat-sidebar-inner",
-          div(class = "chat-sidebar-title",
-            div(
-              "\u2736 Ask the data",
-              tags$small("Search, filter, summarize, and analyze DWR publications")
-            ),
-            actionButton(
-              "btn_chat_restart", "\u21ba New chat",
-              class = "btn-chat-restart",
-              title = "Clear conversation and start over"
+            div(class = "pcrd",
+              div(class = "pcrd-title", "Articles by Division"),
+              plotlyOutput("bar_division", height = "500px")
             )
           ),
-          shinychat::chat_mod_ui(
-            "chat",
-            placeholder = "e.g. Show hydrology papers from 2015\u20132022\u2026"
+
+          div(class = "panel-right",
+            div(class = "pcrd filt-row",
+              fluidRow(
+                column(3,
+                  selectInput("f_div", "Division",
+                    choices = division_choices, width = "100%")
+                ),
+                column(3,
+                  selectInput("f_field", "Science Field",
+                    choices = field_choices, width = "100%")
+                ),
+                column(3,
+                  selectInput("f_contrib", "Contribution Type",
+                    choices = c("All", CONTRIB_LEVELS), width = "100%")
+                ),
+                column(3,
+                  selectInput("f_affil", "Author Affiliation",
+                    choices = c("All", all_affiliations), width = "100%")
+                )
+              )
+            ),
+            uiOutput("papers_filter_banner"),
+            uiOutput("stat_boxes"),
+            div(class = "pcrd",
+              div(class = "pcrd-title", "Publications by Year and Contribution"),
+              sliderInput("year_range", NULL,
+                min   = year_min,
+                max   = year_max,
+                value = YEAR_DEFAULT,
+                step  = 1, sep = "", width = "100%"
+              ),
+              plotlyOutput("bar_year", height = "240px")
+            ),
+            div(class = "pcrd",
+              DT::dataTableOutput("article_table")
+            )
+          ),
+
+          div(class = "chat-sidebar",
+            div(class = "chat-sidebar-inner",
+              div(class = "chat-sidebar-title",
+                div(
+                  "✶ Ask the data",
+                  tags$small("Search, filter, summarize, and analyze DWR publications")
+                ),
+                actionButton(
+                  "btn_chat_restart", "↺ New chat",
+                  class = "btn-chat-restart",
+                  title = "Clear conversation and start over"
+                )
+              ),
+              shinychat::chat_mod_ui(
+                "chat",
+                placeholder = "e.g. Show hydrology papers from 2015–2022…"
+              )
+            )
           )
+
         )
       )
+    ),
 
+    # ── Institution Map tab ────────────────────────────────────────────────────
+    tabPanel("Institution Map",
+      div(class = "map-ctrls-bar",
+        div(class = "map-yr-group",
+          tags$span(class = "yr-label", "Year Range"),
+          div(class = "yr-wrap",
+            sliderInput("map_year_range", label = NULL,
+              min = year_min, max = year_max, value = YEAR_DEFAULT,
+              step = 1, sep = "", width = "100%"
+            )
+          )
+        ),
+        div(class = "map-right-group",
+          div(class = "ct-wrap",
+            selectInput("map_contrib", "Contribution Type",
+              choices = c("All", CONTRIB_LEVELS), width = "100%"
+            )
+          ),
+          div(class = "reset-wrap",
+            actionButton("map_reset_view", "Reset View", class = "btn-dwr")
+          )
+        )
+      ),
+      leafletOutput("institution_map", height = "calc(100vh - 300px)"),
+      uiOutput("map_notes_ui")
+    ),
+
+    # ── Publishing Network tab ─────────────────────────────────────────────────
+    tabPanel("Publishing Network",
+      div(class = "net-ctrls-bar",
+        div(class = "net-ctrls-row",
+          div(class = "net-yr-group",
+            tags$span(class = "yr-label", "Year Range"),
+            sliderInput("net_year_range", label = NULL,
+              min = year_min, max = year_max, value = YEAR_DEFAULT,
+              step = 1, sep = "", width = "100%")
+          ),
+          div(class = "net-ct-group",
+            selectInput("net_contrib", "Contribution Type",
+              choices = c("All", CONTRIB_LEVELS), width = "100%")
+          ),
+          div(class = "net-fld-group",
+            selectInput("net_field", "Science Field",
+              choices = field_choices, width = "100%")
+          ),
+          div(class = "net-mode-group",
+            radioButtons("net_mode", "Network Mode",
+              choices  = c("Institutions", "People"),
+              selected = "Institutions", inline = TRUE)
+          ),
+          div(class = "net-topn-group",
+            sliderInput("net_top_n", "Top N Nodes",
+              min = 5, max = 100, value = 25, step = 5, width = "100%")
+          ),
+          div(style = "flex-shrink: 0; display: flex; align-items: flex-end;",
+            actionButton("net_reset", "Reset View", class = "btn-dwr")
+          )
+        )
+      ),
+      visNetwork::visNetworkOutput("network_graph", height = "calc(100vh - 280px)"),
+      uiOutput("net_stats_bar"),
+      uiOutput("net_disambig_note")
     )
+
   ),
 
-  # ── Footer ──────────────────────────────────────────────────────────────────
-  div(class = "dwr-footer", "Dataset updated 12/10/2025")
+  # ── Footer ──────────────────────────────────────────────────────────────────────────
+  div(class = "dwr-footer", paste0("Dataset updated ", .dataset_updated_label))
 )
 
 # ── Server ─────────────────────────────────────────────────────────────────────
@@ -1749,6 +2069,663 @@ server <- function(input, output, session) {
     id = "chat-chat", role = "assistant",
     response = chat_welcome_msg, session = session
   )
+
+  # ── Institution Map ──────────────────────────────────────────────────────────
+
+  map_filtered <- reactive({
+    df <- pubs
+    yr <- input$map_year_range
+    df <- filter(df, !is.na(year), year >= yr[1L], year <= yr[2L])
+    ct <- input$map_contrib
+    if (!isTRUE(ct == "All"))
+      df <- filter(df, contribution_type == ct)
+    df
+  })
+
+  map_counts <- reactive({
+    rk <- map_filtered()$record_key
+
+    # Country counts: one (record_key, country) pair counts at most once
+    country_n <- geo_country_base |>
+      filter(record_key %in% rk) |>
+      distinct(record_key, country) |>
+      count(country, name = "n")
+
+    # US state counts from geo_inst_base; deduplicate per (paper, state)
+    state_n <- geo_inst_base |>
+      filter(record_key %in% rk, country == "United States", !is.na(state)) |>
+      distinct(record_key, state) |>
+      count(state, name = "n")
+
+    # National-scope US: US institutions with no state assigned
+    nat_rk <- unique(geo_inst_base$record_key[
+      geo_inst_base$record_key %in% rk &
+      geo_inst_base$country == "United States" &
+      is.na(geo_inst_base$state)
+    ])
+    national_n <- length(nat_rk)
+    national_top <- if (national_n > 0L) {
+      geo_inst_base |>
+        filter(record_key %in% nat_rk,
+               country == "United States", is.na(state)) |>
+        distinct(record_key, canonical) |>
+        count(canonical, name = "n") |>
+        arrange(desc(n)) |>
+        head(3L) |>
+        pull(canonical)
+    } else character(0L)
+
+    # Publications with no geo data at all
+    rk_with_geo <- unique(geo_country_base$record_key)
+    no_geo_n <- sum(!rk %in% rk_with_geo)
+
+    # Top-5 institutions per country (for popups)
+    country_inst <- geo_inst_base |>
+      filter(record_key %in% rk) |>
+      distinct(record_key, country, canonical) |>
+      count(country, canonical, name = "n") |>
+      group_by(country) |>
+      slice_max(n, n = 5L, with_ties = FALSE) |>
+      ungroup()
+
+    # Top-5 institutions per state (for popups)
+    state_inst <- geo_inst_base |>
+      filter(record_key %in% rk, !is.na(state)) |>
+      distinct(record_key, state, canonical) |>
+      count(state, canonical, name = "n") |>
+      group_by(state) |>
+      slice_max(n, n = 5L, with_ties = FALSE) |>
+      ungroup()
+
+    list(
+      country_n    = country_n,
+      state_n      = state_n,
+      national_n   = national_n,
+      national_top = national_top,
+      no_geo_n     = no_geo_n,
+      country_inst = country_inst,
+      state_inst   = state_inst
+    )
+  })
+
+  # Base map rendered once; polygons updated via leafletProxy
+  output$institution_map <- renderLeaflet({
+    leaflet(options = leafletOptions(zoomControl = TRUE)) |>
+      addProviderTiles("Esri.WorldGrayCanvas") |>
+      setView(lng = 10, lat = 20, zoom = 2)
+  })
+
+  observe({
+    input$main_tabs  # re-draw when user switches to the map tab
+    mc <- map_counts()
+    cn <- mc$country_n
+    sn <- mc$state_n
+    ci <- mc$country_inst
+    si <- mc$state_inst
+
+    all_n    <- c(cn$n, sn$n)
+    max_logn <- if (length(all_n) > 0L && max(all_n) > 1L) max(log1p(all_n)) else log1p(2L)
+
+    pal <- colorNumeric(
+      palette  = c("#eef7eb", "#bdddb9", "#79bb73", "#3e9438", "#1f6b1c", "#0b3f09"),
+      domain   = c(log1p(1), max_logn),
+      na.color = "#ffffff"
+    )
+
+    # Harmonize country names and aggregate (guards against multiple LLM names
+    # mapping to the same Natural Earth admin polygon)
+    cn_h <- cn |>
+      mutate(admin = .harmonize_country(country)) |>
+      group_by(admin) |>
+      summarise(n = sum(n), .groups = "drop")
+
+    world_data <- world_sf |>
+      left_join(cn_h, by = "admin") |>
+      mutate(n = coalesce(n, 0L), log_n = log1p(n))
+
+    make_inst_lines <- function(inst_df) {
+      if (nrow(inst_df) == 0L) return("")
+      paste0(
+        "<br><span style='font-size:0.78rem;color:#4a6080'>Top institutions:</span><br>",
+        paste(
+          paste0(htmltools::htmlEscape(inst_df$canonical), " — ", inst_df$n),
+          collapse = "<br>"
+        )
+      )
+    }
+
+    world_labels <- sprintf(
+      "<strong>%s</strong> — %s",
+      world_data$admin,
+      ifelse(world_data$n > 0L,
+             paste0(world_data$n, " pub", ifelse(world_data$n == 1L, "", "s")),
+             "No publications")
+    )
+
+    world_popups <- vapply(seq_len(nrow(world_data)), function(i) {
+      nm   <- world_data$admin[i]
+      n    <- world_data$n[i]
+      orig <- cn$country[.harmonize_country(cn$country) == nm]
+      inst_sub <- ci[ci$country %in% orig, ]
+      if (n == 0L) return(paste0(
+        "<strong>", htmltools::htmlEscape(nm),
+        "</strong><br>No publications in the current selection."))
+      paste0("<strong>", htmltools::htmlEscape(nm), "</strong><br>",
+             n, " publication", if (n == 1L) "" else "s",
+             make_inst_lines(inst_sub))
+    }, character(1L))
+
+    us_data <- states_sf |>
+      left_join(sn, by = c("name" = "state")) |>
+      mutate(n = coalesce(n, 0L), log_n = log1p(n))
+
+    us_labels <- sprintf(
+      "<strong>%s</strong> — %s",
+      us_data$name,
+      ifelse(us_data$n > 0L,
+             paste0(us_data$n, " pub", ifelse(us_data$n == 1L, "", "s")),
+             "No publications")
+    )
+
+    us_popups <- vapply(seq_len(nrow(us_data)), function(i) {
+      nm <- us_data$name[i]
+      n  <- us_data$n[i]
+      inst_sub <- si[si$state == nm, ]
+      if (n == 0L) return(paste0(
+        "<strong>", htmltools::htmlEscape(nm),
+        "</strong><br>No publications in the current selection."))
+      paste0("<strong>", htmltools::htmlEscape(nm), "</strong><br>",
+             n, " publication", if (n == 1L) "" else "s",
+             make_inst_lines(inst_sub))
+    }, character(1L))
+
+    # Legend at meaningful raw-count breakpoints
+    legend_breaks <- c(1L, 5L, 10L, 50L, 100L, 500L)
+    if (length(all_n) > 0L && max(all_n) > 0L)
+      legend_breaks <- legend_breaks[legend_breaks <= max(all_n)]
+    if (length(legend_breaks) == 0L) legend_breaks <- 1L
+    legend_colors <- c("#ffffff", pal(log1p(legend_breaks)))
+    legend_labels <- c("0", as.character(legend_breaks))
+
+    poly_style <- list(fillOpacity = 0.75, color = "white", weight = 0.6, opacity = 1)
+    hl_opts    <- highlightOptions(weight = 2, color = "#1a2f4a",
+                                   fillOpacity = 0.9, bringToFront = TRUE)
+    lbl_opts   <- labelOptions(style = list(
+      "font-size"   = "0.82rem",
+      "font-family" = "'Helvetica Neue', Arial, sans-serif",
+      "padding"     = "4px 8px"
+    ))
+
+    leafletProxy("institution_map") |>
+      clearShapes() |>
+      removeControl("dwr-map-legend") |>
+      addPolygons(
+        data             = world_data,
+        fillColor        = ~pal(ifelse(n == 0L, NA_real_, log_n)),
+        fillOpacity      = poly_style$fillOpacity,
+        color            = poly_style$color,
+        weight           = poly_style$weight,
+        opacity          = poly_style$opacity,
+        label            = lapply(world_labels, htmltools::HTML),
+        labelOptions     = lbl_opts,
+        popup            = world_popups,
+        highlightOptions = hl_opts
+      ) |>
+      addPolygons(
+        data             = us_data,
+        fillColor        = ~pal(ifelse(n == 0L, NA_real_, log_n)),
+        fillOpacity      = poly_style$fillOpacity,
+        color            = poly_style$color,
+        weight           = poly_style$weight,
+        opacity          = poly_style$opacity,
+        label            = lapply(us_labels, htmltools::HTML),
+        labelOptions     = lbl_opts,
+        popup            = us_popups,
+        highlightOptions = hl_opts
+      ) |>
+      addLegend(
+        position = "bottomright",
+        colors   = legend_colors,
+        labels   = legend_labels,
+        title    = "Publications",
+        opacity  = 0.85,
+        layerId  = "dwr-map-legend"
+      )
+  })
+
+  observeEvent(input$map_reset_view, {
+    leafletProxy("institution_map") |>
+      setView(lng = 10, lat = 20, zoom = 2)
+  })
+
+  output$map_notes_ui <- renderUI({
+    mc <- map_counts()
+    notes <- list()
+
+    if (mc$national_n > 0L) {
+      top_str <- if (length(mc$national_top) > 0L)
+        paste0(" Top: ", paste(mc$national_top, collapse = "; "), ".")
+      else ""
+      notes[[length(notes) + 1L]] <- div(class = "map-note-item",
+        span(class = "map-note-lbl", "National-scope US institutions:"),
+        span(paste0(
+          mc$national_n, " publication",
+          if (mc$national_n == 1L) "" else "s",
+          " involve US institutions without a single-state footprint",
+          " and are not attributed to any state on the map.", top_str
+        ))
+      )
+    }
+
+    if (mc$no_geo_n > 0L) {
+      notes[[length(notes) + 1L]] <- div(class = "map-note-item",
+        span(class = "map-note-lbl", "Publications without geo data:"),
+        span(paste0(
+          mc$no_geo_n, " publication",
+          if (mc$no_geo_n == 1L) "" else "s",
+          " have no affiliated institution geo data and are not shown on the map."
+        ))
+      )
+    }
+
+    if (length(notes) == 0L) return(NULL)
+    div(class = "map-notes-bar", notes)
+  })
+
+  # ── Publishing Network ────────────────────────────────────────────────────────
+
+  # Debounced slider inputs to avoid continuous re-render while dragging
+  net_year_range_d <- debounce(reactive(input$net_year_range), 400)
+  net_top_n_d      <- debounce(reactive(input$net_top_n),      400)
+
+  # Filtered pair base table for the active network mode
+  net_base <- reactive({
+    mode <- input$net_mode
+    base <- if (isTRUE(mode == "Institutions")) network_inst_base else network_author_base
+
+    empty <- data.frame(
+      node_a = character(0), node_b = character(0),
+      record_key = character(0), year = integer(0),
+      contribution_type = character(0), pc_field = character(0),
+      stringsAsFactors = FALSE
+    )
+    if (is.null(base) || nrow(base) == 0L) return(empty)
+
+    yr <- net_year_range_d()
+    base <- base[!is.na(base$year) & base$year >= yr[1L] & base$year <= yr[2L], ]
+
+    ct <- input$net_contrib
+    if (!isTRUE(ct == "All"))
+      base <- base[!is.na(base$contribution_type) & base$contribution_type == ct, ]
+
+    fld <- input$net_field
+    if (!isTRUE(fld == "All"))
+      base <- base[!is.na(base$pc_field) & base$pc_field == fld, ]
+
+    base
+  })
+
+  # Build visNetwork nodes/edges from the filtered base
+  net_graph <- reactive({
+    base  <- net_base()
+    mode  <- input$net_mode
+    n_top <- as.integer(net_top_n_d())
+
+    empty_graph <- list(
+      nodes      = data.frame(id = character(0), stringsAsFactors = FALSE),
+      edges      = data.frame(id = integer(0), from = character(0),
+                              to = character(0), stringsAsFactors = FALSE),
+      edge_lookup = data.frame(id = integer(0), node_a = character(0),
+                               node_b = character(0), stringsAsFactors = FALSE),
+      n_papers   = 0L
+    )
+
+    if (nrow(base) == 0L) return(empty_graph)
+
+    # Aggregate: count distinct papers per unique node pair
+    edges_agg <- base |>
+      group_by(node_a, node_b) |>
+      summarise(n_papers = n_distinct(record_key), .groups = "drop") |>
+      as.data.frame()
+
+    # Node degree (number of distinct neighbors)
+    deg_tbl    <- table(c(edges_agg$node_a, edges_agg$node_b))
+    deg_sorted <- sort(deg_tbl, decreasing = TRUE)
+
+    # Top-N nodes; always include .DWR_NODE in Institutions mode
+    top_nodes <- names(head(deg_sorted, n_top))
+    if (isTRUE(mode == "Institutions") &&
+        .DWR_NODE %in% names(deg_tbl) &&
+        !.DWR_NODE %in% top_nodes)
+      top_nodes <- c(top_nodes, .DWR_NODE)
+
+    # Restrict edges to top-N nodes
+    edges_agg <- edges_agg[
+      edges_agg$node_a %in% top_nodes & edges_agg$node_b %in% top_nodes, ,
+      drop = FALSE
+    ]
+
+    # All nodes that appear in retained edges, plus DWR if it has edges
+    all_nodes <- unique(c(edges_agg$node_a, edges_agg$node_b))
+    if (isTRUE(mode == "Institutions") && .DWR_NODE %in% names(deg_tbl))
+      all_nodes <- unique(c(all_nodes, .DWR_NODE))
+
+    if (length(all_nodes) == 0L) return(empty_graph)
+
+    degrees <- as.integer(deg_tbl[all_nodes])
+    degrees[is.na(degrees)] <- 0L
+
+    # Paper count per node: distinct papers in the current filter involving each node
+    node_rk      <- unique(rbind(
+      data.frame(node = base$node_a, record_key = base$record_key, stringsAsFactors = FALSE),
+      data.frame(node = base$node_b, record_key = base$record_key, stringsAsFactors = FALSE)
+    ))
+    paper_ct     <- table(node_rk$node)
+    paper_counts <- as.integer(paper_ct[all_nodes])
+    paper_counts[is.na(paper_counts)] <- 0L
+
+    # ── Node data frame ────────────────────────────────────────────────────────
+    nodes_df <- data.frame(
+      id    = all_nodes,
+      label = substr(all_nodes, 1L, 28L),
+      title = paste0("<b>", all_nodes, "</b><br>",
+                     paper_counts, " paper", ifelse(paper_counts == 1L, "", "s")),
+      size  = pmax(12, 8 + log1p(paper_counts) * 4.5),
+      stringsAsFactors = FALSE
+    )
+
+    if (isTRUE(mode == "Institutions")) {
+      is_dwr  <- nodes_df$id == .DWR_NODE
+      ctrs    <- inst_country_map[nodes_df$id]
+      is_us   <- !is.na(ctrs) & ctrs == "United States"
+      is_intl <- !is.na(ctrs) & ctrs != "United States"
+
+      nodes_df$color.background         <- ifelse(is_dwr, "#1a2f4a",
+                                            ifelse(is_us, "#4da87a",
+                                            ifelse(is_intl, "#4a9cad", "#aaaaaa")))
+      nodes_df$color.border              <- ifelse(is_dwr, "#7dc3d0", "#d8e8d8")
+      nodes_df$color.highlight.background <- ifelse(is_dwr, "#2e4d72",
+                                              ifelse(is_us | is_intl, "#2d7a5f", "#888888"))
+      nodes_df$font.color                <- ifelse(is_dwr, "white", "#1a2f4a")
+      nodes_df$borderWidth               <- ifelse(is_dwr, 3L, 1L)
+      nodes_df$size                      <- ifelse(is_dwr, pmax(nodes_df$size, 42), nodes_df$size)
+      nodes_df$fixed.x                   <- is_dwr
+      nodes_df$fixed.y                   <- is_dwr
+      nodes_df$x                         <- ifelse(is_dwr, 0, NA_real_)
+      nodes_df$y                         <- ifelse(is_dwr, 0, NA_real_)
+    } else {
+      is_dwr_auth <- nodes_df$id %in% dwr_author_names
+      nodes_df$color.background          <- ifelse(is_dwr_auth, "#1a2f4a", "#4da87a")
+      nodes_df$color.border              <- ifelse(is_dwr_auth, "#7dc3d0", "#d8e8d8")
+      nodes_df$color.highlight.background <- ifelse(is_dwr_auth, "#2e4d72", "#2d7a5f")
+      nodes_df$font.color                <- ifelse(is_dwr_auth, "white", "#1a2f4a")
+      nodes_df$borderWidth               <- ifelse(is_dwr_auth, 3L, 1L)
+    }
+
+    # ── Edge data frame ────────────────────────────────────────────────────────
+    edge_n <- nrow(edges_agg)
+    edges_df <- data.frame(
+      id    = seq_len(edge_n),
+      from  = edges_agg$node_a,
+      to    = edges_agg$node_b,
+      width = 1 + log1p(edges_agg$n_papers) * 2,
+      title = paste0(edges_agg$n_papers, " paper",
+                     ifelse(edges_agg$n_papers == 1L, "", "s")),
+      stringsAsFactors = FALSE
+    )
+
+    # Edge lookup (id → node pair) used by the edge click handler
+    edge_lookup <- data.frame(
+      id     = seq_len(edge_n),
+      node_a = edges_agg$node_a,
+      node_b = edges_agg$node_b,
+      stringsAsFactors = FALSE
+    )
+
+    list(
+      nodes       = nodes_df,
+      edges       = edges_df,
+      edge_lookup = edge_lookup,
+      n_papers    = n_distinct(base$record_key)
+    )
+  })
+
+  # ── Render the network ────────────────────────────────────────────────────────
+  output$network_graph <- visNetwork::renderVisNetwork({
+    g <- net_graph()
+
+    if (nrow(g$nodes) == 0L) {
+      return(
+        visNetwork::visNetwork(
+          nodes = data.frame(
+            id = 1L,
+            label = "No connections found for current filters",
+            color.background = "#eef1f5", color.border = "#dde3ea",
+            font.color = "#7a8a9a", size = 20L,
+            stringsAsFactors = FALSE
+          ),
+          edges = data.frame(from = integer(0), to = integer(0),
+                             stringsAsFactors = FALSE)
+        ) |>
+          visNetwork::visOptions(physics = FALSE)
+      )
+    }
+
+    visNetwork::visNetwork(g$nodes, g$edges) |>
+      visNetwork::visPhysics(
+        solver = "forceAtlas2Based",
+        forceAtlas2Based = list(
+          gravitationalConstant = -120,
+          centralGravity        = 0.005,
+          springConstant        = 0.06,
+          springLength          = 250,
+          damping               = 0.4
+        ),
+        stabilization = list(enabled = TRUE, iterations = 300, fit = TRUE),
+        timestep = 0.35
+      ) |>
+      visNetwork::visInteraction(
+        dragNodes         = TRUE,
+        zoomView          = TRUE,
+        navigationButtons = TRUE,
+        hover             = TRUE
+      ) |>
+      visNetwork::visOptions(
+        highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE)
+      ) |>
+      visNetwork::visEdges(
+        color  = list(color = "#cccccc", highlight = "#4da87a", opacity = 0.85),
+        smooth = FALSE
+      ) |>
+      visNetwork::visEvents(
+        click = "function(params) {
+          if (params.nodes.length > 0) {
+            Shiny.setInputValue('net_node_click',
+              {node: params.nodes[0], nonce: Math.random()},
+              {priority: 'event'});
+          } else if (params.edges.length > 0) {
+            Shiny.setInputValue('net_edge_click',
+              {edge: params.edges[0], nonce: Math.random()},
+              {priority: 'event'});
+          }
+        }"
+      ) |>
+      visNetwork::visLegend(
+        useGroups = FALSE,
+        position  = "right",
+        width     = 0.24,
+        ncol      = 1,
+        addNodes  = if (isTRUE(input$net_mode == "Institutions")) {
+          data.frame(
+            label            = c("DWR", "US Institution", "International", "Unknown geo"),
+            shape            = "dot",
+            color.background = c("#1a2f4a", "#4da87a", "#4a9cad", "#aaaaaa"),
+            color.border     = c("#7dc3d0", "#d8e8d8", "#d8e8d8", "#d8e8d8"),
+            size             = 12,
+            stringsAsFactors = FALSE
+          )
+        } else {
+          data.frame(
+            label            = c("DWR Author", "External Author"),
+            shape            = "dot",
+            color.background = c("#1a2f4a", "#4da87a"),
+            color.border     = c("#7dc3d0", "#d8e8d8"),
+            size             = 12,
+            stringsAsFactors = FALSE
+          )
+        }
+      )
+  })
+
+  # Re-fit the network when the user navigates to the Publishing Network tab
+  observeEvent(input$main_tabs, {
+    if (isTRUE(input$main_tabs == "Publishing Network")) {
+      visNetwork::visNetworkProxy("network_graph") |> visNetwork::visFit()
+    }
+  })
+
+  # ── Modal content builder (inline — avoids uiOutput race condition) ───────────
+  .net_paper_table <- function(papers) {
+    if (nrow(papers) == 0L)
+      return(p(style = "font-size:0.82rem; color:#4a6080; padding:8px 0",
+               "No papers in the current view for this selection."))
+
+    rows <- lapply(seq_len(min(nrow(papers), 50L)), function(i) {
+      r   <- papers[i, ]
+      ttl <- substr(coalesce(r$title, ""), 1L, 80L)
+      if (nchar(coalesce(r$title, "")) > 80L) ttl <- paste0(ttl, "…")
+      title_cell <- if (!is.na(r$doi))
+        tags$a(ttl, href   = paste0("https://doi.org/", r$doi),
+               target = "_blank",
+               style  = "color:#4a9cad; text-decoration:underline")
+      else
+        tags$span(ttl)
+      tags$tr(
+        tags$td(title_cell,                         style = "width:54%; padding:5px 8px; vertical-align:top"),
+        tags$td(coalesce(as.character(r$year), ""), style = "width:7%;  padding:5px 8px; vertical-align:top"),
+        tags$td(coalesce(r$contribution_type, ""),  style = "width:17%; padding:5px 8px; vertical-align:top"),
+        tags$td(coalesce(r$first_author, ""),       style = "width:22%; padding:5px 8px; vertical-align:top")
+      )
+    })
+
+    tagList(
+      if (nrow(papers) > 50L)
+        p(style = "font-size:0.76rem; color:#7a8a9a; margin-bottom:6px",
+          paste0("Showing first 50 of ", nrow(papers), " papers.")),
+      tags$table(
+        class = "table table-sm table-striped table-hover",
+        style = "font-size:0.8rem; width:100%; margin-bottom:0",
+        tags$thead(
+          style = "background:#f5f7f9",
+          tags$tr(
+            tags$th("Title",        style = "font-weight:700; color:#1a2f4a; padding:6px 8px"),
+            tags$th("Year",         style = "font-weight:700; color:#1a2f4a; padding:6px 8px"),
+            tags$th("Contribution", style = "font-weight:700; color:#1a2f4a; padding:6px 8px"),
+            tags$th("First Author", style = "font-weight:700; color:#1a2f4a; padding:6px 8px")
+          )
+        ),
+        tags$tbody(rows)
+      )
+    )
+  }
+
+  # ── Node click → paper list modal ─────────────────────────────────────────────
+  observeEvent(input$net_node_click, {
+    req(input$net_node_click)
+    node_id <- as.character(input$net_node_click$node)
+    mode    <- isolate(input$net_mode)
+    base    <- isolate(net_base())
+
+    lookup  <- if (isTRUE(mode == "Institutions")) inst_to_records else author_to_records
+    rk_node <- lookup[[node_id]]
+    if (is.null(rk_node)) rk_node <- character(0L)
+
+    rk_show <- intersect(rk_node, unique(base$record_key))
+    papers  <- pubs[pubs$record_key %in% rk_show, ] |> arrange(desc(year))
+
+    modal_title <- paste0(
+      substr(node_id, 1L, 60L),
+      if (nchar(node_id) > 60L) "…" else "",
+      " — ", nrow(papers), " paper", if (nrow(papers) == 1L) "" else "s"
+    )
+    showModal(modalDialog(
+      title     = modal_title,
+      .net_paper_table(papers),
+      easyClose = TRUE,
+      footer    = modalButton("Close"),
+      size      = "l"
+    ))
+  })
+
+  # ── Edge click → shared-paper list modal ──────────────────────────────────────
+  observeEvent(input$net_edge_click, {
+    req(input$net_edge_click)
+    edge_id <- as.integer(input$net_edge_click$edge)
+    g       <- isolate(net_graph())
+    base    <- isolate(net_base())
+    mode    <- isolate(input$net_mode)
+
+    erow <- g$edge_lookup[g$edge_lookup$id == edge_id, ]
+    if (nrow(erow) == 0L) return()
+
+    node_a <- erow$node_a[1L]
+    node_b <- erow$node_b[1L]
+    lookup <- if (isTRUE(mode == "Institutions")) inst_to_records else author_to_records
+    rk_a   <- lookup[[node_a]]; if (is.null(rk_a)) rk_a <- character(0L)
+    rk_b   <- lookup[[node_b]]; if (is.null(rk_b)) rk_b <- character(0L)
+
+    rk_show <- intersect(intersect(rk_a, rk_b), unique(base$record_key))
+    papers  <- pubs[pubs$record_key %in% rk_show, ] |> arrange(desc(year))
+
+    short_a <- paste0(substr(node_a, 1L, 35L), if (nchar(node_a) > 35L) "…" else "")
+    short_b <- paste0(substr(node_b, 1L, 35L), if (nchar(node_b) > 35L) "…" else "")
+    modal_title <- paste0(
+      short_a, " – ", short_b,
+      " — ", nrow(papers), " shared paper", if (nrow(papers) == 1L) "" else "s"
+    )
+    showModal(modalDialog(
+      title     = modal_title,
+      .net_paper_table(papers),
+      easyClose = TRUE,
+      footer    = modalButton("Close"),
+      size      = "l"
+    ))
+  })
+
+  # ── Stats bar ─────────────────────────────────────────────────────────────────
+  output$net_stats_bar <- renderUI({
+    g    <- net_graph()
+    mode <- input$net_mode
+    node_word <- if (isTRUE(mode == "Institutions")) "institutions" else "authors"
+    div(class = "net-stats-bar",
+      HTML(paste0(
+        "Showing <strong>", nrow(g$nodes), "</strong> ", node_word,
+        " · <strong>", nrow(g$edges), "</strong> edges",
+        " · <strong>", g$n_papers, "</strong> paper",
+        if (g$n_papers == 1L) "" else "s", " in current filter"
+      ))
+    )
+  })
+
+  # ── Disambiguation note (People mode only) ────────────────────────────────────
+  output$net_disambig_note <- renderUI({
+    if (!isTRUE(input$net_mode == "People")) return(NULL)
+    div(class = "net-stats-bar",
+      style = "color:#7a8a9a; font-style:italic",
+      "Author names appear as recorded in Scopus (“Last F.”). Different researchers
+       sharing the same name and initials may appear as a single node."
+    )
+  })
+
+  # ── Reset ─────────────────────────────────────────────────────────────────────
+  observeEvent(input$net_reset, {
+    updateSliderInput(session, "net_year_range", value    = YEAR_DEFAULT)
+    updateSelectInput(session, "net_contrib",   selected = "All")
+    updateSelectInput(session, "net_field",     selected = "All")
+    updateRadioButtons(session, "net_mode",     selected = "Institutions")
+    updateSliderInput(session, "net_top_n",     value    = 25L)
+  })
+
 }
 
 shinyApp(ui, server)
