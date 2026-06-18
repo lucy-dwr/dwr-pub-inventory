@@ -35,8 +35,8 @@ Loaded once at startup using `arrow::read_parquet()`. Key columns used:
 | `is_lead_author` | "Lead Authored" stat; contribution type chart       |
 | `is_sole_author` | Sole Author contribution type in chart              |
 | `journal`     | (reserved; not displayed in initial version)           |
-| `funding_division` | Export column available when joined by pipeline; not yet used by the dashboard |
-| `author_division` | Export column available when joined by pipeline; not yet used by the dashboard |
+| `funding_division` | Division filter and Articles by Division chart |
+| `author_division` | Division filter and Articles by Division chart |
 
 `pc_category` and `pc_field` are both present in the parquet file — no
 in-app taxonomy join is needed. Category names are title-cased for display.
@@ -65,17 +65,17 @@ filter. Hierarchy (most → least specific):
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  HEADER (full width)                                                    │
-├──────────────────────────────────────────────────────────────────────────┤
-│  Keyword search bar (left)  │  [Sci. Category btn] [About btn] [Reset] │
-├──────────────────────────────────────────────────────────────────────────┤
+├─────────────────────────────────────────────────────────────────────────┤
+│  Keyword search bar (left)  │  [Sci. Category btn] [About btn] [Reset]  │
+├─────────────────────────────────────────────────────────────────────────┤
 │  LEFT PANEL (≈40%)          │  RIGHT PANEL (≈60%)                       │
 │  ─ Featured Article         │  ─ Filter dropdowns (row)                 │
 │  ─ Science Category pie     │  ─ Summary stat boxes (row)               │
-│  ─ Division placeholder     │  ─ Publications by Year stacked bar chart │
+│  ─ Articles by Division     │  ─ Publications by Year stacked bar chart │
 │                             │  ─ Article table                          │
-└──────────────────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────┘
 │  FOOTER (full width)                                                    │
-└──────────────────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -115,13 +115,11 @@ A row directly below the header containing:
 
 ## Filters Row (right panel, top)
 
-Four `selectInput` dropdowns are displayed in a single row. Three are active.
-The Division control is currently disabled and does not filter the reactive
-dataset.
+Four active `selectInput` dropdowns are displayed in a single row.
 
 | Filter             | Source                                                       | Notes                              |
 |--------------------|--------------------------------------------------------------|------------------------------------|
-| Division           | `"All"` only | Disabled placeholder; dashboard filtering by division is planned but not implemented |
+| Division           | Unique non-blank values from `author_division` and `funding_division`, excluding `Unknown` | Matches semicolon-delimited author divisions or the funding division |
 | Science Field      | Unique values of `pc_field`, sorted alphabetically          | Displays the field name            |
 | Contribution Type  | Fixed: All / Funder / Co-Author / Lead Author / Sole Author | Derived `contribution_type` column |
 | Author Affiliation | All unique non-empty values from the `affiliations` list column | Standard dropdown scroll |
@@ -148,12 +146,13 @@ Style: light card with subtle border; icon color matches the dashboard palette.
 
 ## Year Range Control
 
-Default year range: **2020-2026**. The control lives **above or beside the
-Publications by Year chart** (exact placement to be decided during build).
+Default year range: **2020-2026**, clipped to the dataset's actual minimum and
+maximum years. The control lives inside the **Publications by Year and
+Contribution** card, directly above the chart.
 
-Implementation: `sliderInput` with `min = 1962`, `max = 2026` (dynamic from
-data), `value = c(2020, 2026)`, `step = 1`, `sep = ""`. The subtitle in the
-header updates to reflect the selected range.
+Implementation: `sliderInput` with dynamic `min = year_min`,
+`max = year_max`, `value = YEAR_DEFAULT`, `step = 1`, and `sep = ""`. The
+subtitle in the header updates to reflect the selected range.
 
 ---
 
@@ -170,10 +169,16 @@ header updates to reflect the selected range.
 
 ### Articles by Division Bar Chart (left panel)
 
-- Current implementation is a placeholder panel.
-- Placeholder text: `"Division classifications are in progress — check back soon"`.
-- The planned implementation will use the `funding_division` column added
-  during export from `data/lookups/funding_division_lookup.csv`.
+- Plotly horizontal stacked bar chart.
+- Counts unique `(record_key, division)` pairs from both `author_division` and
+  `funding_division`.
+- Multi-valued `author_division` strings are split on `;`; `Unknown` and blank
+  values are excluded.
+- Bars are stacked by contribution type using the same colors as the year chart.
+- Clicking a division bar toggles the Division dropdown to that division; clicking
+  it again clears the filter.
+- If the current selection has no division data, the chart displays
+  `"No division data for selection"`.
 
 ### Publications by Year and Contribution (right panel)
 
@@ -244,8 +249,9 @@ classification.
 ## Footer
 
 Full-width bar at the bottom. Dark background matching header.
-Text: `"Dataset updated MM/DD/YYYY"` — hardcoded to the last known
-update date for now; update manually when data is refreshed.
+Text: `"Dataset updated MM/DD/YYYY"`. The date is read from the latest
+non-empty `completed_at` value in `data/refresh_log.csv` at startup. If the
+refresh log cannot be read, the app falls back to `12/10/2025`.
 
 ---
 
@@ -268,15 +274,15 @@ division assignments. Exports expose those values as `author_division`.
 Blank `funding_division` values mean the record passed funding review but still
 needs a division assignment.
 
-The dashboard does not yet use either division column for filtering or charts.
+The dashboard uses both division columns for the Division filter and the
+Articles by Division chart. Author divisions can be multi-valued; funding
+division is a single value per record.
 
 ---
 
 ## Not Yet Implemented
 
-- Division filter and Articles by Division chart (data available as `funding_division` / `author_division` in the parquet)
 - Production copy for the About and Classification modals (currently placeholder text)
-- Dynamic footer date (currently hardcoded; could be derived from the export or refresh log)
 
 ---
 
@@ -293,6 +299,10 @@ The dashboard does not yet use either division column for filtering or charts.
 | `stringr`     | String splitting, case conversion            |
 | `shinychat`   | Chat UI                                      |
 | `ellmer`      | LLM client and tool calling                  |
+| `leaflet`     | Institution Map rendering                    |
+| `rnaturalearth` | Country and US state polygon geometries    |
+| `sf`          | Spatial data handling                        |
+| `visNetwork`  | Publishing Network rendering                 |
 
 ---
 
@@ -300,12 +310,19 @@ The dashboard does not yet use either division column for filtering or charts.
 
 ### Purpose
 
-An LLM-backed chat panel embedded in the dashboard with two capabilities:
+An LLM-backed chat panel embedded in the dashboard with several capabilities:
 
 1. **Filter-driving** — the user describes a slice of the data in natural language
    ("show me hydrology papers from 2018 to 2022 where DWR was lead author") and
    the LLM updates the existing Shiny filter controls to match.
-2. **Literature synthesis** — the user asks for a summary or synthesis of the
+2. **Inventory search and pinning** — the user searches the full inventory, then
+   can pin the dashboard to specific matching papers.
+3. **Breakdowns, trends, and comparisons** — the assistant can return frequency
+   tables, year-by-year trends, and before/after comparisons for the current view.
+4. **Paper detail, citations, authors, and collaborations** — the assistant can
+   retrieve paper metadata, format citations, rank authors, and summarize common
+   collaborating institutions.
+5. **Literature synthesis** — the user asks for a summary or synthesis of the
    currently visible papers ("what are the main themes in these abstracts?") and
    the LLM reads the filtered abstracts and responds.
 
@@ -341,15 +358,12 @@ year band) are 30–200 papers and fit easily. The 300-paper cap can be tuned.
 ┌──────────────────────────────────────────────────────────────┐
 │  shinychat panel (collapsible sidebar)                       │
 │                                                              │
-│  User message ──► ellmer chat object ──► LLM               │
+│  User message ──► ellmer chat object ──► LLM                 │
 │                           │                                  │
 │                    tool calls (R functions)                  │
-│                     ┌─────┴──────┐                           │
-│              set_filters()   synthesize_selection()          │
-│                     │              │                         │
-│           updateSelectInput()  filtered() abstracts          │
-│           updateSliderInput()  stuffed into next LLM call    │
-│           (updates Shiny state)                              │
+│          filters/search/counts/trends/details/citations      │
+│                     │                                        │
+│           Shiny inputs, filtered data, or formatted output   │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -359,6 +373,21 @@ registered. `shinychat` handles streaming the response text into the chat panel.
 ---
 
 ### Tools
+
+The assistant registers twelve tools:
+
+- `set_filters`
+- `reset_filters`
+- `count_by`
+- `get_trend`
+- `compare_periods`
+- `find_papers`
+- `filter_to_papers`
+- `get_paper_detail`
+- `synthesize_selection`
+- `get_author_stats`
+- `get_collaboration_stats`
+- `cite_papers`
 
 #### `set_filters`
 
@@ -370,9 +399,12 @@ the dropdowns manually.
 
 | Parameter | Type | Description |
 |---|---|---|
+| `keyword` | string (optional) | Free-text search over title, abstract, and authors, or `"All"` to clear |
 | `year_start` | integer (optional) | Start of year range |
 | `year_end` | integer (optional) | End of year range |
+| `science_category` | string (optional) | One of the title-cased science category values, or `"All"` |
 | `science_field` | string (optional) | One of the `pc_field` values, or `"All"` |
+| `division` | string (optional) | One of the dashboard division values, or `"All"` |
 | `contribution_type` | string (optional) | One of `Funder`, `Co-Author`, `Lead Author`, `Sole Author`, or `"All"` |
 | `affiliation` | string (optional) | One of the canonical institution names, or `"All"` |
 
@@ -410,7 +442,8 @@ It covers:
 1. **Role:** The assistant helps users explore the DWR Peer-Reviewed
    Publication Inventory dashboard.
 2. **Available filters:** List the current valid values for each filter
-   (science fields, contribution types, year range, top-N affiliations)
+   (science categories, science fields, divisions, contribution types, year range,
+   and top-N affiliations)
    so the LLM can map user language to valid filter values without guessing.
 3. **Tool guidance:** Prefer `set_filters` for navigation requests and
    `synthesize_selection` for summarization requests. Clarify if the user's
@@ -432,7 +465,7 @@ two-column layout. A toggle button in the controls bar opens and closes it.
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  HEADER                                                                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  [Keyword search]  [Sci. Category] [About] [Reset]  [Ask the data ✦]       │
+│  [Keyword search]  [Sci. Category] [About] [Reset]  [Ask the data ✦]        │
 ├──────────────────────────────┬──────────────────────┬───────────────────────┤
 │  LEFT (charts)               │  RIGHT (filters +    │  CHAT SIDEBAR         │
 │                              │  table)              │  (collapsible)        │
@@ -522,11 +555,12 @@ At app startup, compute two baseline data frames from the full unfiltered
 `pubs`:
 
 - `geo_country_base` — one row per `(record_key, country)` pair.
-- `geo_state_base` — one row per `(record_key, state)` pair (US only),
-  plus a `national_us` flag for national-scope entries.
+- `geo_inst_base` — one row per `(record_key, canonical, country, state)` pair.
 
-These are filtered reactively by year range and contribution type; no re-join
-is needed on each render.
+`geo_inst_base` is used for US state counts, national-scope US counts, and
+top-institution popup lists. These startup tables are filtered reactively by
+year range and contribution type; no geo lookup re-join is needed on each
+render.
 
 ---
 
@@ -603,7 +637,7 @@ swatch is white, labeled "0", to represent the zero-publication category.
 ### Layers
 
 1. **World countries layer** — polygons from `world_sf` (US excluded), filled
-   by publication count. Countries with no data in the current filter are grey.
+   by publication count. Countries with no data in the current filter are white.
 2. **US states layer** — polygons from `states_sf`, filled by publication count
    using the **same palette domain** as the world layer.
 
@@ -627,7 +661,7 @@ Every polygon (country and state) shows a brief `label` on hover:
 - Country/state name
 - Publication count, or "No publications" if zero
 
-Example: `"France — 23 publications"` / `"Wyoming — No publications"`
+Example: `"France — 23 pubs"` / `"Wyoming — No publications"`
 
 The label is a plain HTML string; no institution list. Tooltips use
 `labelOptions(style = list("font-size" = "0.82rem"))` to match dashboard type scale.
@@ -647,17 +681,17 @@ no external popup package required.
 
 ### Non-US country click
 
-Popup scoped to the clicked country using the `geo_country_base` data joined
-to the institution geo lookup to retrieve institution names for that country.
+Popup scoped to the clicked country using `geo_inst_base` to retrieve
+institution names for that country.
 
 ### US state click
 
-Same popup format, scoped to the clicked state using `geo_state_base`.
+Same popup format, scoped to the clicked state using `geo_inst_base`.
 
 ### Notes below the map
 
 Two conditional text notes are displayed in a compact bar directly below the
-map. Both use the same muted style as the existing `papers-banner` CSS class.
+map. Both use the `map-notes-bar` / `map-note-item` styles.
 
 **National-scope US institutions** (shown when N > 0):
 
@@ -670,56 +704,58 @@ map. Both use the same muted style as the existing `papers-banner` CSS class.
 > M publication(s) have no affiliated institution geo data and are not shown on
 > the map.
 
-"No geo data" means either: (a) the paper's `affiliation_countries` is empty/NA
-for all affiliations, or (b) all affiliations are absent from the geo lookup.
-Both notes are computed from the reactive filtered data and update with filter
-changes. Hide each note independently when its count is zero.
+"No geo data" means the paper's `affiliation_countries` is empty/NA for all
+affiliations. Affiliations absent from the geo lookup are excluded from
+state-level counts and institution popup lists, but can still contribute to
+country-level counts through `affiliation_countries`. Both notes are computed
+from the reactive filtered data and update with filter changes. Hide each note
+independently when its count is zero.
 
 ---
 
 ## Layout
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│  HEADER (shared, full-width)                                            │
-├─────────────────────────────────────────────────────────────────────────┤
-│  [Dashboard]  [Institution Map]  [Publishing Network]  ← tab bar       │
-├─────────────────────────────────────────────────────────────────────────┤
-│  [Year ────────────────○─○──]  [Contribution Type ▼]  [Reset View]     │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                  Leaflet choropleth map                         │   │
-│  │  (world countries + US states; pan/zoom enabled)                │   │
-│  │                                        [Legend: 0 ──── N pubs] │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-│  National-scope US institutions note (conditional)                     │
-└─────────────────────────────────────────────────────────────────────────┘
-│  FOOTER (shared, full-width)                                           │
-└─────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│  HEADER (shared, full-width)                                          │
+├───────────────────────────────────────────────────────────────────────┤
+│  [Dashboard]  [Institution Map]  [Publishing Network]  ← tab bar      │
+├───────────────────────────────────────────────────────────────────────┤
+│  [Year ────────────────○─○──]  [Contribution Type ▼]  [Reset View]    │
+├───────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │                  Leaflet choropleth map                         │  │
+│  │  (world countries + US states; pan/zoom enabled)                │  │
+│  │                                        [Legend: 0 ──── N pubs]  │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+│  National-scope US institutions note (conditional)                    │
+└───────────────────────────────────────────────────────────────────────┘
+│  FOOTER (shared, full-width)                                          │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
-Map height: `calc(100vh - 220px)` so it fills the viewport. The controls bar
+Map height: `calc(100vh - 300px)` so it fills the viewport. The controls bar
 and note are compact (no scrolling needed).
 
 ---
 
 ## Legend
 
-A Leaflet legend (`addLegend()`) anchored bottom-right. Shows a continuous
-gradient from the palette min to max, labeled with the actual publication
-counts (not log values). Title: "Publications".
+A Leaflet legend (`addLegend()`) anchored bottom-right. It shows a white swatch
+for `0`, followed by green swatches at meaningful raw-count breakpoints
+(`1`, `5`, `10`, `50`, `100`, `500`, capped at the current maximum). Labels are
+actual publication counts, not log values. Title: "Publications".
 
 ---
 
 ## Design Decisions
 
-1. **Tab styling** — The tab bar uses DWR dark-navy brand colors. CSS targets
-   `.nav-tabs .nav-link` and `.nav-tabs .nav-link.active` to apply
-   `background: #1a2f4a`, `color: white`, `border: none`, and appropriate
-   hover states. The tab bar sits between the shared header and the tab content,
-   flush with the header bottom border.
+1. **Tab styling** — The tab bar uses a white background with DWR dark-navy text
+   and teal active/hover underlines. CSS targets `.nav-tabs .nav-link` and
+   `.nav-tabs .nav-link.active`. The tab bar sits between the shared header and
+   the tab content, flush with the header bottom border.
 
 2. **Palette: green, log scale, shared domain** — Sequential green
    `log1p`-transformed `colorNumeric` palette, shared across world countries and
@@ -746,7 +782,6 @@ counts (not log values). Title: "Publications".
 |---|---|
 | `leaflet` | Interactive map rendering and polygon layers |
 | `rnaturalearth` | Country and US state polygon geometries |
-| `rnaturalearthdata` | Data dependency for `rnaturalearth` medium-scale data |
 | `sf` | Spatial data frame join and handling |
 
 ---
@@ -818,7 +853,7 @@ Result: `network_author_base`.
 
 ## Controls (Independent of Other Tabs)
 
-A two-row compact controls bar above the network:
+A compact controls bar above the network:
 
 | Control | Type | Default | Notes |
 |---|---|---|---|
@@ -838,17 +873,20 @@ Changing any control triggers a full network recompute and re-render.
 On filter or mode change:
 
 1. **Filter base table** — Filter `network_inst_base` (or `network_author_base`
-   in People mode) by year range and contribution_type.
+   in People mode) by year range, contribution type, and science field.
 2. **Aggregate edges** — Group by `(node_a, node_b)`; count distinct
    `record_key` values → `n_papers` (the number of papers on which the pair
    co-occurred). This is the edge weight.
 3. **Build node list** — Collect all unique nodes from the edge list. Compute
    each node's degree (number of distinct neighbors in the current edge set).
 4. **Apply Top N** — Rank nodes by degree descending; retain the top N. In
-   Institutions mode, always include `.DWR_NODE` regardless of rank. Discard
-   edges where either endpoint is not in the retained set.
-5. **Pass to `visNetwork`** — Build `nodes` and `edges` data frames and call
-   `visNetworkProxy` to update without full re-render when only data changes.
+   Institutions mode, retain `.DWR_NODE` regardless of rank when it appears in
+   the filtered degree table. Discard edges where either endpoint is not in the
+   retained set.
+5. **Render with `visNetwork`** — Build `nodes` and `edges` data frames and
+   render the graph with `visNetwork::renderVisNetwork()`. When the user
+   navigates to the Publishing Network tab, `visNetworkProxy()` calls `visFit()`
+   to re-fit the graph in the visible viewport.
 
 **Edge width:** `1 + log1p(n_papers) * 2` — thin for 1 shared paper, clearly
 thicker at 10+.
@@ -892,14 +930,11 @@ Label shown: author name as stored (`"Last F."` format).
 ## Edge Styling
 
 ```
-color:        list(color = "#aaaaaa", highlight = "#4da87a", opacity = 0.7)
-selectionWidth: 3
+color:        list(color = "#cccccc", highlight = "#4da87a", opacity = 0.85)
 smooth:       FALSE   # improves performance for large graphs
 ```
 
-Hover tooltip on an edge (`title`): `"N paper(s) in common"` where N =
-`n_papers`. If N ≤ 3, append a bulleted list of the paper titles (truncated to
-60 characters each).
+Hover tooltip on an edge (`title`): `"N paper(s)"` where N = `n_papers`.
 
 ---
 
@@ -947,8 +982,8 @@ missed events when re-clicking an already-selected node. The `click` event fires
 on every click, with `params.nodes` / `params.edges` indicating what was hit. A
 nonce is appended so Shiny always treats each click as a new event.
 
-After initial stabilization, physics is disabled automatically so the graph is
-static for panning and zooming. Users can drag individual nodes to reposition them.
+The graph uses force-directed physics with stabilization enabled. Users can
+drag individual nodes to reposition them, and pan/zoom controls are enabled.
 
 ---
 
@@ -1042,8 +1077,8 @@ A single line of muted text below the network, updated reactively:
 
 ## Disambiguation Note (People mode only)
 
-A conditional note shown only when Network Mode = People, using the same
-`papers-banner` CSS class as the map tab's geo note:
+A conditional note shown only when Network Mode = People, using the
+`net-stats-bar` style:
 
 > Author names appear as recorded in Scopus ("Last F."). Different researchers
 > sharing the same name and initials may appear as a single node.
@@ -1055,45 +1090,45 @@ Hidden in Institutions mode.
 ## Layout
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│  HEADER (shared, full-width)                                            │
-├─────────────────────────────────────────────────────────────────────────┤
-│  [Dashboard]  [Institution Map]  [Publishing Network]  ← tab bar       │
-├─────────────────────────────────────────────────────────────────────────┤
-│  Row 1: [Year ────────────○─○──]  [Contribution ▼]  [Reset View]       │
-│  Row 2: [● Institutions  ○ People]  [Top N ──────────○──]              │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │           visNetwork interactive force-directed graph           │   │
-│  │   (DWR pinned center; pan/zoom; node click → paper list)        │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-│  Showing N nodes · M edges · P papers                                  │
-│  [Disambiguation note — People mode only]                              │
-└─────────────────────────────────────────────────────────────────────────┘
-│  FOOTER (shared, full-width)                                           │
-└─────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│  HEADER (shared, full-width)                                          │
+├───────────────────────────────────────────────────────────────────────┤
+│  [Dashboard]  [Institution Map]  [Publishing Network]  ← tab bar      │
+├───────────────────────────────────────────────────────────────────────┤
+│  [Year ─────○─○──] [Contribution ▼] [Science Field ▼]                 │
+│  [● Institutions  ○ People] [Top N ─────○──] [Reset View]             │
+├───────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │           visNetwork interactive force-directed graph           │  │
+│  │   (DWR pinned center; pan/zoom; node click → paper list)        │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+│  Showing N nodes · M edges · P papers                                 │
+│  [Disambiguation note — People mode only]                             │
+└───────────────────────────────────────────────────────────────────────┘
+│  FOOTER (shared, full-width)                                          │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
-Network height: `calc(100vh - 270px)` — slightly shorter than the map tab to
-accommodate the two-row controls bar.
+Network height: `calc(100vh - 280px)`.
 
 ---
 
 ## Design Decisions
 
 1. **DWR as fixed anchor (institution mode only)** — `"California Department of
-   Water Resources"` is pinned to `x = 0, y = 0` with physics frozen for that
-   node. It is always visible regardless of the Top N setting. This makes DWR's
-   collaboration network the explicit subject of the institution view. In People
-   mode, DWR authors are highlighted but not pinned, since there are multiple
-   DWR staff rather than a single anchor.
+   Water Resources"` is pinned to `x = 0, y = 0` when present in the current
+   institution network. It is retained regardless of the Top N setting, as long
+   as it has edges in the filtered base table. This makes DWR's collaboration
+   network the explicit subject of the institution view. In People mode, DWR
+   authors are highlighted but not pinned, since there are multiple DWR staff
+   rather than a single anchor.
 
 2. **Top-N default 25, pan/zoom for high N** — The default keeps the graph
    readable. Users who increase N to 50+ see a denser graph; force-directed
-   layout + pan/zoom handle navigation. Physics auto-stabilizes after 200
-   iterations and then disables, so panning is smooth regardless of N.
+   layout + pan/zoom handle navigation. The network stabilizes with 300 physics
+   iterations.
 
 3. **No DWR injection for funder records** — Funder-only papers (where DWR was
    not an author) do not connect DWR to co-author institutions in the network.
