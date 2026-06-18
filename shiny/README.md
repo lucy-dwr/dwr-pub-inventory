@@ -62,10 +62,12 @@ Only rows where `reviewed_at` is NA are shown by default. Saving a row marks it 
 
 ### 5. `dashboard_app.R` — Publication inventory dashboard
 
-**When to use:** Any time, for exploration. Displays the final accepted publications with filters by year, division, science category, and contribution type. Includes an LLM chat assistant for natural-language queries over the inventory.
+**When to use:** Any time, for exploration. Displays the final accepted publications with filters by year, division, science category, and contribution type. Includes an LLM chat assistant for natural-language queries over the inventory, and an Institution Map tab showing where co-author affiliated institutions are located.
 
-**Reads:** `data/generated/dwr_publications.parquet`
+**Reads:** `data/generated/dwr_publications.parquet`, `data/lookups/institution_geo_lookup.csv`
 **Writes:** nothing
+
+The app has three tabs: **Dashboard** (default), **Institution Map**, and **Publishing Network**.
 
 #### Filters
 
@@ -104,6 +106,83 @@ The assistant has twelve tools. Some tools update the live dashboard (UI-driving
 | `cite_papers` | Formats citations for the current filtered selection, sorted by year or title. |
 
 See [`docs/CHAT_TOOLS.md`](../docs/CHAT_TOOLS.md) for more detail on each tool's parameters and example prompts.
+
+#### Institution Map tab
+
+The Institution Map tab shows a choropleth world map of co-author affiliated
+institutions by geography, with US state-level detail. It has its own
+independent filter controls (year range and contribution type) that do not
+affect the Dashboard tab.
+
+**Map design:**
+
+- **Base tiles:** Esri World Gray Canvas (English-only labels, grey ocean background)
+- **Color scale:** Sequential green palette (`log1p`-transformed), palette min at
+  1 publication. Countries/states with zero publications are white; the grey
+  ocean makes these clearly distinct.
+- **Layers:** World countries layer (excluding US) + US states layer, using the
+  same shared `log1p` palette domain so counts are directly comparable.
+- **Hover tooltip:** Country/state name and publication count.
+- **Click popup:** Name, count, and top-5 institutions by count for that
+  country or state.
+- **Legend:** Anchored bottom-right. Shows a white "0" swatch followed by the
+  green palette at breakpoints (1, 5, 10, 50, 100, 500).
+
+**Notes below the map (conditional):**
+
+- *National-scope US institutions:* US institutions without a single-state
+  footprint (e.g., federal agencies) are not attributed to any state on the
+  map; a note below reports how many publications are affected and names the
+  top institutions.
+- *No geo data:* Publications whose affiliations are entirely absent from the
+  geo lookup are not shown on the map; a note reports the count. This note only
+  appears when the count is greater than zero — with the current inventory, all
+  publications have at least one resolvable institution, so this note does not
+  appear in practice.
+
+#### Publishing Network tab
+
+The Publishing Network tab shows an interactive force-directed co-authorship
+network built from the publication inventory. It has its own independent filter
+controls and does not share state with the other tabs.
+
+**Controls:**
+
+| Control | Default | Notes |
+|---------|---------|-------|
+| Year Range | 2020–2026 | Same min/max as Dashboard |
+| Contribution Type | All | All / Sole Author / Lead Author / Co-Author / Funder |
+| Science Field | All | Same field list as Dashboard |
+| Network Mode | Institutions | Institutions (org nodes) or People (author nodes) |
+| Top N Nodes | 25 | Range 5–100; step 5 |
+| Reset View | — | Resets all controls to defaults |
+
+**Network modes:**
+
+- *Institutions* — each node is a canonical organization name from the
+  `affiliations` column. DWR (`"California Department of Water Resources"`) is
+  pinned at the center and always included regardless of the Top N setting.
+  Nodes are colored by geography: navy = DWR, green = US institution,
+  teal = international, gray = unknown.
+- *People* — each node is an author name as stored in Scopus (`"Last F."`
+  format). DWR authors (from `author_division_decisions.csv`) are shown in navy;
+  external authors in green. A disambiguation note warns that authors sharing
+  the same name and initials may be merged into a single node.
+
+**Node size** scales with the number of distinct papers in the current filtered
+view that involve that node (log-scaled). Larger nodes = more publications.
+
+**Edge width** scales with the number of shared papers between the two endpoint
+nodes (`1 + log1p(n_papers) * 2`).
+
+**Interactions:**
+- Click a node → modal listing all papers for that node in the current view
+  (title linked by DOI, year, contribution type, first author).
+- Click an edge → modal listing all papers shared by both endpoint nodes.
+- Pan and zoom are enabled; nodes can be dragged to reposition.
+
+**Legend:** A color legend panel on the right side of the network identifies the
+node color scheme for the active mode.
 
 ---
 

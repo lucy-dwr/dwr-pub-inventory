@@ -100,15 +100,16 @@ control:
 
 There is also an application for viewing the publication inventory in a dashboard:
 
-- `shiny/dashboard_app.R`: dashboard for browsing the final exported inventory.
-  The dashboard includes an LLM-powered chat assistant ("Ask the data") that
-  accepts natural-language questions about the inventory. The assistant can
-  filter the dashboard view on behalf of the user, return frequency breakdowns,
-  describe trends over time, search across titles and abstracts, retrieve paper
-  details, summarize a selected set of papers, and format citations. It uses the
-  same LLM backend and `PUBCLASSIFY_LLM_KEY` credential as the pipeline. See
-  [`shiny/README.md`](shiny/README.md) and [`docs/CHAT_TOOLS.md`](docs/CHAT_TOOLS.md)
-  for details.
+- `shiny/dashboard_app.R`: three-tab dashboard for browsing the final exported
+  inventory. The **Dashboard** tab provides filtered publication charts and a
+  table, plus an LLM-powered chat assistant ("Ask the data") that accepts
+  natural-language questions about the inventory. The **Institution Map** tab
+  shows a choropleth world map of co-author affiliated institutions by geography
+  with hover/click popups. The **Publishing Network** tab shows an interactive
+  force-directed co-authorship network (institution or people mode) with
+  click-through paper lists. See [`shiny/README.md`](shiny/README.md),
+  [`docs/CHAT_TOOLS.md`](docs/CHAT_TOOLS.md), and
+  [`docs/DASHBOARD.md`](docs/DASHBOARD.md) for details.
 
 To run an application, use `shiny`:
 
@@ -374,10 +375,13 @@ command:
 ```text
 _targets.R                              # Pipeline definition
 README.md                               # Project overview and operator quickstart
-REFRESH_WORKFLOW.md                     # Detailed refresh workflow
-PLAN.md                                 # Implementation notes and deferred work
-SPEC.md                                 # Current dashboard specification
 LICENSE
+
+docs/
+  ARCHITECTURE.md                       # Pipeline and dashboard architecture reference
+  DASHBOARD.md                          # Dashboard design and behavior reference
+  CHAT_TOOLS.md                         # Chat assistant tool reference
+  DATA_REFERENCE.md                     # Data schemas and file formats
 
 config/
   pipeline.yml                          # Non-secret pipeline settings and paths

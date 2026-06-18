@@ -1,9 +1,11 @@
-# DWR Publication Inventory - Implementation Notes
+# DWR Publication Inventory — Architecture Reference
 
-This document summarizes the current implementation and the remaining planned
-work. For operator instructions, see `README.md`.
+Technical reference for maintainers and contributors. Describes the pipeline
+architecture, data flow, review semantics, and dashboard implementation.
+For the operator quickstart, see `README.md`. For dashboard design and behavior,
+see [`docs/DASHBOARD.md`](DASHBOARD.md).
 
-## Current Architecture
+## Architecture Overview
 
 The project is organized around a `targets` pipeline in `_targets.R`.
 
@@ -165,6 +167,14 @@ Implemented dashboard features:
 - Publications by Year and Contribution stacked bar chart
 - article table
 - chat sidebar with filter-setting and filtered-set synthesis tools
+- Institution Map tab (choropleth world map with US state detail)
+- Publishing Network tab (interactive force-directed co-authorship network)
+  - institution mode (org nodes, DWR pinned anchor, geo color coding)
+  - people mode (author nodes, DWR authors highlighted)
+  - node click → paper list modal
+  - edge click → shared paper list modal
+  - node size scaled to paper count
+  - color legend
 
 Not yet implemented in the dashboard:
 
@@ -173,10 +183,9 @@ Not yet implemented in the dashboard:
 - Author Division filter
 - production copy for About and Classification modals
 
-See `SPEC.md` for the current dashboard specification and planned dashboard
-enhancements.
+See [`docs/DASHBOARD.md`](DASHBOARD.md) for the dashboard design reference.
 
-## Known Prerequisites And Gaps
+## Prerequisites and Known Gaps
 
 - `data/lookups/affiliation_lookup.csv` is maintained by the
   `affiliation_lookup_file` target. The target prepends new raw affiliation
@@ -189,14 +198,3 @@ enhancements.
 - The funder review app does not capture acknowledgments text.
 - The dashboard still has placeholder modal text.
 
-## Deferred Work
-
-- Add author-specific counts to `data/refresh_log.csv` and
-  `refresh_log_completed`.
-- Implement the dashboard Division filter and Articles by Division chart from
-  `funding_division`.
-- Decide whether dashboard division UX should expose `funding_division`,
-  `author_division`, or a combined division filter.
-- Add reviewer-entered acknowledgments text to the funder review workflow if
-  needed for auditability.
-- Replace dashboard placeholder modal copy with production text.
