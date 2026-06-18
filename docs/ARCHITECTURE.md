@@ -20,10 +20,14 @@ The pipeline:
 7. Flags DWR contribution types.
 8. Maintains and applies the affiliation lookup through
    `data/lookups/affiliation_lookup.csv`.
-9. Classifies new canonicalized records into the DWR taxonomy.
-10. Appends accepted records to `data/generated/accepted_publications.parquet`.
-11. Updates the keep-only funding division lookup.
-12. Joins funding and author division fields into dashboard exports.
+9. Maintains and applies the institution geo lookup through
+   `data/lookups/institution_geo_lookup.csv`, then adds
+   `affiliation_countries`.
+10. Classifies new canonicalized records into the DWR taxonomy.
+11. Appends accepted records to `data/generated/accepted_publications.parquet`.
+12. Updates the keep-only funding division lookup.
+13. Joins funding and author division fields into dashboard exports.
+14. Completes the refresh log.
 
 ## Operator Workflow
 
@@ -43,12 +47,17 @@ shiny::runApp("shiny/author_review_app.R")
 # Resolve any confirmed DWR authors with missing divisions
 shiny::runApp("shiny/author_division_resolution_app.R")
 
-# Build/refresh affiliation lookup; review unresolved rows before publishing
+# Build/refresh the affiliation lookup; review unresolved rows before publishing
 targets::tar_make(affiliation_lookup_file)
 shiny::runApp("shiny/affiliation_review_app.R")
 
-# Publish accepted records and dashboard exports
-targets::tar_make()
+# Publish accepted records and update the funding division lookup
+targets::tar_make(names = c(accepted_publications_updated, funding_division_lookup_updated))
+
+# Fill division for rows where new == TRUE in data/lookups/funding_division_lookup.csv.
+
+# Rebuild dashboard exports and complete the refresh log
+targets::tar_make(names = c(dashboard_csv, dashboard_parquet, refresh_log_completed))
 ```
 
 ## Key Source Files
@@ -57,6 +66,7 @@ targets::tar_make()
 |------|---------|
 | `_targets.R` | Pipeline definition |
 | `config/pipeline.yml` | Non-secret paths, model, Scopus search settings |
+| `R/load_pipeline_config.R` | Pipeline configuration loader |
 | `R/add_record_keys.R` | Stable record key assignment |
 | `R/create_refresh_id.R` | Refresh ID and refresh-log helpers |
 | `R/save_harvest_candidates.R` | Per-refresh harvest snapshot writer |
@@ -67,12 +77,16 @@ targets::tar_make()
 | `R/update_funding_division_lookup.R` | Keep-only funding division lookup update |
 | `R/join_funding_division.R` | Export-time funding division join |
 | `R/join_author_division.R` | Export-time author division join |
+| `R/flag_dwr_contributions.R` | Contribution-type boolean flag assignment |
+| `R/classify_publications.R` | LLM-backed taxonomy classification wrapper |
 | `R/author_name_utils.R` | Author lookup and division matching utilities |
 | `R/score_dwr_relevance.R` | Funder review suspicion scoring |
 | `R/score_author_affiliation.R` | Author review suspicion scoring |
 | `R/apply_affiliation_lookup.R` | Affiliation canonicalization |
 | `R/build_affiliation_lookup.R` | Affiliation lookup generation |
 | `R/build_institution_reference.R` | Institution reference list generation |
+| `R/build_institution_geo_lookup.R` | Institution country/state lookup generation |
+| `R/join_institution_countries.R` | Export-time country enrichment from institution geo lookup |
 | `R/require_scopus_api_allowed.R` | Guard Scopus API calls behind config flag |
 | `R/resolve_harvest_candidates_file.R` | Locate saved harvest candidates for a refresh |
 | `shiny/funder_review_app.R` | Funder review app |
@@ -91,6 +105,9 @@ targets::tar_make()
 | `data/lookups/funding_division_lookup.csv` | Kept funder records and manual funding division assignments; `new` flags current-refresh blanks |
 | `data/lookups/author_division_lookup.csv` | Local HR-derived author/year/division lookup; ignored by Git |
 | `data/lookups/dwr_org_lookup.csv` | Raw org label to canonical division lookup |
+| `data/lookups/affiliation_lookup.csv` | Raw affiliation string to canonical institution lookup |
+| `data/lookups/institution_geo_lookup.csv` | Canonical institution to country and US state lookup |
+| `data/lookups/institution_reference.txt` | Reference list used as context for affiliation canonicalization |
 | `data/generated/accepted_publications.parquet` | Durable accepted-publications table |
 | `data/generated/dwr_publications.csv` | Dashboard CSV export |
 | `data/generated/dwr_publications.parquet` | Dashboard Parquet export |
@@ -151,22 +168,52 @@ division is non-empty
 The export column `author_division` is a semicolon-delimited set of unique
 divisions for confirmed DWR authors on a publication.
 
+## Institution Geo Enrichment
+
+`build_institution_geo_lookup()` reads reviewed canonical institution names from
+`data/lookups/affiliation_lookup.csv` and updates
+`data/lookups/institution_geo_lookup.csv`.
+
+The geo lookup has one row per canonical institution:
+
+```text
+canonical
+country
+state
+resolved
+```
+
+Only reviewed affiliation lookup rows (`new != TRUE`) with non-`Unknown`
+canonical names are sent for geolocation. Rows where `resolved == TRUE` are not
+sent to the LLM again, even if `country` or `state` is blank. `state` is only
+populated for United States institutions.
+
+`join_institution_countries()` uses this lookup to add the
+`affiliation_countries` list column to accepted records. The dashboard uses that
+column for country-level Institution Map counts, and reads
+`institution_geo_lookup.csv` directly for US state counts and institution popup
+details.
+
 ## Dashboard State
 
-`shiny/dashboard_app.R` reads `data/generated/dwr_publications.parquet`.
+`shiny/dashboard_app.R` reads `data/generated/dwr_publications.parquet` and
+`data/lookups/institution_geo_lookup.csv`.
 
 Implemented dashboard features:
 
 - keyword search over title, abstract, and authors
+- Division filter using `author_division` and `funding_division`
 - Science Field filter
 - Contribution Type filter
 - Author Affiliation filter
 - year range slider
 - summary stat boxes
 - Science Category pie chart
+- Articles by Division stacked horizontal bar chart
 - Publications by Year and Contribution stacked bar chart
 - article table
-- chat sidebar with filter-setting and filtered-set synthesis tools
+- chat sidebar with filtering, search, breakdown, trend, paper-detail,
+  synthesis, citation, author, and collaboration tools
 - Institution Map tab (choropleth world map with US state detail)
 - Publishing Network tab (interactive force-directed co-authorship network)
   - institution mode (org nodes, DWR pinned anchor, geo color coding)
@@ -178,8 +225,6 @@ Implemented dashboard features:
 
 Not yet implemented in the dashboard:
 
-- active Division filter
-- Articles by Division chart
 - Author Division filter
 - production copy for About and Classification modals
 
@@ -197,4 +242,3 @@ See [`docs/DASHBOARD.md`](DASHBOARD.md) for the dashboard design reference.
   does not separately record author review counts.
 - The funder review app does not capture acknowledgments text.
 - The dashboard still has placeholder modal text.
-
