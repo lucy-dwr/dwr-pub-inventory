@@ -93,6 +93,8 @@ targets::tar_make(names = c(dashboard_csv, dashboard_parquet, refresh_log_comple
 | `shiny/author_review_app.R` | Author review app |
 | `shiny/author_division_resolution_app.R` | Missing author division resolution app |
 | `shiny/affiliation_review_app.R` | Unresolved affiliation review app |
+| `R/dashboard_chat_tools.R` | Dashboard chat tool definitions (`register_chat_tools()`) |
+| `prompts/chat_system_prompt.txt` | Dashboard chat system prompt template |
 | `shiny/dashboard_app.R` | Dashboard app |
 
 ## Key Data Files

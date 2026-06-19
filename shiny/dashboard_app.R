@@ -11,16 +11,20 @@ library(leaflet)
 library(rnaturalearth)
 library(sf)
 library(visNetwork)
+library(glue)
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 if (basename(getwd()) == "shiny") setwd("..")
 .ROOT <- getwd()
 
 source(file.path(.ROOT, "R", "load_pipeline_config.R"))
+source(file.path(.ROOT, "R", "dashboard_chat_tools.R"))
 pipeline_config <- load_pipeline_config(file.path(.ROOT, "config", "pipeline.yml"))
 
 # ── Load data ──────────────────────────────────────────────────────────────────
-pubs_raw <- arrow::read_parquet(file.path(.ROOT, "data/generated/dwr_publications.parquet"))
+pubs_raw  <- arrow::read_parquet(file.path(.ROOT, "data/generated/dwr_publications.parquet"))
+taxonomy  <- read.csv(file.path(.ROOT, "taxonomy", "dwr_disciplines_taxonomy.csv"),
+                      stringsAsFactors = FALSE)
 
 refresh_log_path <- file.path(.ROOT, "data/refresh_log.csv")
 .dataset_updated_label <- tryCatch({
@@ -216,74 +220,18 @@ CATEGORY_COLORS <- c(
 
 # ── Chat system prompt (built once at startup) ─────────────────────────────────
 top_affiliations <- head(all_affiliations, 60L)
-chat_system_prompt <- paste0(
-  "You are a helpful assistant for the DWR Peer-Reviewed Publication Inventory ",
-  "dashboard, used by the California Department of Water Resources (DWR). ",
-  "You have access to the following tools — pick the right one for each request.\n\n",
+year_default_start <- YEAR_DEFAULT[1L]
+year_default_end   <- YEAR_DEFAULT[2L]
+categories_str     <- paste(all_categories, collapse = "; ")
+fields_str         <- paste(field_choices[-1L], collapse = "; ")
+divisions_str      <- paste(all_divisions, collapse = "; ")
+contrib_types_str  <- paste(CONTRIB_LEVELS, collapse = ", ")
+n_affiliations     <- length(all_affiliations)
+affiliations_str   <- paste(top_affiliations, collapse = "; ")
 
-  "TOOLS AND WHEN TO USE THEM\n",
-  "set_filters       — User wants to filter/show/display a subset of data ",
-  "(e.g. 'show sturgeon papers', 'hydrology papers from 2018', 'lead-authored only'). ",
-  "Supports keyword (topic/species/place-name), year, science field/category, division, ",
-  "contribution type, and affiliation. Use keyword='sturgeon' for topic-based filtering. ",
-  "Prefer set_filters when the user says 'filter', 'show', or 'display'; ",
-  "prefer find_papers when the user says 'find' or 'search' without wanting to change the view.\n",
-  "reset_filters     — User says 'start over', 'clear', 'reset', or similar.\n",
-  "count_by          — User asks for a breakdown or frequency table ",
-  "(e.g. 'how many papers per division?', 'top journals').\n",
-  "get_trend         — User asks about change over time ",
-  "(e.g. 'is output growing?', 'when did ISE peak?').\n",
-  "compare_periods   — User wants to compare two time periods ",
-  "(e.g. 'before and after 2020').\n",
-  "find_papers       — User wants to find papers on a topic without setting filters ",
-  "(e.g. 'find papers about groundwater recharge'). Searches the full inventory.\n",
-  "filter_to_papers  — After find_papers, user wants the dashboard to show ONLY those ",
-  "specific results. Pass the record_keys from find_papers output. ",
-  "Also use when user says 'filter to those', 'show just those papers', etc.\n",
-  "get_paper_detail  — User asks for details on a specific paper by title or DOI.\n",
-  "synthesize_selection — User asks for a summary or thematic analysis of the *currently ",
-  "visible* papers. Retrieves titles + abstracts; you synthesize them.\n",
-  "get_author_stats  — User asks who the most prolific authors are.\n",
-  "get_collaboration_stats — User asks about external partners or collaborating institutions.\n",
-  "cite_papers       — User wants formatted citations for the current selection.\n\n",
-
-  "AVAILABLE FILTER VALUES\n",
-  "Year range: ", year_min, "–", year_max,
-  " (default view: ", YEAR_DEFAULT[1L], "–", YEAR_DEFAULT[2L], ")\n",
-  "Science Categories: ", paste(all_categories, collapse = "; "), "\n",
-  "Science Fields: ", paste(field_choices[-1L], collapse = "; "), "\n",
-  "Divisions: ", paste(all_divisions, collapse = "; "), "\n",
-  "Contribution Types: ", paste(CONTRIB_LEVELS, collapse = ", "), "\n",
-  "Common Affiliations (sample of ", length(all_affiliations), " total): ",
-  paste(top_affiliations, collapse = "; "), "\n\n",
-
-  "GENERAL RULES\n",
-  "- Prefer tools over prose wherever possible.\n",
-  "- When intent is ambiguous between filtering and synthesis, ask for clarification.\n",
-  "- set_filters and reset_filters update the UI; always confirm what changed.\n",
-  "- synthesize_selection only covers the *current* filtered view; use find_papers ",
-  "to search the whole inventory.\n",
-  "- Be professional, direct, and suited to a government science context.\n\n",
-
-  "STYLE — follow these rules precisely:\n",
-  "- No emoji. Ever.\n",
-  "- No obsequious openers. Never start with 'Great question!', 'Absolutely!', ",
-  "'Of course!', 'Certainly!', 'Happy to help!', or any similar filler. ",
-  "Get straight to the answer.\n",
-  "- No markdown headings (##, ###). They render as oversized text. Use bold (**word**) ",
-  "for emphasis if needed, or plain prose and simple bullet lists.\n",
-  "- Do not adopt or refer to yourself by any name or persona.\n\n",
-
-  "OUT-OF-SCOPE REQUESTS:\n",
-  "If asked about something unrelated to the DWR publication inventory, note the scope ",
-  "in one sentence and, if a relevant official California resource exists, point to it ",
-  "(e.g. water.ca.gov for general DWR questions, ca.gov for other state agencies). ",
-  "Do not apologize at length. Do not provide resources for topics unrelated to ",
-  "California state government. Example for a DWR question: 'That is outside the scope ",
-  "of this tool, which covers DWR peer-reviewed publications. For general information ",
-  "about DWR programs, visit water.ca.gov.' Example for an unrelated topic: ",
-  "'That is outside the scope of this tool. Is there something in the publication ",
-  "inventory I can help with?'"
+chat_system_prompt <- glue::glue(
+  paste(readLines(file.path(.ROOT, "prompts", "chat_system_prompt.txt"), warn = FALSE),
+        collapse = "\n")
 )
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
@@ -662,6 +610,21 @@ app_css <- "
     border-top: 1px solid #dde3ea;
     font-size: 0.76rem; color: #4a6080;
   }
+
+  /* ── Science Fields tab ── */
+  .taxonomy-wrap {
+    padding: 24px 40px;
+  }
+  #taxonomy_table td {
+    white-space: normal !important;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  #taxonomy_table td:nth-child(1),
+  #taxonomy_table td:nth-child(2) {
+    white-space: nowrap !important;
+    font-weight: 500;
+  }
 "
 
 # ── UI ─────────────────────────────────────────────────────────────────────────
@@ -921,6 +884,13 @@ ui <- fluidPage(
       visNetwork::visNetworkOutput("network_graph", height = "calc(100vh - 280px)"),
       uiOutput("net_stats_bar"),
       uiOutput("net_disambig_note")
+    ),
+
+    # ── Science Fields tab ───────────────────────────────────────────────────
+    tabPanel("Science Fields",
+      div(class = "taxonomy-wrap",
+        DT::dataTableOutput("taxonomy_table")
+      )
     )
 
   ),
@@ -1392,13 +1362,10 @@ server <- function(input, output, session) {
   observeEvent(input$btn_about, {
     showModal(modalDialog(
       title     = "About the Inventory",
-      p("[Placeholder] This inventory tracks peer-reviewed publications funded
-        by or authored by staff of the California Department of Water Resources
-        (DWR). Publications are identified through Scopus searches and classified
-        into scientific fields using a custom taxonomy and large language model."),
-      p("For question, contact ",
-        tags$a("dwrscience@water.ca.gov",
-               href = "mailto:dwrscience@water.ca.gov"), "."),
+      HTML(commonmark::markdown_html(
+        paste(readLines(file.path(.ROOT, "shiny", "content", "about.md"),
+                        warn = FALSE), collapse = "\n")
+      )),
       easyClose = TRUE,
       footer    = modalButton("Close")
     ))
@@ -1407,15 +1374,50 @@ server <- function(input, output, session) {
   observeEvent(input$btn_sci, {
     showModal(modalDialog(
       title     = "Science Category & Field Classification",
-      p("[Placeholder] Publications are classified into scientific fields using a
-        custom DWR taxonomy developed in collaboration with subject-matter experts.
-        Each field belongs to a broader science category. Classification is
-        performed using a large language model guided by structured field
-        definitions. See the full taxonomy for detailed field descriptions."),
+      HTML(commonmark::markdown_html(
+        paste(readLines(file.path(.ROOT, "shiny", "content", "classification.md"),
+                        warn = FALSE), collapse = "\n")
+      )),
       easyClose = TRUE,
       footer    = modalButton("Close")
     ))
   })
+
+  # ── Science Fields tab ───────────────────────────────────────────────────
+  output$taxonomy_table <- DT::renderDataTable({
+    bold_first_sentence <- function(x) {
+      # Bold up to and including the first sentence-ending period
+      # (identified by a period followed by whitespace + capital letter)
+      ifelse(
+        grepl("\\. [A-Z]", x),
+        sub("^(.*?\\.) (?=[A-Z])", "<strong>\\1</strong> ", x, perl = TRUE),
+        paste0("<strong>", x, "</strong>")
+      )
+    }
+    df <- data.frame(
+      Category   = stringr::str_to_title(taxonomy$category),
+      Field      = stringr::str_to_title(taxonomy$field),
+      Definition = bold_first_sentence(taxonomy$definition),
+      stringsAsFactors = FALSE
+    )
+    DT::datatable(
+      df,
+      rownames = FALSE,
+      escape   = FALSE,
+      width    = "100%",
+      options  = list(
+        pageLength = 50,
+        dom        = "ft",
+        order      = list(list(0L, "asc")),
+        columnDefs = list(
+          list(width = "18%",  targets = 0L),
+          list(width = "16%",  targets = 1L),
+          list(width = "66%",  targets = 2L)
+        )
+      ),
+      class = "stripe hover"
+    )
+  }, server = FALSE)
 
   # ── Reset ─────────────────────────────────────────────────────────────────
   observeEvent(input$btn_reset, {
@@ -1449,590 +1451,18 @@ server <- function(input, output, session) {
     echo          = "none"
   )
 
-  # \u2500\u2500 Tool: set_filters \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(
-      keyword           = NULL,
-      year_start        = NULL,
-      year_end          = NULL,
-      science_category  = NULL,
-      science_field     = NULL,
-      division          = NULL,
-      contribution_type = NULL,
-      affiliation       = NULL
-    ) {
-      changed <- character(0)
-
-      if (!is.null(keyword)) {
-        kw <- if (keyword == "All" || keyword == "") "" else trimws(keyword)
-        updateTextInput(session, "keyword", value = kw)
-        if (nchar(kw) > 0L)
-          changed <- c(changed, paste0("Keyword → \"", kw, "\""))
-        else
-          changed <- c(changed, "Keyword cleared")
-      }
-
-      if (!is.null(year_start) || !is.null(year_end)) {
-        current   <- isolate(input$year_range)
-        new_start <- if (!is.null(year_start)) as.integer(year_start) else current[1L]
-        new_end   <- if (!is.null(year_end))   as.integer(year_end)   else current[2L]
-        updateSliderInput(session, "year_range", value = c(new_start, new_end))
-        changed <- c(changed, paste0("Year \u2192 ", new_start, "\u2013", new_end))
-      }
-
-      if (!is.null(science_category)) {
-        if (science_category == "All") {
-          selected_category(NULL)
-          updateSelectInput(session, "f_field", choices = field_choices, selected = "All")
-        } else {
-          selected_category(science_category)
-          fields <- pubs |>
-            filter(str_to_title(pc_category) == science_category) |>
-            pull(pc_field) |> na.omit() |> unique() |> sort()
-          updateSelectInput(session, "f_field",
-            choices = c("All", fields), selected = "All")
-        }
-        changed <- c(changed, paste0("Science Category \u2192 ", science_category))
-      }
-
-      if (!is.null(science_field)) {
-        updateSelectInput(session, "f_field", selected = science_field)
-        changed <- c(changed, paste0("Science Field \u2192 ", science_field))
-      }
-
-      if (!is.null(division)) {
-        updateSelectInput(session, "f_div", selected = division)
-        changed <- c(changed, paste0("Division \u2192 ", division))
-      }
-
-      if (!is.null(contribution_type)) {
-        updateSelectInput(session, "f_contrib", selected = contribution_type)
-        changed <- c(changed, paste0("Contribution Type \u2192 ", contribution_type))
-      }
-
-      if (!is.null(affiliation)) {
-        updateSelectInput(session, "f_affil", selected = affiliation)
-        changed <- c(changed, paste0("Author Affiliation \u2192 ", affiliation))
-      }
-
-      if (length(changed) == 0L) return("No filters were changed.")
-      paste0("Filters updated: ", paste(changed, collapse = "; "), ".")
-    },
-    "Update the live dashboard filter controls. Only supply parameters you want to
-     change; omit the rest. Pass 'All' to any parameter to clear that filter.",
-    arguments = list(
-      keyword           = ellmer::type_string(
-        "Free-text keyword to search title/abstract/authors, or 'All' to clear",
-        required = FALSE),
-      year_start        = ellmer::type_integer(
-        "Start year (e.g. 2015)", required = FALSE),
-      year_end          = ellmer::type_integer(
-        "End year (e.g. 2022)", required = FALSE),
-      science_category  = ellmer::type_string(
-        "Science category title-cased exactly as listed, or 'All' to clear",
-        required = FALSE),
-      science_field     = ellmer::type_string(
-        "Science field exactly as listed, or 'All' to clear", required = FALSE),
-      division          = ellmer::type_string(
-        "DWR division name exactly as listed, or 'All' to clear", required = FALSE),
-      contribution_type = ellmer::type_string(
-        "One of: Funder, Co-Author, Lead Author, Sole Author, or 'All' to clear",
-        required = FALSE),
-      affiliation       = ellmer::type_string(
-        "Institution name exactly as listed, or 'All' to clear", required = FALSE)
-    )
-  ))
-
-  # \u2500\u2500 Tool: reset_filters \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function() {
-      selected_category(NULL)
-      updateTextInput(  session, "keyword",    value    = "")
-      updateSliderInput(session, "year_range", value    = YEAR_DEFAULT)
-      updateSelectInput(session, "f_div",      selected = "All")
-      updateSelectInput(session, "f_field",
-        choices  = field_choices,
-        selected = "All"
-      )
-      updateSelectInput(session, "f_contrib", selected = "All")
-      updateSelectInput(session, "f_affil",   selected = "All")
-      "All filters have been reset to defaults."
-    },
-    "Clear all dashboard filters and return to the default view."
-  ))
-
-  # \u2500\u2500 Tool: count_by \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(dimension) {
-      valid <- c("year", "science_field", "science_category", "division",
-                 "contribution_type", "journal", "affiliation", "country")
-      if (!dimension %in% valid)
-        return(paste0("Unknown dimension '", dimension,
-                      "'. Valid options: ", paste(valid, collapse = ", ")))
-
-      df <- isolate(filtered())
-      if (nrow(df) == 0L) return("No papers in current view.")
-
-      counts <- if (dimension == "year") {
-        tbl <- sort(table(df$year[!is.na(df$year)]), decreasing = TRUE)
-        data.frame(value = names(tbl), n = as.integer(tbl), stringsAsFactors = FALSE)
-      } else if (dimension == "science_field") {
-        tbl <- sort(table(df$pc_field[!is.na(df$pc_field)]), decreasing = TRUE)
-        data.frame(value = names(tbl), n = as.integer(tbl), stringsAsFactors = FALSE)
-      } else if (dimension == "science_category") {
-        cats <- str_to_title(df$pc_category[!is.na(df$pc_category)])
-        tbl  <- sort(table(cats), decreasing = TRUE)
-        data.frame(value = names(tbl), n = as.integer(tbl), stringsAsFactors = FALSE)
-      } else if (dimension == "division") {
-        auth_divs <- unlist(lapply(
-          df$author_division[!is.na(df$author_division)],
-          function(d) trimws(strsplit(d, ";")[[1L]])
-        ))
-        fund_divs <- trimws(df$funding_division[!is.na(df$funding_division)])
-        all_divs  <- c(auth_divs, fund_divs)
-        all_divs  <- all_divs[all_divs != "Unknown" & nchar(all_divs) > 0L]
-        tbl <- sort(table(all_divs), decreasing = TRUE)
-        data.frame(value = names(tbl), n = as.integer(tbl), stringsAsFactors = FALSE)
-      } else if (dimension == "contribution_type") {
-        tbl <- sort(table(df$contribution_type[!is.na(df$contribution_type)]),
-                    decreasing = TRUE)
-        data.frame(value = names(tbl), n = as.integer(tbl), stringsAsFactors = FALSE)
-      } else if (dimension == "journal") {
-        tbl <- sort(table(df$journal[!is.na(df$journal)]), decreasing = TRUE)
-        data.frame(value = names(tbl), n = as.integer(tbl), stringsAsFactors = FALSE)
-      } else if (dimension == "affiliation") {
-        affs <- unlist(df$affiliations)
-        affs <- affs[!is.na(affs) & trimws(affs) != "" & affs != "Unknown"]
-        tbl  <- sort(table(affs), decreasing = TRUE)
-        data.frame(value = names(tbl), n = as.integer(tbl), stringsAsFactors = FALSE)
-      } else {
-        ctrs <- unlist(df$affiliation_countries)
-        ctrs <- ctrs[!is.na(ctrs) & trimws(ctrs) != ""]
-        tbl  <- sort(table(ctrs), decreasing = TRUE)
-        data.frame(value = names(tbl), n = as.integer(tbl), stringsAsFactors = FALSE)
-      }
-
-      top   <- head(counts, 25L)
-      lines <- paste0(seq_len(nrow(top)), ". ", top$value, ": ", top$n)
-      paste0("Breakdown by ", dimension, " (", nrow(df), " papers in view):\n",
-             paste(lines, collapse = "\n"))
-    },
-    "Return a ranked frequency table for one dimension of the current filtered view.
-     Use for questions like 'how many papers per division?' or 'top journals?'",
-    arguments = list(
-      dimension = ellmer::type_string(
-        paste0("One of: year, science_field, science_category, division, ",
-               "contribution_type, journal, affiliation, country"),
-        required = TRUE)
-    )
-  ))
-
-  # \u2500\u2500 Tool: get_trend \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(breakdown = NULL) {
-      df <- isolate(filtered())
-      if (nrow(df) == 0L) return("No papers in current view.")
-
-      if (is.null(breakdown)) {
-        tbl   <- sort(table(df$year[!is.na(df$year)]))
-        lines <- paste0(names(tbl), ": ", as.integer(tbl))
-        return(paste0("Publications by year (", nrow(df), " total in view):\n",
-                      paste(lines, collapse = "\n")))
-      }
-
-      if (breakdown == "contribution_type") {
-        ct_year <- df |>
-          filter(!is.na(year), !is.na(contribution_type)) |>
-          count(year, contribution_type, name = "n") |>
-          arrange(year)
-        years <- sort(unique(ct_year$year))
-        lines <- vapply(years, function(yr) {
-          row   <- ct_year[ct_year$year == yr, ]
-          parts <- paste0(row$contribution_type, ":", row$n)
-          paste0(yr, ": total=", sum(row$n), " (", paste(parts, collapse = ", "), ")")
-        }, character(1L))
-        return(paste0("Publications by year and contribution type:\n",
-                      paste(lines, collapse = "\n")))
-      }
-
-      if (breakdown == "division") {
-        auth_pairs <- do.call(rbind, lapply(
-          which(!is.na(df$author_division) & !is.na(df$year)),
-          function(i) {
-            divs <- trimws(strsplit(df$author_division[i], ";")[[1L]])
-            divs <- divs[divs != "Unknown" & nchar(divs) > 0L]
-            if (length(divs) == 0L) return(NULL)
-            data.frame(year = df$year[i], div = divs, stringsAsFactors = FALSE)
-          }
-        ))
-        if (is.null(auth_pairs)) return("No division data in current view.")
-        div_year <- auth_pairs |> count(div, year, name = "n") |> arrange(div, year)
-        lines <- vapply(unique(div_year$div), function(d) {
-          rows <- div_year[div_year$div == d, ]
-          paste0(d, ": ", paste0(rows$year, ":", rows$n, collapse = ", "),
-                 " (total=", sum(rows$n), ")")
-        }, character(1L))
-        return(paste0("Publications by division over time:\n",
-                      paste(sort(lines), collapse = "\n")))
-      }
-
-      paste0("Unknown breakdown '", breakdown,
-             "'. Use: contribution_type, division, or omit for totals only.")
-    },
-    "Return year-by-year publication counts for the current view. Use for trend
-     questions like 'is output growing?' or 'when did ISE peak?'",
-    arguments = list(
-      breakdown = ellmer::type_string(
-        "Optional: 'contribution_type' or 'division' to break counts out further",
-        required = FALSE)
-    )
-  ))
-
-  # \u2500\u2500 Tool: compare_periods \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(split_year) {
-      df <- isolate(filtered())
-      if (nrow(df) == 0L) return("No papers in current view.")
-
-      split_year <- as.integer(split_year)
-      before <- df[!is.na(df$year) & df$year <  split_year, ]
-      after  <- df[!is.na(df$year) & df$year >= split_year, ]
-
-      summarise_period <- function(d, label) {
-        if (nrow(d) == 0L) return(paste0(label, ": No papers."))
-        top_fields <- head(sort(table(d$pc_field[!is.na(d$pc_field)]),
-                                decreasing = TRUE), 3L)
-        ct_tbl <- sort(table(d$contribution_type[!is.na(d$contribution_type)]),
-                       decreasing = TRUE)
-        paste0(
-          label, " (", min(d$year, na.rm = TRUE), "\u2013",
-          max(d$year, na.rm = TRUE), "):\n",
-          "  Total: ", nrow(d), " papers\n",
-          "  Contribution types: ",
-          paste(paste0(names(ct_tbl), " (", ct_tbl, ")"), collapse = ", "), "\n",
-          "  Top fields: ",
-          paste(paste0(names(top_fields), " (", top_fields, ")"), collapse = ", ")
-        )
-      }
-
-      paste0(
-        "Period comparison split at ", split_year,
-        " (", nrow(df), " total papers in view):\n\n",
-        summarise_period(before, paste0("Before ", split_year)), "\n\n",
-        summarise_period(after,  paste0("From ", split_year, " onward"))
-      )
-    },
-    "Split the current filtered view at a year and compare the two periods.
-     Use for questions like 'compare before and after 2020'.",
-    arguments = list(
-      split_year = ellmer::type_integer(
-        "The year to split on. Papers before this year form period 1; from this year onward form period 2.",
-        required = TRUE)
-    )
-  ))
-
-  # \u2500\u2500 Tool: find_papers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(query, max_results = 20L) {
-      max_results <- as.integer(max_results)
-      query_l     <- tolower(trimws(query))
-      if (nchar(query_l) == 0L) return("Please provide a search query.")
-
-      matches <- pubs |>
-        filter(
-          str_detect(tolower(coalesce(title,    "")), fixed(query_l)) |
-          str_detect(tolower(coalesce(abstract, "")), fixed(query_l)) |
-          str_detect(tolower(authors_text),           fixed(query_l))
-        ) |>
-        arrange(desc(year)) |>
-        head(max_results)
-
-      if (nrow(matches) == 0L)
-        return(paste0("No papers found matching '", query, "'."))
-
-      lines <- vapply(seq_len(nrow(matches)), function(i) {
-        r   <- matches[i, ]
-        doi <- if (!is.na(r$doi)) paste0(" \u2014 https://doi.org/", r$doi) else ""
-        paste0(i, ". [key:", r$record_key, "] ",
-               "(", coalesce(as.character(r$year), "?"), ") ",
-               coalesce(r$title, "[No title]"),
-               " / ", coalesce(r$first_author, "?"), doi)
-      }, character(1L))
-
-      paste0(
-        "Found ", nrow(matches), " paper(s) matching '", query, "'",
-        if (nrow(matches) == max_results)
-          paste0(" (capped at ", max_results, "; there may be more)") else "",
-        ":\n\n", paste(lines, collapse = "\n"),
-        "\n\nTo filter the dashboard to these specific papers, ",
-        "call filter_to_papers with the record_key values above."
-      )
-    },
-    "Full-text search across the entire inventory (title, abstract, authors) \u2014
-     independent of the current dashboard filters. Use when the user wants to
-     find papers on a topic without changing the visible view.",
-    arguments = list(
-      query       = ellmer::type_string(
-        "Keywords or phrase to search for", required = TRUE),
-      max_results = ellmer::type_integer(
-        "Maximum results to return (default 20)", required = FALSE)
-    )
-  ))
-
-  # \u2500\u2500 Tool: filter_to_papers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(record_keys = NULL, dois = NULL, clear = FALSE) {
-      if (isTRUE(clear)) {
-        selected_papers(NULL)
-        return("Paper selection cleared \u2014 dashboard now shows all papers matching other active filters.")
-      }
-
-      if (is.null(record_keys) && is.null(dois))
-        return("Provide record_keys, dois, or clear = TRUE.")
-
-      if (!is.null(record_keys)) {
-        keys  <- as.character(record_keys)
-        valid <- keys[keys %in% pubs$record_key]
-        if (length(valid) == 0L)
-          return("None of the provided record_keys matched any papers in the inventory.")
-        selected_papers(valid)
-        n <- length(valid)
-        return(paste0("Dashboard filtered to ", n, " specific paper", if (n == 1L) "" else "s", "."))
-      }
-
-      doi_norm   <- tolower(trimws(as.character(dois)))
-      found_keys <- pubs$record_key[!is.na(pubs$doi) & tolower(pubs$doi) %in% doi_norm]
-      if (length(found_keys) == 0L)
-        return("None of the provided DOIs matched any papers.")
-      selected_papers(found_keys)
-      n <- length(found_keys)
-      paste0("Dashboard filtered to ", n, " specific paper", if (n == 1L) "" else "s", ".")
-    },
-    "Pin the dashboard to an exact set of papers by record_key or DOI.
-     Use after find_papers when the user says 'filter to those', 'show just those papers',
-     or similar. Pass clear = TRUE to remove the selection and return to normal filtering.",
-    arguments = list(
-      record_keys = ellmer::type_array(
-        ellmer::type_string("A record_key value from find_papers output"),
-        "Array of record_key strings to pin the dashboard to",
-        required = FALSE),
-      dois        = ellmer::type_array(
-        ellmer::type_string("A DOI string"),
-        "Array of DOI strings to pin the dashboard to",
-        required = FALSE),
-      clear       = ellmer::type_boolean(
-        "Set TRUE to clear the selection and return to normal filtering",
-        required = FALSE)
-    )
-  ))
-
-  # \u2500\u2500 Tool: get_paper_detail \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(title_fragment = NULL, doi = NULL) {
-      if (is.null(title_fragment) && is.null(doi))
-        return("Provide either a title_fragment or a doi.")
-
-      if (!is.null(doi)) {
-        doi_clean <- tolower(trimws(doi))
-        match <- pubs[!is.na(pubs$doi) & tolower(pubs$doi) == doi_clean, ]
-      } else {
-        frag  <- tolower(trimws(title_fragment))
-        match <- pubs[str_detect(tolower(coalesce(pubs$title, "")), fixed(frag)), ]
-      }
-
-      if (nrow(match) == 0L) return("No paper found matching those criteria.")
-      if (nrow(match) > 3L)
-        return(paste0(nrow(match), " papers matched \u2014 please be more specific. Titles:\n",
-                      paste(head(match$title, 5L), collapse = "\n")))
-
-      format_one <- function(r) {
-        authors_str <- paste(unlist(r$authors), collapse = "; ")
-        paste0(
-          "Title:              ", coalesce(r$title,    "Unknown"), "\n",
-          "Authors:            ", if (nchar(authors_str) > 0L) authors_str else "Unknown", "\n",
-          "Year:               ", coalesce(as.character(r$year), "Unknown"), "\n",
-          "Journal:            ", coalesce(r$journal,  "Unknown"), "\n",
-          "DOI:                ",
-          if (!is.na(r$doi)) paste0("https://doi.org/", r$doi) else "None", "\n",
-          "Science Field:      ", coalesce(r$pc_field, "Unclassified"), "\n",
-          "Science Category:   ", coalesce(str_to_title(r$pc_category), "Unclassified"), "\n",
-          "Contribution Type:  ", coalesce(r$contribution_type, "Unknown"), "\n",
-          "Division (Author):  ", coalesce(r$author_division,  "Unknown"), "\n",
-          "Division (Funder):  ", coalesce(r$funding_division, "Unknown"), "\n",
-          "Abstract:           ", coalesce(r$abstract, "No abstract available")
-        )
-      }
-
-      paste(
-        vapply(seq_len(nrow(match)), function(i) format_one(match[i, ]), character(1L)),
-        collapse = "\n\n---\n\n"
-      )
-    },
-    "Retrieve full metadata (title, authors, abstract, field, division, DOI, etc.)
-     for a specific paper. Use when the user asks for details on a paper they've
-     seen in the table or mentions a specific title or DOI.",
-    arguments = list(
-      title_fragment = ellmer::type_string(
-        "A distinctive word or phrase from the paper title", required = FALSE),
-      doi            = ellmer::type_string(
-        "The paper's DOI (with or without the https://doi.org/ prefix)", required = FALSE)
-    )
-  ))
-
-  # \u2500\u2500 Tool: synthesize_selection \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function() {
-      df <- isolate(filtered())
-      n  <- nrow(df)
-
-      if (n == 0L)
-        return("No papers are currently visible. Ask the user to adjust the filters.")
-
-      if (n > 300L)
-        return(paste0(
-          "There are ", n, " papers in view \u2014 too many to synthesize at once. ",
-          "Tell the user to narrow the selection first (field, contribution type, year range)."
-        ))
-
-      lines <- vapply(seq_len(n), function(i) {
-        row <- df[i, ]
-        paste0(i, ". (", coalesce(as.character(row$year), "?"), ") ",
-               coalesce(row$title, "[No title]"),
-               "\n   Abstract: ", coalesce(row$abstract, "[No abstract available]"))
-      }, character(1L))
-
-      paste0("The current filtered view contains ", n, " paper",
-             if (n == 1L) "" else "s",
-             ". Titles and abstracts:\n\n", paste(lines, collapse = "\n\n"))
-    },
-    "Retrieve titles and abstracts of the currently filtered papers so you can
-     synthesize or analyze them. Use for summary or theme questions about the
-     *visible* selection. For searching the whole inventory, use find_papers instead."
-  ))
-
-  # \u2500\u2500 Tool: get_author_stats \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(top_n = 10L) {
-      df    <- isolate(filtered())
-      top_n <- as.integer(top_n)
-      if (nrow(df) == 0L) return("No papers in current view.")
-
-      author_totals <- df |>
-        filter(!is.na(first_author)) |>
-        count(first_author, name = "total") |>
-        arrange(desc(total)) |>
-        head(top_n)
-
-      lead_counts <- df |>
-        filter(!is.na(first_author), is_lead_author | is_sole_author) |>
-        count(first_author, name = "lead")
-
-      result <- author_totals |>
-        left_join(lead_counts, by = "first_author") |>
-        mutate(lead = coalesce(lead, 0L))
-
-      lines <- paste0(
-        seq_len(nrow(result)), ". ", result$first_author,
-        " \u2014 total: ", result$total, ", lead/sole: ", result$lead
-      )
-      paste0("Top ", top_n, " DWR authors (", nrow(df), " papers in view):\n",
-             paste(lines, collapse = "\n"))
-    },
-    "Return the most prolific DWR authors in the current filtered view, with
-     total publication count and lead/sole-author count.",
-    arguments = list(
-      top_n = ellmer::type_integer(
-        "Number of authors to return (default 10)", required = FALSE)
-    )
-  ))
-
-  # \u2500\u2500 Tool: get_collaboration_stats \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(top_n = 15L, exclude_dwr = TRUE) {
-      df    <- isolate(filtered())
-      top_n <- as.integer(top_n)
-      if (nrow(df) == 0L) return("No papers in current view.")
-
-      all_affs <- unlist(df$affiliations)
-      all_affs <- all_affs[!is.na(all_affs) & trimws(all_affs) != "" &
-                             all_affs != "Unknown"]
-
-      if (isTRUE(exclude_dwr))
-        all_affs <- all_affs[
-          !grepl("Department of Water Resources|\\bDWR\\b", all_affs,
-                 ignore.case = TRUE)]
-
-      if (length(all_affs) == 0L)
-        return("No external collaborator affiliations found in current view.")
-
-      tbl  <- sort(table(all_affs), decreasing = TRUE)
-      top  <- head(tbl, top_n)
-      lines <- paste0(seq_along(top), ". ", names(top), " (", as.integer(top), " papers)")
-
-      paste0(
-        "Top ", top_n, " collaborating institutions",
-        if (isTRUE(exclude_dwr)) " (DWR affiliations excluded)" else "",
-        " (", nrow(df), " papers in view):\n",
-        paste(lines, collapse = "\n")
-      )
-    },
-    "Return the external institutions DWR most frequently collaborates with,
-     based on co-author affiliations in the current filtered view.",
-    arguments = list(
-      top_n       = ellmer::type_integer(
-        "Number of institutions to return (default 15)", required = FALSE),
-      exclude_dwr = ellmer::type_boolean(
-        "Exclude DWR-affiliated entries (default TRUE)", required = FALSE)
-    )
-  ))
-
-  # \u2500\u2500 Tool: cite_papers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  chat_obj$register_tool(ellmer::tool(
-    function(max_papers = 10L, sort_by = "year_desc") {
-      df         <- isolate(filtered())
-      max_papers <- as.integer(max_papers)
-      if (nrow(df) == 0L) return("No papers in current view.")
-
-      if (!sort_by %in% c("year_desc", "year_asc", "title"))
-        return("Invalid sort_by. Use: year_desc, year_asc, or title")
-
-      df_sorted <- switch(sort_by,
-        year_desc = arrange(df, desc(year), title),
-        year_asc  = arrange(df, year, title),
-        title     = arrange(df, title)
-      )
-      subset <- head(df_sorted, max_papers)
-
-      lines <- vapply(seq_len(nrow(subset)), function(i) {
-        r          <- subset[i, ]
-        authors    <- paste(unlist(r$authors), collapse = ", ")
-        if (nchar(authors) == 0L) authors <- "Unknown Authors"
-        year_s     <- if (!is.na(r$year)) as.character(r$year) else "n.d."
-        journal_s  <- coalesce(r$journal, "")
-        doi_s      <- if (!is.na(r$doi)) paste0(" https://doi.org/", r$doi) else ""
-        paste0(
-          i, ". ", authors, " (", year_s, "). ",
-          coalesce(r$title, "Untitled"), ".",
-          if (nchar(journal_s) > 0L) paste0(" ", journal_s, ".") else "",
-          doi_s
-        )
-      }, character(1L))
-
-      paste0(
-        "Citations for current selection (", sort_by, ", ",
-        nrow(subset), " of ", nrow(df), " papers):\n\n",
-        paste(lines, collapse = "\n\n")
-      )
-    },
-    "Format papers from the current filtered view as plain-text citations.
-     Useful when the user wants a reference list for a report or proposal.",
-    arguments = list(
-      max_papers = ellmer::type_integer(
-        "Maximum number of citations to return (default 10)", required = FALSE),
-      sort_by    = ellmer::type_string(
-        "Sort order: 'year_desc' (default), 'year_asc', or 'title'", required = FALSE)
-    )
-  ))
+  register_chat_tools(
+    chat_obj          = chat_obj,
+    session           = session,
+    input             = input,
+    filtered          = filtered,
+    pubs              = pubs,
+    selected_category = selected_category,
+    selected_papers   = selected_papers,
+    field_choices     = field_choices,
+    YEAR_DEFAULT      = YEAR_DEFAULT,
+    all_categories    = all_categories
+  )
 
   chat_welcome_msg <- paste0(
     "**DWR Publication Inventory Assistant**\n\n",
