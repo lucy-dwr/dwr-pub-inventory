@@ -62,12 +62,12 @@ Only rows where `reviewed_at` is NA are shown by default. Saving a row marks it 
 
 ### 5. `dashboard_app.R` — Publication inventory dashboard
 
-**When to use:** Any time, for exploration. Displays the final accepted publications with filters by year, division, science category, and contribution type. Includes an LLM chat assistant for natural-language queries over the inventory, and an Institution Map tab showing where co-author affiliated institutions are located.
+**When to use:** Any time, for exploration. Displays the final accepted publications with filters by year, division, science category, and contribution type. Includes an LLM chat assistant for natural-language queries over the inventory, an Institution Map tab showing where co-author affiliated institutions are located, a Publishing Network tab for co-authorship relationships, and a Science Fields tab listing the taxonomy definitions used for publication classification.
 
 **Reads:** `data/generated/dwr_publications.parquet`, `data/lookups/institution_geo_lookup.csv`
 **Writes:** nothing
 
-The app has three tabs: **Dashboard** (default), **Institution Map**, and **Publishing Network**.
+The app has four tabs: **Dashboard** (default), **Institution Map**, **Publishing Network**, and **Science Fields**.
 
 #### Filters
 
@@ -183,6 +183,14 @@ nodes (`1 + log1p(n_papers) * 2`).
 
 **Legend:** A color legend panel on the right side of the network identifies the
 node color scheme for the active mode.
+
+#### Science Fields tab
+
+The Science Fields tab shows a searchable taxonomy table with each science
+category, field, and definition used by the publication classifier. It reads the
+same `taxonomy/dwr_disciplines_taxonomy.csv` file used by the pipeline, title-
+cases category and field names for display, and bolds the leading definition
+sentence to make scanning easier.
 
 ---
 

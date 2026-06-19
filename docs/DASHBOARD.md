@@ -1,8 +1,8 @@
 # DWR Publication Inventory — Dashboard Reference
 
-Design and behavior reference for `shiny/dashboard_app.R`. Covers all three
-tabs (Dashboard, Institution Map, Publishing Network), the data model, and the
-chat assistant. For the pipeline architecture, see
+Design and behavior reference for `shiny/dashboard_app.R`. Covers all four
+tabs (Dashboard, Institution Map, Publishing Network, Science Fields), the data
+model, and the chat assistant. For the pipeline architecture, see
 [`docs/ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Overview
@@ -29,7 +29,7 @@ Loaded once at startup using `arrow::read_parquet()`. Key columns used:
 | `authors`     | First author extraction (first list element)           |
 | `affiliations`| Author Affiliation filter (all list elements, flattened) |
 | `pc_category` | Science Category pie chart; populated by pipeline join |
-| `pc_field`    | Science Field filter                                   |
+| `pc_field`    | Science Field filter; article table display           |
 | `is_funder`   | "Articles Funded" stat; contribution type chart        |
 | `is_author`   | "Affiliated Org" stat; contribution type chart         |
 | `is_lead_author` | "Lead Authored" stat; contribution type chart       |
@@ -40,6 +40,9 @@ Loaded once at startup using `arrow::read_parquet()`. Key columns used:
 
 `pc_category` and `pc_field` are both present in the parquet file — no
 in-app taxonomy join is needed. Category names are title-cased for display.
+
+The Science Fields tab separately reads `taxonomy/dwr_disciplines_taxonomy.csv`
+at startup to display the current taxonomy definitions used by the classifier.
 
 **Derived column — `contribution_type`:** Assign the *most specific* single
 label per record for use in the stacked bar chart and the Contribution Type
@@ -261,16 +264,16 @@ refresh log cannot be read, the app falls back to `12/10/2025`.
 The pipeline can add `funding_division` and `author_division` to
 `data/generated/dwr_publications.csv` and `data/generated/dwr_publications.parquet`.
 
-`data/lookups/funding_division_lookup.csv` is a manual lookup for funder-query records
-that explicitly passed funding review (`decision == "keep"`). Records marked
-`drop` or `unsure` are excluded from the lookup. The lookup stores the manual
-assignment in a `division` column; exports expose that value as
+`data/lookups/funding_division_lookup.csv` is a manual lookup for funder-query
+records that explicitly passed funding review (`decision == "keep"`). Records
+marked `drop` or `unsure` are excluded from the lookup. The lookup stores the
+manual assignment in a `division` column; exports expose that value as
 `funding_division`. Newly accepted current-refresh rows are prepended, and
 `new == TRUE` means the row still needs a funding division assignment from the
 current refresh.
 
-`data/decisions/author_division_decisions.csv` stores confirmed DWR authors and resolved
-division assignments. Exports expose those values as `author_division`.
+`data/decisions/author_division_decisions.csv` stores confirmed DWR authors and
+resolved division assignments. Exports expose those values as `author_division`.
 
 Blank `funding_division` values mean the record passed funding review but still
 needs a division assignment.
@@ -506,6 +509,7 @@ fluidPage(
     tabPanel("Dashboard",      controls bar + left/right/chat layout)
     tabPanel("Institution Map", map controls bar + leaflet map)
     tabPanel("Publishing Network", network controls bar + visNetwork)
+    tabPanel("Science Fields", taxonomy table)
   )
   footer div (shared)
 )
@@ -713,24 +717,24 @@ independently when its count is zero.
 ## Layout
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│  HEADER (shared, full-width)                                          │
-├───────────────────────────────────────────────────────────────────────┤
-│  [Dashboard]  [Institution Map]  [Publishing Network]  ← tab bar      │
-├───────────────────────────────────────────────────────────────────────┤
-│  [Year ────────────────○─○──]  [Contribution Type ▼]  [Reset View]    │
-├───────────────────────────────────────────────────────────────────────┤
-│                                                                       │
-│  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │                  Leaflet choropleth map                         │  │
-│  │  (world countries + US states; pan/zoom enabled)                │  │
-│  │                                        [Legend: 0 ──── N pubs]  │  │
-│  └─────────────────────────────────────────────────────────────────┘  │
-│                                                                       │
-│  National-scope US institutions note (conditional)                    │
-└───────────────────────────────────────────────────────────────────────┘
-│  FOOTER (shared, full-width)                                          │
-└───────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│  HEADER (shared, full-width)                                           │
+├────────────────────────────────────────────────────────────────────────┤
+│  [Dashboard]  [Institution Map]  [Publishing Network]  [Science Fields]│
+├────────────────────────────────────────────────────────────────────────┤
+│  [Year ────────────────○─○──]  [Contribution Type ▼]  [Reset View]     │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                  Leaflet choropleth map                         │   │
+│  │  (world countries + US states; pan/zoom enabled)                │   │
+│  │                                        [Legend: 0 ──── N pubs]  │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                                                        │
+│  National-scope US institutions note (conditional)                     │
+└────────────────────────────────────────────────────────────────────────┘
+│  FOOTER (shared, full-width)                                           │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 Map height: `calc(100vh - 300px)` so it fills the viewport. The controls bar
@@ -1087,25 +1091,25 @@ Hidden in Institutions mode.
 ## Layout
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│  HEADER (shared, full-width)                                          │
-├───────────────────────────────────────────────────────────────────────┤
-│  [Dashboard]  [Institution Map]  [Publishing Network]  ← tab bar      │
-├───────────────────────────────────────────────────────────────────────┤
-│  [Year ─────○─○──] [Contribution ▼] [Science Field ▼]                 │
-│  [● Institutions  ○ People] [Top N ─────○──] [Reset View]             │
-├───────────────────────────────────────────────────────────────────────┤
-│                                                                       │
-│  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │           visNetwork interactive force-directed graph           │  │
-│  │   (DWR pinned center; pan/zoom; node click → paper list)        │  │
-│  └─────────────────────────────────────────────────────────────────┘  │
-│                                                                       │
-│  Showing N nodes · M edges · P papers                                 │
-│  [Disambiguation note — People mode only]                             │
-└───────────────────────────────────────────────────────────────────────┘
-│  FOOTER (shared, full-width)                                          │
-└───────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│  HEADER (shared, full-width)                                           │
+├────────────────────────────────────────────────────────────────────────┤
+│  [Dashboard]  [Institution Map]  [Publishing Network]  [Science Fields]│
+├────────────────────────────────────────────────────────────────────────┤
+│  [Year ─────○─○──] [Contribution ▼] [Science Field ▼]                  │
+│  [● Institutions  ○ People] [Top N ─────○──] [Reset View]              │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │           visNetwork interactive force-directed graph           │   │
+│  │   (DWR pinned center; pan/zoom; node click → paper list)        │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                                                        │
+│  Showing N nodes · M edges · P papers                                  │
+│  [Disambiguation note — People mode only]                              │
+└────────────────────────────────────────────────────────────────────────┘
+│  FOOTER (shared, full-width)                                           │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 Network height: `calc(100vh - 280px)`.
@@ -1166,6 +1170,72 @@ Network height: `calc(100vh - 280px)`.
 straightforward with `dplyr` over the base tables. Add `igraph` later if layout
 algorithms or graph-theoretic metrics (clustering coefficient, centrality) are
 needed.
+
+---
+
+# Science Fields Tab
+
+## Overview
+
+A fourth tab in the dashboard showing the science classification taxonomy used
+by the pipeline and Dashboard filters. The tab is informational: it has no
+filters and does not share reactive state with the other tabs.
+
+---
+
+## Data Source
+
+**File:** `taxonomy/dwr_disciplines_taxonomy.csv`
+
+Loaded once at startup. Required columns:
+
+| Column | Display use |
+|---|---|
+| `category` | Science category column, title-cased |
+| `field` | Science field column, title-cased |
+| `definition` | Full field definition |
+
+The table reflects the same taxonomy used by the LLM classifier to populate
+`pc_category` and `pc_field` in the dashboard export.
+
+---
+
+## Table
+
+The tab renders a single `DT::datatable` with three columns:
+
+| Column | Notes |
+|---|---|
+| Category | Top-level science category |
+| Field | Specific science field |
+| Definition | Full field definition, with the first sentence bolded |
+
+Table options:
+
+- Search box enabled with `dom = "ft"`
+- 50 rows per page
+- Initial sort by Category ascending
+- No row numbers
+- HTML escaping disabled only so the bolded first sentence can render
+
+---
+
+## Layout
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│  HEADER (shared, full-width)                                          │
+├───────────────────────────────────────────────────────────────────────┤
+│  [Dashboard] [Institution Map] [Publishing Network] [Science Fields]  │
+├───────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│  Category | Field | Definition                                        │
+│  searchable DT table of taxonomy rows                                 │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
+│  FOOTER (shared, full-width)                                          │
+└───────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 

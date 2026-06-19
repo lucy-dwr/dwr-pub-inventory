@@ -100,14 +100,16 @@ control:
 
 There is also an application for viewing the publication inventory in a dashboard:
 
-- `shiny/dashboard_app.R`: three-tab dashboard for browsing the final exported
+- `shiny/dashboard_app.R`: four-tab dashboard for browsing the final exported
   inventory. The **Dashboard** tab provides filtered publication charts and a
   table, plus an LLM-powered chat assistant ("Ask the data") that accepts
   natural-language questions about the inventory. The **Institution Map** tab
   shows a choropleth world map of co-author affiliated institutions by geography
   with hover/click popups. The **Publishing Network** tab shows an interactive
   force-directed co-authorship network (institution or people mode) with
-  click-through paper lists. See [`shiny/README.md`](shiny/README.md),
+  click-through paper lists. The **Science Fields** tab lists the taxonomy
+  categories, fields, and definitions used for publication classification. See
+  [`shiny/README.md`](shiny/README.md),
   [`docs/CHAT_TOOLS.md`](docs/CHAT_TOOLS.md), and
   [`docs/DASHBOARD.md`](docs/DASHBOARD.md) for details.
 
