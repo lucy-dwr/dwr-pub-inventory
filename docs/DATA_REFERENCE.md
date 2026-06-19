@@ -1,5 +1,8 @@
 # Data Reference
 
+For coverage, review, division-assignment, classification, and other
+interpretation caveats, see [`docs/LIMITATIONS.md`](LIMITATIONS.md).
+
 ## Stable Record Keys
 
 `record_key` is assigned by `R/add_record_keys.R` using this priority:

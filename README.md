@@ -382,6 +382,7 @@ docs/
   DASHBOARD.md                          # Dashboard design and behavior reference
   CHAT_TOOLS.md                         # Chat assistant tool reference
   DATA_REFERENCE.md                     # Data schemas and file formats
+  LIMITATIONS.md                        # Known dataset and data-model limitations
 
 config/
   pipeline.yml                          # Non-secret pipeline settings and paths
@@ -480,3 +481,5 @@ renv.lock                               # R dependency lockfile
 
 For stable record keys, refresh log fields, decision file schemas, and lookup
 table schemas, see [`docs/DATA_REFERENCE.md`](docs/DATA_REFERENCE.md).
+For interpretation caveats, see
+[`docs/LIMITATIONS.md`](docs/LIMITATIONS.md).
