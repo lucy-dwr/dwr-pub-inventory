@@ -44,6 +44,31 @@ Three LLM tasks are used in the pipeline, each with a system prompt and a user t
 
 ---
 
+## Dashboard chat assistant
+
+**File:** `chat_system_prompt.txt`
+
+**Used by:** `shiny/dashboard_app.R` (loaded via `glue::glue()` at app startup)
+
+**What it does:** Sets the system prompt for the per-session `ellmer` chat object that powers the "Ask the data" chat sidebar. Describes the available tools, when to use each one, tone rules, and how to handle out-of-scope requests.
+
+**Template variables** (resolved from live data at app startup):
+
+| Variable | Value |
+|---|---|
+| `{year_min}` / `{year_max}` | Full year range of the inventory |
+| `{year_default_start}` / `{year_default_end}` | Default year range shown on load |
+| `{categories_str}` | Semicolon-delimited science category list |
+| `{fields_str}` | Semicolon-delimited science field list |
+| `{divisions_str}` | Semicolon-delimited DWR division list |
+| `{contrib_types_str}` | Comma-delimited contribution type list |
+| `{n_affiliations}` | Total number of unique affiliations |
+| `{affiliations_str}` | Semicolon-delimited sample of the top 60 affiliations |
+
+Injecting live filter values at startup (rather than hardcoding them) keeps the prompt accurate as the inventory grows without manual edits.
+
+---
+
 ## Modifying prompts
 
 Rule changes in a system prompt affect all future LLM calls. They do not retroactively change already-resolved rows in the lookup files — those are protected by the `resolved = TRUE` flag (geo) or `reviewed_at` timestamp (affiliations). If you need to re-resolve existing rows after a rule change, clear the relevant flag/timestamp in the lookup CSV before re-running the pipeline target.

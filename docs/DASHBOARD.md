@@ -226,23 +226,24 @@ An interactive `DT::datatable` showing all filtered records.
 ## Modals
 
 Both modals open centered over the dashboard with a semi-transparent overlay.
-Closeable via an ✕ button or clicking outside.
+Closeable via an ✕ button or clicking outside. Modal body text is loaded from
+Markdown files in `shiny/content/` — edit those files to update copy without
+touching the app script.
 
 ### About the Inventory Modal
 
 **Title:** About the Inventory
 
-**Body:** Placeholder production copy. The current app text begins with
-`[Placeholder]` and briefly describes the inventory, Scopus searches, taxonomy,
-and LLM classification.
+**Body:** Loaded from `shiny/content/about.md`. Describes the inventory's
+purpose, Scopus coverage, classification approach, and refresh cadence.
 
 ### Science Category & Field Classification Modal
 
 **Title:** Science Category & Field Classification
 
-**Body:** Placeholder production copy. The current app text begins with
-`[Placeholder]` and describes the custom DWR taxonomy and LLM-guided
-classification.
+**Body:** Loaded from `shiny/content/classification.md`. Brief overview of the
+taxonomy and LLM classification process, with a pointer to the Science Fields
+tab for the full field definitions.
 
 ---
 
@@ -277,12 +278,6 @@ needs a division assignment.
 The dashboard uses both division columns for the Division filter and the
 Articles by Division chart. Author divisions can be multi-valued; funding
 division is a single value per record.
-
----
-
-## Not Yet Implemented
-
-- Production copy for the About and Classification modals (currently placeholder text)
 
 ---
 
@@ -450,9 +445,11 @@ It covers:
    intent is ambiguous.
 4. **Tone:** Professional, concise, suited to a government science context.
 
-Valid filter values are injected into the system prompt at app startup (not
-hardcoded in the source file), so the prompt stays accurate if the data
-is updated.
+The system prompt template lives in `prompts/chat_system_prompt.txt` and is
+loaded at app startup via `glue::glue()`. Valid filter values (year range,
+categories, fields, divisions, affiliations) are interpolated from live data
+at load time, so the prompt stays accurate as the inventory grows without
+manual edits to the template.
 
 ---
 
@@ -1159,7 +1156,7 @@ Network height: `calc(100vh - 280px)`.
 
 ---
 
-## New R Package Required
+## R Packages (Network Visualization)
 
 | Package | Use |
 |---|---|
