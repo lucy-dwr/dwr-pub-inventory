@@ -25,8 +25,16 @@ jobs:
       - name: Set up pandoc
         uses: r-lib/actions/setup-pandoc@v2
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y cmake gdal-bin libabsl-dev libcurl4-openssl-dev \
+            libgdal-dev libglpk-dev libpng-dev libudunits2-dev libx11-dev
+
       - name: Restore R package library
         uses: r-lib/actions/setup-renv@v2
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run unit tests
         run: Rscript -e 'testthat::test_dir("tests/testthat")'
