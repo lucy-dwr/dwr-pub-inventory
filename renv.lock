@@ -5,6 +5,10 @@
       {
         "Name": "CRAN",
         "URL": "https://cran.rstudio.com"
+      },
+      {
+        "Name": "ropensci",
+        "URL": "https://ropensci.r-universe.dev"
       }
     ]
   },
@@ -3821,6 +3825,38 @@
       "Author": "Philippe Massicotte [aut, cre] (ORCID: <https://orcid.org/0000-0002-5919-4116>), Andy South [aut], Koen Hufkens [ctb] (ORCID: <https://orcid.org/0000-0002-5070-8109>)",
       "Maintainer": "Philippe Massicotte <pmassicotte@hotmail.com>",
       "Repository": "CRAN"
+    },
+    "rnaturalearthdata": {
+      "Package": "rnaturalearthdata",
+      "Version": "1.0.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "ropensci",
+      "RemoteRepo": "rnaturalearthdata",
+      "RemotePkgRef": "ropensci/rnaturalearthdata",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "ff4d891f74265473ae2c936dcfeb0c9afeac6631",
+      "GithubRepo": "rnaturalearthdata",
+      "GithubUsername": "ropensci",
+      "GithubRef": "HEAD",
+      "GithubSHA1": "ff4d891f74265473ae2c936dcfeb0c9afeac6631"
+    },
+    "rnaturalearthhires": {
+      "Package": "rnaturalearthhires",
+      "Version": "1.0.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "ropensci",
+      "RemoteRepo": "rnaturalearthhires",
+      "RemotePkgRef": "ropensci/rnaturalearthhires",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "e4736f636baa1c013d77d2ba028dd5bc334defee",
+      "GithubRepo": "rnaturalearthhires",
+      "GithubUsername": "ropensci",
+      "GithubRef": "HEAD",
+      "GithubSHA1": "e4736f636baa1c013d77d2ba028dd5bc334defee"
     },
     "rpart": {
       "Package": "rpart",
