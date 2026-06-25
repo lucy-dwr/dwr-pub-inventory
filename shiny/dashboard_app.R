@@ -15,6 +15,9 @@ library(sf)
 library(visNetwork)
 library(glue)
 
+# Suppress shinychat tool call/result cards — show final responses only
+options(shinychat.tool_display = "none")
+
 # ── Paths ──────────────────────────────────────────────────────────────────────
 if (basename(getwd()) == "shiny") setwd("..")
 .ROOT <- getwd()
@@ -379,10 +382,6 @@ app_css <- "
   }
   .papers-banner a { color: #7a8a9a; font-weight: 700; text-decoration: none; margin-left: 10px; }
   .papers-banner a:hover { color: #2d7a5f; }
-  /* Hide tool call/result cards — show final responses only */
-  .chat-sidebar-inner shiny-tool-request,
-  .chat-sidebar-inner shiny-tool-result { display: none !important; }
-
   /* shinychat fills the remaining space */
   .chat-sidebar-inner .shiny-chat-container {
     flex: 1;
