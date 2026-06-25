@@ -3829,8 +3829,18 @@
     "rnaturalearthdata": {
       "Package": "rnaturalearthdata",
       "Version": "1.0.0.9000",
-      "Source": "Repository",
-      "Repository": "https://ropensci.r-universe.dev"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "ropensci",
+      "RemoteRepo": "rnaturalearthdata",
+      "RemotePkgRef": "ropensci/rnaturalearthdata",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "ff4d891f74265473ae2c936dcfeb0c9afeac6631",
+      "GithubRepo": "rnaturalearthdata",
+      "GithubUsername": "ropensci",
+      "GithubRef": "HEAD",
+      "GithubSHA1": "ff4d891f74265473ae2c936dcfeb0c9afeac6631"
     },
     "rnaturalearthhires": {
       "Package": "rnaturalearthhires",
