@@ -381,7 +381,14 @@ command:
 ```text
 _targets.R                              # Pipeline definition
 README.md                               # Project overview and operator quickstart
+CONTRIBUTING.md                         # Contribution guidelines and setup troubleshooting
+CODE_OF_CONDUCT.md                      # Contributor covenant
 LICENSE
+
+.github/
+  CODEOWNERS                            # Default reviewers for pull requests
+  workflows/
+    r-tests.yml                         # CI: restore renv and run unit tests
 
 docs/
   ARCHITECTURE.md                       # Pipeline and dashboard architecture reference
@@ -394,6 +401,7 @@ config/
   pipeline.yml                          # Non-secret pipeline settings and paths
 
 R/
+  README.md                             # R/ directory overview
   load_pipeline_config.R                # Read config/pipeline.yml
   add_record_keys.R                     # Assign stable record_key values
   create_refresh_id.R                   # Refresh identity and refresh log management
@@ -406,6 +414,8 @@ R/
   join_funding_division.R               # Join funding divisions into exports
   join_author_division.R                # Join resolved author divisions into exports
   flag_dwr_contributions.R              # Add contribution-type boolean flags
+  classify_publications.R               # Classify publications using pubclassify and the LLM
+  dashboard_chat_tools.R                # Tool definitions for the dashboard chat assistant
   author_name_utils.R                   # Author lookup/name matching utilities
   score_dwr_relevance.R                 # Funder-review suspicion scoring
   score_author_affiliation.R            # Author-review suspicion scoring
@@ -424,14 +434,17 @@ taxonomy/
   dwr_disciplines_taxonomy.csv          # DWR field taxonomy
 
 prompts/
+  README.md                             # Prompt authoring guidance
   classify_system_prompt.txt            # LLM system prompt for disciplinary classification
   classify_user_instructions.txt        # LLM user instructions for disciplinary classification
   affiliation_system_prompt.txt         # LLM system prompt for affiliation canonicalization
   affiliation_user_template.txt         # LLM user template for affiliation canonicalization
   geo_system_prompt.txt                 # LLM system prompt for institution geolocation
   geo_user_template.txt                 # LLM user template for institution geolocation
+  chat_system_prompt.txt                # LLM system prompt for the dashboard chat assistant
 
 data/
+  README.md                             # Data directory overview and file ownership
   refresh_log.csv                       # One row per refresh cycle with counts
   decisions/
     funding_review_decisions.csv        # Funder keep/drop/unsure decisions
@@ -454,13 +467,24 @@ data/
   harvests/                             # Per-refresh candidate snapshots; ignored by Git
 
 shiny/                                  # Review and visualization apps
+  README.md                             # Shiny apps overview
   funder_review_app.R
   author_review_app.R
   author_division_resolution_app.R
   affiliation_review_app.R
   dashboard_app.R
+  content/
+    about.md                            # Dashboard about panel content
+    classification.md                   # Dashboard classification panel content
   www/
     dwr-logo-new.png                    # Dashboard logo asset
+
+tests/
+  README.md                             # Testing overview
+  TESTING.md                            # Test writing guidance
+  testthat/
+    helper-fixtures.R                   # Shared test fixtures
+    test-*.R                            # Unit tests (one file per R/ function)
 
 renv/
   activate.R
