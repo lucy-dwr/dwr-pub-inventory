@@ -9,6 +9,8 @@ library(shinychat)
 library(ellmer)
 library(leaflet)
 library(rnaturalearth)
+library(rnaturalearthdata)
+library(rnaturalearthhires)
 library(sf)
 library(visNetwork)
 library(glue)
@@ -544,13 +546,11 @@ app_css <- "
     height: 38px; padding-top: 0; padding-bottom: 0;
     display: inline-flex; align-items: center;
   }
-  /* hide slider grid ticks, endpoint labels, and individual handle bubbles */
+  /* hide grid ticks and endpoint labels; keep irs-from/to/single for moving handle labels */
   .map-ctrls-bar .irs--shiny .irs-grid-text,
   .map-ctrls-bar .irs--shiny .irs-grid-pol,
   .map-ctrls-bar .irs--shiny .irs-min,
-  .map-ctrls-bar .irs--shiny .irs-max,
-  .map-ctrls-bar .irs--shiny .irs-from,
-  .map-ctrls-bar .irs--shiny .irs-to { display: none; }
+  .map-ctrls-bar .irs--shiny .irs-max { display: none; }
 
   /* ── Map notes bar ── */
   .map-notes-bar {
@@ -591,9 +591,7 @@ app_css <- "
   .net-ctrls-bar .irs--shiny .irs-grid-text:not(.dwr-decade),
   .net-ctrls-bar .irs--shiny .irs-grid-pol:not(.dwr-decade-pol),
   .net-ctrls-bar .irs--shiny .irs-min,
-  .net-ctrls-bar .irs--shiny .irs-max,
-  .net-ctrls-bar .irs--shiny .irs-from,
-  .net-ctrls-bar .irs--shiny .irs-to { display: none; }
+  .net-ctrls-bar .irs--shiny .irs-max { display: none; }
   /* Network mode radio: inline, compact */
   .net-mode-group .shiny-input-container { margin-bottom: 0; }
   .net-mode-group .shiny-options-group   { display: flex; gap: 16px; margin-top: 2px; }
@@ -1578,15 +1576,7 @@ server <- function(input, output, session) {
     )
   })
 
-  # Base map rendered once; polygons updated via leafletProxy
-  output$institution_map <- renderLeaflet({
-    leaflet(options = leafletOptions(zoomControl = TRUE)) |>
-      addProviderTiles("Esri.WorldGrayCanvas") |>
-      setView(lng = 10, lat = 20, zoom = 2)
-  })
-
-  observe({
-    input$main_tabs  # re-draw when user switches to the map tab
+  map_layer_data <- reactive({
     mc <- map_counts()
     cn <- mc$country_n
     sn <- mc$state_n
@@ -1677,50 +1667,79 @@ server <- function(input, output, session) {
     legend_colors <- c("#ffffff", pal(log1p(legend_breaks)))
     legend_labels <- c("0", as.character(legend_breaks))
 
+    list(
+      pal           = pal,
+      world_data    = world_data,
+      world_labels  = world_labels,
+      world_popups  = world_popups,
+      us_data       = us_data,
+      us_labels     = us_labels,
+      us_popups     = us_popups,
+      legend_colors = legend_colors,
+      legend_labels = legend_labels
+    )
+  })
+
+  add_map_layers <- function(map, layer_data) {
     poly_style <- list(fillOpacity = 0.75, color = "white", weight = 0.6, opacity = 1)
-    hl_opts    <- highlightOptions(weight = 2, color = "#1a2f4a",
-                                   fillOpacity = 0.9, bringToFront = TRUE)
-    lbl_opts   <- labelOptions(style = list(
+    hl_opts <- highlightOptions(weight = 2, color = "#1a2f4a",
+                                fillOpacity = 0.9, bringToFront = TRUE)
+    lbl_opts <- labelOptions(style = list(
       "font-size"   = "0.82rem",
       "font-family" = "'Helvetica Neue', Arial, sans-serif",
       "padding"     = "4px 8px"
     ))
 
-    leafletProxy("institution_map") |>
-      clearShapes() |>
-      removeControl("dwr-map-legend") |>
+    map |>
       addPolygons(
-        data             = world_data,
-        fillColor        = ~pal(ifelse(n == 0L, NA_real_, log_n)),
+        data             = layer_data$world_data,
+        fillColor        = ~layer_data$pal(ifelse(n == 0L, NA_real_, log_n)),
         fillOpacity      = poly_style$fillOpacity,
         color            = poly_style$color,
         weight           = poly_style$weight,
         opacity          = poly_style$opacity,
-        label            = lapply(world_labels, htmltools::HTML),
+        label            = lapply(layer_data$world_labels, htmltools::HTML),
         labelOptions     = lbl_opts,
-        popup            = world_popups,
+        popup            = layer_data$world_popups,
         highlightOptions = hl_opts
       ) |>
       addPolygons(
-        data             = us_data,
-        fillColor        = ~pal(ifelse(n == 0L, NA_real_, log_n)),
+        data             = layer_data$us_data,
+        fillColor        = ~layer_data$pal(ifelse(n == 0L, NA_real_, log_n)),
         fillOpacity      = poly_style$fillOpacity,
         color            = poly_style$color,
         weight           = poly_style$weight,
         opacity          = poly_style$opacity,
-        label            = lapply(us_labels, htmltools::HTML),
+        label            = lapply(layer_data$us_labels, htmltools::HTML),
         labelOptions     = lbl_opts,
-        popup            = us_popups,
+        popup            = layer_data$us_popups,
         highlightOptions = hl_opts
       ) |>
       addLegend(
         position = "bottomright",
-        colors   = legend_colors,
-        labels   = legend_labels,
+        colors   = layer_data$legend_colors,
+        labels   = layer_data$legend_labels,
         title    = "Publications",
         opacity  = 0.85,
         layerId  = "dwr-map-legend"
       )
+  }
+
+  output$institution_map <- renderLeaflet({
+    leaflet(options = leafletOptions(zoomControl = TRUE)) |>
+      addProviderTiles("Esri.WorldGrayCanvas") |>
+      setView(lng = 10, lat = 20, zoom = 2) |>
+      add_map_layers(map_layer_data())
+  })
+
+  observe({
+    input$main_tabs  # re-draw when user switches to the map tab
+    layer_data <- map_layer_data()
+
+    leafletProxy("institution_map") |>
+      clearShapes() |>
+      removeControl("dwr-map-legend") |>
+      add_map_layers(layer_data)
   })
 
   observeEvent(input$map_reset_view, {

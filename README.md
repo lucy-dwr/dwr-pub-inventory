@@ -120,7 +120,7 @@ There is also an application for viewing the publication inventory in a dashboar
 To run an application, use `shiny`:
 
 ```r
-shiny::runApp(here::here("shiny", "<app-name>"))
+shiny::runApp("shiny/<app-file>.R")
 ```
 
 The application will then run locally—Shiny will serve it as a local URL, such as
