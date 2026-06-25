@@ -384,11 +384,15 @@ README.md                               # Project overview and operator quicksta
 CONTRIBUTING.md                         # Contribution guidelines and setup troubleshooting
 CODE_OF_CONDUCT.md                      # Contributor covenant
 LICENSE
+.betterleaks.toml                       # Secrets scanner config (extends betterleaks defaults)
+betterleaks-baseline.json               # Baseline of known-clean findings for CI comparison
+.pre-commit-config.yaml                 # Optional local pre-commit hook (betterleaks)
 
 .github/
   CODEOWNERS                            # Default reviewers for pull requests
   workflows/
     r-tests.yml                         # CI: restore renv and run unit tests
+    secrets-scan.yml                    # CI: scan for accidentally committed secrets
 
 docs/
   ARCHITECTURE.md                       # Pipeline and dashboard architecture reference
