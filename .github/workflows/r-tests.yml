@@ -29,7 +29,8 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y cmake gdal-bin libabsl-dev libcurl4-openssl-dev \
-            libgdal-dev libglpk-dev libpng-dev libudunits2-dev libx11-dev
+            libgdal-dev libgeos-dev libglpk-dev libpng-dev libproj-dev \
+            libudunits2-dev libx11-dev
 
       - name: Restore R package library
         uses: r-lib/actions/setup-renv@v2
