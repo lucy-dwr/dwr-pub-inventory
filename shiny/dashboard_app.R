@@ -546,13 +546,11 @@ app_css <- "
     height: 38px; padding-top: 0; padding-bottom: 0;
     display: inline-flex; align-items: center;
   }
-  /* hide slider grid ticks, endpoint labels, and individual handle bubbles */
+  /* hide grid ticks and endpoint labels; keep irs-from/to/single for moving handle labels */
   .map-ctrls-bar .irs--shiny .irs-grid-text,
   .map-ctrls-bar .irs--shiny .irs-grid-pol,
   .map-ctrls-bar .irs--shiny .irs-min,
-  .map-ctrls-bar .irs--shiny .irs-max,
-  .map-ctrls-bar .irs--shiny .irs-from,
-  .map-ctrls-bar .irs--shiny .irs-to { display: none; }
+  .map-ctrls-bar .irs--shiny .irs-max { display: none; }
 
   /* ── Map notes bar ── */
   .map-notes-bar {
@@ -593,9 +591,7 @@ app_css <- "
   .net-ctrls-bar .irs--shiny .irs-grid-text:not(.dwr-decade),
   .net-ctrls-bar .irs--shiny .irs-grid-pol:not(.dwr-decade-pol),
   .net-ctrls-bar .irs--shiny .irs-min,
-  .net-ctrls-bar .irs--shiny .irs-max,
-  .net-ctrls-bar .irs--shiny .irs-from,
-  .net-ctrls-bar .irs--shiny .irs-to { display: none; }
+  .net-ctrls-bar .irs--shiny .irs-max { display: none; }
   /* Network mode radio: inline, compact */
   .net-mode-group .shiny-input-container { margin-bottom: 0; }
   .net-mode-group .shiny-options-group   { display: flex; gap: 16px; margin-top: 2px; }
