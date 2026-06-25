@@ -47,7 +47,7 @@ Records are sorted by `caff_score` descending.
 **Reads:** `data/lookups/affiliation_lookup.csv`, `data/lookups/institution_reference.txt`
 **Writes:** `data/lookups/affiliation_lookup.csv` (in place)
 
-Only rows where `reviewed_at` is NA are shown by default. Saving a row marks it reviewed.
+Only articles with new/unreviewed affiliations (`new == TRUE`) are shown by default. Saving a row sets `new = FALSE` and stamps `reviewed_at`.
 
 ---
 

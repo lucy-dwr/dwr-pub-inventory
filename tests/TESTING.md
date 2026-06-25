@@ -16,9 +16,9 @@ use in-memory fixtures or temporary files.
 
 ```
 tests/
-├── TESTING_PLAN.md          ← this file
+├── TESTING.md                  # this file
 └── testthat/
-    ├── helper-fixtures.R    ← shared in-memory tibbles and temp-file helpers
+    ├── helper-fixtures.R       # shared in-memory tibbles and temp-file helpers
     ├── test-add_record_keys.R
     ├── test-create_refresh_id.R
     ├── test-apply_review_decisions.R

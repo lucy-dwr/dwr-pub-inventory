@@ -48,7 +48,7 @@ author_division_decisions.csv       # division assignment per author/publication
 Durable lookup tables. Most are built by pipeline targets and then reviewed via Shiny apps; some (`funding_division_lookup.csv`, `dwr_org_lookup.csv`) are partially hand-maintained.
 
 ```
-affiliation_lookup.csv          # raw affiliation string → canonical institution name
+affiliation_lookup.csv          # occurrence-level: one row per publication/raw-affiliation pair (record_key, doi, title, year, authors, raw, canonical, new, reviewed_at, review_notes, manual_added)
 author_division_lookup.csv      # DWR employee name × year → division (from HR data)
 dwr_org_lookup.csv              # canonical division name aliases
 funding_division_lookup.csv     # accepted funder publication → manually assigned DWR division

@@ -36,7 +36,7 @@ The pipeline:
 # Optionally set refresh.id; blank defaults to today's date.
 
 # Build both review queues
-targets::tar_make(funder_review_queue_file, author_review_queue_file)
+targets::tar_make(names = c(funder_review_queue_file, author_review_queue_file))
 
 # Review funder candidates
 shiny::runApp("shiny/funder_review_app.R")
@@ -228,7 +228,6 @@ Implemented dashboard features:
 Not yet implemented in the dashboard:
 
 - Author Division filter
-- production copy for About and Classification modals
 
 See [`docs/DASHBOARD.md`](DASHBOARD.md) for the dashboard design reference.
 

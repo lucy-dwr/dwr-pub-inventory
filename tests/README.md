@@ -20,10 +20,10 @@ testthat::test_file("tests/testthat/test-add_record_keys.R")
 
 ```
 tests/
-├── README.md            ← this file
-├── TESTING.md           ← per-function test specs and fixture definitions
+├── README.md                    # this file
+├── TESTING.md                   # per-function test specs and fixture definitions
 └── testthat/
-    ├── helper-fixtures.R        ← shared tibble factories and temp-file helpers
+    ├── helper-fixtures.R        # shared tibble factories and temp-file helpers
     ├── test-add_record_keys.R
     ├── test-append_accepted_publications.R
     ├── test-apply_affiliation_lookup.R

@@ -138,7 +138,7 @@ currently filtered dataset.
 |-------------------|--------------------------------------------------------|
 | Total Articles    | `nrow(filtered_data)`                                  |
 | Articles Funded   | `sum(is_funder)`                                       |
-| Affiliated Org    | `sum(is_author)`                                       |
+| Affiliated Orgs   | `sum(is_author)`                                       |
 | Co-Authored       | `sum(is_author & !is_lead_author)`                     |
 | Lead Authored     | `sum(is_lead_author)`                                  |
 
@@ -207,7 +207,7 @@ An interactive `DT::datatable` showing all filtered records.
 | Science Field | `pc_field`                                      |                           |
 | Article Link  | `doi` → `https://doi.org/<doi>`                | Render as "Read >" hyperlink |
 
-- Sorted by `title` ascending by default
+- No default sort order (`ordering = FALSE`)
 - Pagination: 10 rows per page
 - Column headers bold
 - Search box hidden (global keyword search bar handles search)
@@ -297,8 +297,11 @@ division is a single value per record.
 | `stringr`     | String splitting, case conversion            |
 | `shinychat`   | Chat UI                                      |
 | `ellmer`      | LLM client and tool calling                  |
+| `glue`        | Chat system prompt template interpolation    |
 | `leaflet`     | Institution Map rendering                    |
 | `rnaturalearth` | Country and US state polygon geometries    |
+| `rnaturalearthdata` | Natural earth dataset for map polygons |
+| `rnaturalearthhires` | High-res natural earth dataset        |
 | `sf`          | Spatial data handling                        |
 | `visNetwork`  | Publishing Network rendering                 |
 
@@ -334,9 +337,9 @@ not need to switch tools or modes.
 **Package stack:** `shinychat` (chat UI + streaming) + `ellmer` (LLM client).
 
 **Provider:** The same OpenAI-compatible endpoint used by the `pubclassify`
-pipeline (California Department of Technology, base URL
-`PUBCLASSIFY_LLM_BASE_URL`). The app uses
-`ellmer::chat_openai_compatible()` with a custom `base_url` and
+pipeline (California Department of Technology). The app uses
+`ellmer::chat_openai_compatible()` with `base_url` read from
+`pipeline_config$llm$base_url` (set in `config/pipeline.yml`) and
 `api_key = Sys.getenv("PUBCLASSIFY_LLM_KEY")`.
 
 If that endpoint is unavailable or a higher-capability model is needed,

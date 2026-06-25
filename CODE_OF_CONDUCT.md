@@ -100,7 +100,7 @@ rungs on the ladder may be skipped.
    - _Repair:_ Examples of repair include a private written apology,
      acknowledgement of responsibility, and seeking clarification on
      expectations.
-2. Temporarily Limited Activities
+2. **Temporarily Limited Activities**
    - _Event:_ A repeated incidence of a violation that previously resulted in a
      warning, or the first incidence of a more serious violation.
    - _Consequence:_ A private, written warning with a time-limited cooldown period
@@ -111,7 +111,7 @@ rungs on the ladder may be skipped.
    - _Repair:_ Examples of repair may include making an apology, using the
      cooldown period to reflect on actions and impact, and being thoughtful
      about re-entering community spaces after the period is over.
-3. Temporary Suspension
+3. **Temporary Suspension**
    - _Event:_ A pattern of repeated violation which the community moderators have
       tried to address with warnings, or a single serious violation.
    - _Consequence:_ A private written warning with conditions for return from
@@ -121,7 +121,7 @@ rungs on the ladder may be skipped.
    - _Repair:_ Examples of repair include respecting the spirit of the suspension,
      meeting the specified conditions for return, and being thoughtful about how
      to reintegrate with the community when the suspension is lifted.
-4. Permanent Ban
+4. **Permanent Ban**
    - _Event:_ A pattern of repeated code of conduct violations that other steps on
      the ladder have failed to resolve, or a violation so serious that the
      community moderators determine there is no way to keep the community safe

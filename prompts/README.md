@@ -26,7 +26,7 @@ Three LLM tasks are used in the pipeline, each with a system prompt and a user t
 
 **What it does:** Assigns each accepted publication to exactly one science field from the taxonomy in `taxonomy/`. The system prompt defines classification rules; the user instructions file provides tie-breaking priority rules that are appended to every request along with the actual publication batch.
 
-**Output format:** JSON array, one object per publication with `record_key` and `pc_field`.
+**Output format:** JSON array, one object per publication. The pipeline parses the model response via `pubclassify`, which returns a data frame with `field` and `rationale` columns. The pipeline then assigns `field` to the `pc_field` column in the accepted publications table.
 
 ---
 
