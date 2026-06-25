@@ -1,0 +1,8 @@
+repos:
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.5.0
+    hooks:
+      - id: betterleaks-system
+        args:
+          - --baseline-path
+          - betterleaks-baseline.json

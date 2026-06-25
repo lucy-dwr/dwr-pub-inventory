@@ -150,6 +150,70 @@ Avoid committing transient review queues, local pipeline caches, credentials, or
 private lookup data. When updating durable data files, describe the source and
 review step in the pull request.
 
+## Security
+
+### Secrets scanning
+
+All pull requests and pushes to `main` are scanned for accidentally committed
+secrets by a [betterleaks](https://github.com/betterleaks/betterleaks) workflow
+in GitHub Actions. The `betterleaks` check is a required status check — pull
+requests cannot be merged unless it passes. The workflow uses a committed
+baseline (`betterleaks-baseline.json`) so it only fails on findings that are
+new relative to that baseline.
+
+A local pre-commit hook is also available and strongly recommended. It catches
+secrets before they are pushed, saving a round-trip to CI. It is not a
+substitute for the CI check, however: git hooks can be bypassed with
+`--no-verify` and are not enforced for contributors who have not installed them.
+
+To set up the local hook (recommended, not required):
+
+```bash
+# Install the pre-commit framework and betterleaks (one-time setup).
+pip install pre-commit
+brew install betterleaks
+
+# Install the hook into your local clone.
+pre-commit install
+```
+
+After installation the hook runs automatically on `git commit`, scanning staged
+changes before they are written to history. To run it manually at any time:
+
+```bash
+pre-commit run betterleaks-system
+```
+
+To run a full history scan locally (matching what CI does):
+
+```bash
+betterleaks git . --baseline-path betterleaks-baseline.json --log-level warn
+```
+
+### If a secret is accidentally committed
+
+**Rotate or revoke the credential immediately.** Deleting it from git history
+does not make it safe if the repository was ever visible or cloned while the
+secret was present. Steps:
+
+1. Revoke or rotate the exposed credential (Scopus API key, LLM key, etc.)
+   with the issuing service before doing anything else.
+2. Remove the secret from git history using
+   [`git filter-repo`](https://github.com/newren/git-filter-repo) or contact
+   a maintainer to coordinate a history rewrite.
+3. Force-push the rewritten history and notify any collaborators who may have
+   cloned the affected commits.
+4. Open an issue or notify a maintainer so the baseline can be updated if
+   needed.
+
+If a false positive triggers the scanner, add a minimal entry to the
+`[[allowlists]]` section of `betterleaks.toml` with a comment explaining why
+the match is safe, then regenerate the baseline:
+
+```bash
+betterleaks git . --report-format json --report-path betterleaks-baseline.json
+```
+
 ## Pull Request Guidelines
 
 - Keep changes focused and explain the publication-inventory workflow they

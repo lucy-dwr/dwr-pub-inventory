@@ -1,0 +1,11 @@
+[extend]
+useDefault = true
+
+# Allowlist entries belong here, added only for verified false positives.
+# Each entry should have a comment explaining why it is safe.
+# Example:
+#
+# [[allowlists]]
+# id = "example-allowlist"
+# description = "Why this is safe"
+# paths = ['''some/path/.*''']
