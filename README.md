@@ -65,6 +65,10 @@ R package environment:
 renv::restore()
 ```
 
+The required R version is recorded under the `R` key in `renv.lock`. If
+`renv::restore()` fails — for example after upgrading R — see the
+[setup troubleshooting guidance in CONTRIBUTING.md](CONTRIBUTING.md#upgrading-r).
+
 The `pubclassify` package is not on CRAN; it is recorded in `renv.lock` as a
 GitHub dependency, so `renv::restore()` should install it automatically. If you
 need to install or update it manually, use `pak`:

@@ -69,6 +69,54 @@ the locked R package environment:
 renv::restore()
 ```
 
+The required R version is recorded under the `R` key in `renv.lock`. Using a
+different R version may cause compiled packages to fail during `renv::restore()`
+because binary packages are built per R version and source compilation can
+expose API incompatibilities between R releases.
+
+### Upgrading R
+
+If you install a new major or minor R version and `renv::restore()` fails for
+compiled packages, update those packages to versions that support the new R
+release before snapshotting:
+
+```r
+install.packages(c("<failing-package>", ...))
+```
+
+`renv` will install the latest binaries available for your R version. Once the
+failing packages install cleanly, re-run `renv::restore()` to pick up any
+cascade dependencies, then snapshot to record the updated versions:
+
+```r
+renv::snapshot()
+```
+
+Commit the updated `renv.lock` so other contributors and CI pick up the new
+versions.
+
+If you run into compilation errors for specific packages, consult the upstream
+installation documentation before opening an issue here.
+
+R toolchain:
+
+- macOS (compilers, gfortran): [CRAN R for macOS](https://cran.r-project.org/bin/macosx/)
+- Windows (Rtools): [CRAN Rtools](https://cran.r-project.org/bin/windows/Rtools/)
+
+Packages with complex system dependencies:
+
+- **sf / terra / s2 / units** require GDAL, GEOS, PROJ, and libudunits2:
+  [sf installation guide](https://r-spatial.github.io/sf/#installing)
+- **arrow** wraps the Apache Arrow C++ library and can take 10–20 minutes to
+  build from source when binaries are unavailable:
+  [arrow R installation guide](https://arrow.apache.org/docs/r/articles/install.html)
+- **igraph** requires a Fortran compiler (gfortran):
+  [igraph installation guide](https://r.igraph.org/articles/installation-troubleshooting.html)
+- **data.table** has OpenMP and system library requirements:
+  [data.table installation wiki](https://github.com/Rdatatable/data.table/wiki/Installation)
+
+### Credentials
+
 Some full pipeline and classification steps require local credentials:
 
 - `SCOPUS_API_KEY`
