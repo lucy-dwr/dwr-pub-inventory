@@ -1596,7 +1596,7 @@ server <- function(input, output, session) {
     cn_h <- cn |>
       mutate(admin = .harmonize_country(country)) |>
       group_by(admin) |>
-      summarise(n = sum(n), .groups = "drop")
+      summarize(n = sum(n), .groups = "drop")
 
     world_data <- world_sf |>
       left_join(cn_h, by = "admin") |>
@@ -1833,7 +1833,7 @@ server <- function(input, output, session) {
     # Aggregate: count distinct papers per unique node pair
     edges_agg <- base |>
       group_by(node_a, node_b) |>
-      summarise(n_papers = n_distinct(record_key), .groups = "drop") |>
+      summarize(n_papers = n_distinct(record_key), .groups = "drop") |>
       as.data.frame()
 
     # Node degree (number of distinct neighbors)

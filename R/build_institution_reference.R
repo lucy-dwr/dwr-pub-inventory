@@ -24,9 +24,9 @@
 #' }
 #'
 #' @param pubs Tibble with an `affiliations` list column.
-#' @param top_n Number of most-frequent raw strings to canonicalise.
+#' @param top_n Number of most-frequent raw strings to canonicalize.
 #' @param output_path Path to write the reference list.
-#' @param use_llm If `FALSE`, write the raw top-N strings without canonicalising;
+#' @param use_llm If `FALSE`, write the raw top-N strings without canonicalizing;
 #'   useful for a quick manual review pass before committing to an LLM call.
 #' @param batch_size Number of strings per LLM API call (reduce if hitting
 #'   timeouts).

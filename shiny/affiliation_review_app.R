@@ -193,7 +193,7 @@ server <- function(input, output, session) {
     d <- rv$data
     d |>
       group_by(.data$record_key) |>
-      summarise(
+      summarize(
         doi = first(.data$doi),
         doi_url = first(.data$doi_url),
         title = first(.data$title),

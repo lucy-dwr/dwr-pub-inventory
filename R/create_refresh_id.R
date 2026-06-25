@@ -23,7 +23,7 @@ create_refresh_id <- function(pipeline_config = NULL) {
   format(Sys.Date(), "%Y-%m-%d")
 }
 
-#' Initialise a row in the refresh log for a new refresh cycle
+#' Initialize a row in the refresh log for a new refresh cycle
 #'
 #' Creates `data/refresh_log.csv` if it does not exist. Appends a new row for
 #' `refresh_id` with `started_at` set to the current time. If a row for
