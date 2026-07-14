@@ -1434,18 +1434,33 @@ server <- function(input, output, session) {
   # ── Chat ──────────────────────────────────────────────────────────────────
 
   # Create one ellmer chat object per session with the system prompt.
-  # Use chat_openai_compatible to match the pubclassify pipeline's provider.
+  # Dispatch on llm.provider since Claude deployments on Azure AI Foundry
+  # only speak the native Anthropic Messages API, not OpenAI-compatible routes.
   llm_key <- Sys.getenv("PUBCLASSIFY_LLM_KEY", unset = "")
   if (!nzchar(llm_key)) {
     stop("Dashboard chat requires PUBCLASSIFY_LLM_KEY in the environment.", call. = FALSE)
   }
-  chat_obj <- ellmer::chat_openai_compatible(
-    base_url      = pipeline_config$llm$base_url,
-    system_prompt = chat_system_prompt,
-    credentials   = NULL,
-    api_headers   = c(Authorization = paste("Bearer", llm_key)),
-    model         = pipeline_config$llm$model,
-    echo          = "none"
+  chat_obj <- switch(
+    pipeline_config$llm$provider,
+    anthropic = ellmer::chat_anthropic(
+      base_url      = pipeline_config$llm$base_url,
+      system_prompt = chat_system_prompt,
+      credentials   = function() llm_key,
+      model         = pipeline_config$llm$model,
+      echo          = "none"
+    ),
+    `openai-compatible` = ellmer::chat_openai_compatible(
+      base_url      = pipeline_config$llm$base_url,
+      system_prompt = chat_system_prompt,
+      credentials   = NULL,
+      api_headers   = c(Authorization = paste("Bearer", llm_key)),
+      model         = pipeline_config$llm$model,
+      echo          = "none"
+    ),
+    stop(
+      "Unsupported llm.provider in pipeline.yml: ", pipeline_config$llm$provider,
+      call. = FALSE
+    )
   )
 
   register_chat_tools(
