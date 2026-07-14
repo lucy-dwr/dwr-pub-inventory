@@ -1,0 +1,8 @@
+Type: Project
+Package: dwr-pub-inventory
+Title: DWR Publication Inventory
+Version: 0.0.0.9000
+Encoding: UTF-8
+Imports:
+    testthat,
+    withr
