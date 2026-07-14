@@ -161,7 +161,7 @@ Formats citations for papers in the current filtered view, sorted by year or tit
 
 ## Implementation notes
 
-The chat object is created per session in `shiny/dashboard_app.R` using `ellmer::chat_openai_compatible()`. The LLM endpoint and model are read from `config/pipeline.yml`; the API key comes from the `PUBCLASSIFY_LLM_KEY` environment variable. The `shinychat` package renders the chat widget and routes tool calls back to the registered R functions.
+The chat object is created per session in `shiny/dashboard_app.R`. It dispatches on `config/pipeline.yml`'s `llm.provider`: `openai-compatible` uses `ellmer::chat_openai_compatible()` (e.g. Poppy), and `anthropic` uses `ellmer::chat_anthropic()` (e.g. Claude deployments on Azure AI Foundry, which only expose the native Anthropic Messages API and require an `x-api-key` header that `chat_anthropic()` sets automatically). The LLM endpoint, provider, and model are read from `config/pipeline.yml`; the API key comes from the `PUBCLASSIFY_LLM_KEY` environment variable. The `shinychat` package renders the chat widget and routes tool calls back to the registered R functions.
 
 Tool definitions live in `R/dashboard_chat_tools.R` as a single `register_chat_tools()` function called from the server. The system prompt is loaded from `prompts/chat_system_prompt.txt` at app startup using `glue::glue()` to interpolate live filter values (year range, science categories, fields, divisions, etc.).
 

@@ -3399,7 +3399,6 @@
       "License": "MIT + file LICENSE",
       "Encoding": "UTF-8",
       "Roxygen": "list(markdown = TRUE)",
-      "RoxygenNote": "7.3.3",
       "Depends": [
         "R (>= 4.1.0)"
       ],
@@ -3424,13 +3423,14 @@
       ],
       "VignetteBuilder": "knitr",
       "Config/testthat/edition": "3",
+      "Config/roxygen2/version": "8.0.0",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "pubclassify",
       "RemoteUsername": "lucy-dwr",
       "RemotePkgRef": "lucy-dwr/pubclassify",
       "RemoteRef": "HEAD",
-      "RemoteSha": "fbda3f49a833f0982891c101f6d507a507cfc78e",
+      "RemoteSha": "f7ff51de331c951fcb9340d5f47fe84e6eac776a",
       "NeedsCompilation": "no",
       "Author": "Lucy Andrews [aut, cre]",
       "Maintainer": "Lucy Andrews <lucy.andrews@water.ca.gov>"
