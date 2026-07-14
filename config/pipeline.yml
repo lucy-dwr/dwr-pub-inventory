@@ -1,7 +1,7 @@
 llm:
-  base_url: https://stage.cus.gcp.cda.state.ca.gov/api/v1
-  provider: openai-compatible
-  model: Anthropic Claude Sonnet 4.6
+  base_url: https://cog-hrl-ai-prod-qul4qo.services.ai.azure.com/anthropic/v1
+  provider: anthropic
+  model: claude-sonnet-5
 
 scopus:
   allow_api_calls: false
