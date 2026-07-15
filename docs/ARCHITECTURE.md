@@ -95,7 +95,8 @@ targets::tar_make(names = c(dashboard_csv, dashboard_parquet, refresh_log_comple
 | `shiny/affiliation_review_app.R` | Unresolved affiliation review app |
 | `R/dashboard_chat_tools.R` | Dashboard chat tool definitions (`register_chat_tools()`) |
 | `prompts/chat_system_prompt.txt` | Dashboard chat system prompt template |
-| `shiny/dashboard_app.R` | Dashboard app |
+| `shiny/dashboard_app_internal.R` | Internal dashboard app for DWR staff; includes division information and chat |
+| `shiny/dashboard_app_external.R` | Public dashboard app; excludes division information and chat |
 
 ## Key Data Files
 
@@ -196,12 +197,18 @@ column for country-level Institution Map counts, and reads
 `institution_geo_lookup.csv` directly for US state counts and institution popup
 details.
 
-## Dashboard State
+## Dashboard Applications
 
-`shiny/dashboard_app.R` reads `data/generated/dwr_publications.parquet` and
-`data/lookups/institution_geo_lookup.csv`.
+Both `shiny/dashboard_app_internal.R` and `shiny/dashboard_app_external.R` read
+`data/generated/dwr_publications.parquet` and
+`data/lookups/institution_geo_lookup.csv`. They share the publication browsing,
+charts, Institution Map, Publishing Network, and Science Fields functionality.
 
-Implemented dashboard features:
+The internal app is for DWR staff and additionally exposes division information
+and the LLM chat assistant. The public app excludes division information and the
+chat assistant.
+
+Implemented internal-dashboard features:
 
 - keyword search over title, abstract, and authors
 - Division filter using `author_division` and `funding_division`

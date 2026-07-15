@@ -1,17 +1,27 @@
 # DWR Publication Inventory — Dashboard Reference
 
-Design and behavior reference for `shiny/dashboard_app.R`. Covers all four
-tabs (Dashboard, Institution Map, Publishing Network, Science Fields), the data
-model, and the chat assistant. For the pipeline architecture, see
+Design and behavior reference for the dashboard applications. Both
+`shiny/dashboard_app_internal.R` and `shiny/dashboard_app_external.R` provide
+the same four tabs (Dashboard, Institution Map, Publishing Network, Science
+Fields) and shared publication-browsing behavior. This document details the
+internal dashboard's division and chat features; those features are not present
+in the public dashboard. For the pipeline architecture, see
 [`docs/ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Overview
 
-A Shiny app (`shiny/dashboard_app.R`) displaying DWR's peer-reviewed
-publication inventory. It reads from `data/generated/dwr_publications.parquet`
-and `data/lookups/institution_geo_lookup.csv`, both loaded once at startup.
-All visible counts, charts, and table rows update reactively based on the
-user's active filters.
+Two Shiny apps display DWR's peer-reviewed publication inventory:
+
+- `shiny/dashboard_app_internal.R` is for DWR staff. It includes DWR division
+  information and the LLM chat assistant.
+- `shiny/dashboard_app_external.R` is for public viewing. It has the same core
+  browsing, chart, map, network, and science-fields functionality, but does not
+  expose DWR division information or the LLM chat assistant.
+
+Both read from `data/generated/dwr_publications.parquet` and
+`data/lookups/institution_geo_lookup.csv`, loaded once at startup. All visible
+counts, charts, and table rows update reactively based on the user's active
+filters.
 
 ---
 
@@ -35,8 +45,8 @@ Loaded once at startup using `arrow::read_parquet()`. Key columns used:
 | `is_lead_author` | "Lead Authored" stat; contribution type chart       |
 | `is_sole_author` | Sole Author contribution type in chart              |
 | `journal`     | (reserved; not displayed in initial version)           |
-| `funding_division` | Division filter and Articles by Division chart |
-| `author_division` | Division filter and Articles by Division chart |
+| `funding_division` | Internal dashboard: Division filter and Articles by Division chart |
+| `author_division` | Internal dashboard: Division filter and Articles by Division chart |
 
 `pc_category` and `pc_field` are both present in the parquet file — no
 in-app taxonomy join is needed. Category names are title-cased for display.
@@ -259,7 +269,7 @@ refresh log cannot be read, the app falls back to `12/10/2025`.
 
 ---
 
-## Division Data
+## Division Data (Internal Dashboard Only)
 
 The pipeline can add `funding_division` and `author_division` to
 `data/generated/dwr_publications.csv` and `data/generated/dwr_publications.parquet`.
@@ -278,9 +288,23 @@ resolved division assignments. Exports expose those values as `author_division`.
 Blank `funding_division` values mean the record passed funding review but still
 needs a division assignment.
 
-The dashboard uses both division columns for the Division filter and the
-Articles by Division chart. Author divisions can be multi-valued; funding
-division is a single value per record.
+The internal dashboard uses both division columns for the Division filter and
+the Articles by Division chart. Author divisions can be multi-valued; funding
+division is a single value per record. The public dashboard does not display
+these fields or division-derived controls and charts.
+
+---
+
+## CSV Downloads
+
+Both dashboards provide a **Download CSV** menu in the Dashboard control bar.
+**Complete dataset** exports the full inventory, while **Current dashboard view**
+exports records matching the active Dashboard filters and selected science
+category. The viewer-facing CSV includes bibliographic metadata, science
+classification, DWR contribution type, affiliated organizations, affiliation
+countries, DOI, and DOI URL; it excludes pipeline identifiers and provenance
+fields. The internal dashboard additionally exports author and funding division
+columns. The public dashboard does not export division information.
 
 ---
 
@@ -307,7 +331,7 @@ division is a single value per record.
 
 ---
 
-## Chat Interface (Phase 1)
+## Chat Interface (Internal Dashboard Only)
 
 ### Purpose
 

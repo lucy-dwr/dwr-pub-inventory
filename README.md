@@ -102,11 +102,11 @@ control:
 - `shiny/affiliation_review_app.R`: manual review of unresolved canonical
   institution assignments with DOI/title context and canonical-name browsing.
 
-There is also an application for viewing the publication inventory in a dashboard:
+Two dashboard applications provide views of the publication inventory:
 
-- `shiny/dashboard_app.R`: four-tab dashboard for browsing the final exported
-  inventory. The **Dashboard** tab provides filtered publication charts and a
-  table, plus an LLM-powered chat assistant ("Ask the data") that accepts
+- `shiny/dashboard_app_internal.R`: DWR staff dashboard. In addition to the
+  shared dashboard features, it displays DWR division information and provides
+  an LLM-powered chat assistant ("Ask the data") that accepts
   natural-language questions about the inventory. The **Institution Map** tab
   shows a choropleth world map of co-author affiliated institutions by geography
   with hover/click popups. The **Publishing Network** tab shows an interactive
@@ -116,12 +116,18 @@ There is also an application for viewing the publication inventory in a dashboar
   [`shiny/README.md`](shiny/README.md),
   [`docs/CHAT_TOOLS.md`](docs/CHAT_TOOLS.md), and
   [`docs/DASHBOARD.md`](docs/DASHBOARD.md) for details.
+- `shiny/dashboard_app_external.R`: public dashboard. It provides the same
+  publication browsing, charts, map, network, and science-fields functionality
+  without DWR division information or the LLM chat assistant.
 
-To run an application, use `shiny`:
+To run an application, pass its file path as the first argument to `shiny::runApp()`:
 
 ```r
 shiny::runApp("shiny/<app-file>.R")
 ```
+
+For the DWR staff dashboard, use `shiny::runApp("shiny/dashboard_app_internal.R")`.
+For the public dashboard, use `shiny::runApp("shiny/dashboard_app_external.R")`.
 
 The application will then run locally—Shiny will serve it as a local URL, such as
 `http://127.0.0.1:xxxx/`, that can be opened in a browser.
@@ -476,7 +482,8 @@ shiny/                                  # Review and visualization apps
   author_review_app.R
   author_division_resolution_app.R
   affiliation_review_app.R
-  dashboard_app.R
+  dashboard_app_internal.R
+  dashboard_app_external.R
   content/
     about.md                            # Dashboard about panel content
     classification.md                   # Dashboard classification panel content
@@ -508,7 +515,7 @@ renv.lock                               # R dependency lockfile
   semicolon-delimited strings. Includes `funding_division`, `author_division`,
   and `affiliation_countries` when available.
 - `data/generated/dwr_publications.parquet`: full-fidelity dashboard export used by
-  `shiny/dashboard_app.R`. Includes native list columns (including
+  `shiny/dashboard_app_internal.R`. Includes native list columns (including
   `affiliation_countries`) plus joined division fields.
 
 ## Data Reference

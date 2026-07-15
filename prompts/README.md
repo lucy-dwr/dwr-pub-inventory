@@ -48,7 +48,7 @@ Three LLM tasks are used in the pipeline, each with a system prompt and a user t
 
 **File:** `chat_system_prompt.txt`
 
-**Used by:** `shiny/dashboard_app.R` (loaded via `glue::glue()` at app startup)
+**Used by:** `shiny/dashboard_app_internal.R` (loaded via `glue::glue()` at app startup)
 
 **What it does:** Sets the system prompt for the per-session `ellmer` chat object that powers the "Ask the data" chat sidebar. Describes the available tools, when to use each one, tone rules, and how to handle out-of-scope requests.
 

@@ -5,26 +5,18 @@ library(DT)
 library(dplyr)
 library(arrow)
 library(stringr)
-library(shinychat)
-library(ellmer)
 library(leaflet)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(rnaturalearthhires)
 library(sf)
 library(visNetwork)
-library(glue)
-
-# Suppress shinychat tool call/result cards — show final responses only
-options(shinychat.tool_display = "none")
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 if (basename(getwd()) == "shiny") setwd("..")
 .ROOT <- getwd()
 
-source(file.path(.ROOT, "R", "load_pipeline_config.R"))
-source(file.path(.ROOT, "R", "dashboard_chat_tools.R"))
-pipeline_config <- load_pipeline_config(file.path(.ROOT, "config", "pipeline.yml"))
+source(file.path(.ROOT, "R", "dashboard_download.R"))
 
 # ── Load data ──────────────────────────────────────────────────────────────────
 pubs_raw  <- arrow::read_parquet(file.path(.ROOT, "data/generated/dwr_publications.parquet"))
@@ -124,15 +116,6 @@ geo_inst_base <- {
 # ── Publishing Network: constants, base tables, reverse lookups ────────────────
 .DWR_NODE <- "California Department of Water Resources"
 
-# Confirmed DWR authors (for People mode highlighting)
-dwr_author_names <- tryCatch({
-  adf <- read.csv(
-    file.path(.ROOT, "data/decisions/author_division_decisions.csv"),
-    stringsAsFactors = FALSE
-  )
-  unique(adf$author_name[tolower(trimws(adf$decision)) == "dwr"])
-}, error = function(e) character(0L))
-
 # Institution → country for node coloring (reuses geo_lookup already loaded)
 inst_country_map <- setNames(geo_lookup$country, geo_lookup$canonical)
 
@@ -194,10 +177,6 @@ all_affiliations <- sort(unique(na.omit(unlist(pubs_raw$affiliations))))
 all_affiliations <- all_affiliations[nchar(trimws(all_affiliations)) > 0L]
 field_choices    <- c("All", sort(unique(na.omit(pubs$pc_field))))
 
-author_divs_raw  <- unique(trimws(unlist(strsplit(na.omit(pubs_raw$author_division), ";"))))
-funder_divs_raw  <- unique(trimws(na.omit(pubs_raw$funding_division)))
-all_divisions    <- sort(setdiff(unique(c(author_divs_raw, funder_divs_raw)), c("Unknown", "")))
-division_choices <- c("All", all_divisions)
 all_categories   <- sort(unique(str_to_title(na.omit(pubs$pc_category))))
 year_min         <- min(pubs$year, na.rm = TRUE)
 year_max         <- max(pubs$year, na.rm = TRUE)
@@ -221,22 +200,6 @@ CONTRIB_COLORS <- c(
 CATEGORY_COLORS <- c(
   "#1a3a5c", "#2d6a7a", "#4a9cad", "#7dc3d0",
   "#2d7a5f", "#7ec8a0", "#c9a227", "#8a6aad"
-)
-
-# ── Chat system prompt (built once at startup) ─────────────────────────────────
-top_affiliations <- head(all_affiliations, 60L)
-year_default_start <- YEAR_DEFAULT[1L]
-year_default_end   <- YEAR_DEFAULT[2L]
-categories_str     <- paste(all_categories, collapse = "; ")
-fields_str         <- paste(field_choices[-1L], collapse = "; ")
-divisions_str      <- paste(all_divisions, collapse = "; ")
-contrib_types_str  <- paste(CONTRIB_LEVELS, collapse = ", ")
-n_affiliations     <- length(all_affiliations)
-affiliations_str   <- paste(top_affiliations, collapse = "; ")
-
-chat_system_prompt <- glue::glue(
-  paste(readLines(file.path(.ROOT, "prompts", "chat_system_prompt.txt"), warn = FALSE),
-        collapse = "\n")
 )
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
@@ -298,11 +261,8 @@ app_css <- "
     white-space: nowrap;
   }
   .btn-dwr:hover, .btn-dwr:focus { background: #2e4d72 !important; }
-  .btn-chat-toggle { background: #2d7a5f !important; }
-  .btn-chat-toggle:hover, .btn-chat-toggle:focus { background: #235f4a !important; }
-  .btn-chat-toggle.is-open { background: #4a6080 !important; }
-  .btn-chat-toggle.is-open:hover { background: #3a5070 !important; }
-
+  .ctrls-bar .dropdown-menu { font-size: 0.78rem; }
+  .ctrls-bar .dropdown-item { padding: 0.38rem 0.75rem; }
   /* ── Main wrapper ── */
   .main-wrap { padding: 16px 24px 4px; }
 
@@ -316,101 +276,12 @@ app_css <- "
     flex: 0 0 40%;
     min-width: 0;
     overflow: hidden;
-    transition: flex-basis 0.25s ease;
   }
   .panel-right {
     flex: 1;
     min-width: 0;
     overflow: hidden;
   }
-  .chat-sidebar {
-    flex: 0 0 0;
-    overflow: hidden;
-    min-width: 0;
-    transition: flex-basis 0.25s ease;
-  }
-  .main-layout.chat-open .panel-left  { flex-basis: 33%; }
-  .main-layout.chat-open .chat-sidebar {
-    flex: 0 0 340px;
-    overflow: visible;
-  }
-  .chat-sidebar-inner {
-    width: 340px;
-    background: white;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 180px);
-    min-height: 500px;
-    overflow: hidden;
-  }
-  .chat-sidebar-title {
-    font-size: 0.87rem; font-weight: 600; color: white;
-    background: #2d7a5f;
-    padding: 10px 14px;
-    border-radius: 4px 4px 0 0;
-    flex-shrink: 0;
-    display: flex; align-items: flex-start; justify-content: space-between;
-  }
-  .chat-sidebar-title small {
-    display: block; font-weight: 400;
-    font-size: 0.72rem; opacity: 0.85; margin-top: 2px;
-  }
-  .btn-chat-restart {
-    background: none !important; border: 1px solid rgba(255,255,255,0.4) !important;
-    color: rgba(255,255,255,0.85) !important; font-size: 0.66rem !important;
-    padding: 2px 7px !important; border-radius: 3px !important;
-    box-shadow: none !important;
-    flex-shrink: 0; margin-top: 1px; white-space: nowrap;
-  }
-  .btn-chat-restart:hover, .btn-chat-restart:focus, .btn-chat-restart:active {
-    background: rgba(255,255,255,0.15) !important;
-    border-color: rgba(255,255,255,0.6) !important;
-    color: white !important;
-    box-shadow: none !important;
-    outline: none !important;
-  }
-
-  /* Paper-selection filter banner */
-  .papers-banner {
-    background: #f0f5f0; border: 1px solid #b8d8b8;
-    border-radius: 4px; padding: 6px 12px;
-    font-size: 0.76rem; color: #2d7a5f;
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 10px;
-  }
-  .papers-banner a { color: #7a8a9a; font-weight: 700; text-decoration: none; margin-left: 10px; }
-  .papers-banner a:hover { color: #2d7a5f; }
-  /* shinychat fills the remaining space */
-  .chat-sidebar-inner .shiny-chat-container {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  /* Smaller text and flat headings in the chat pane */
-  .chat-sidebar-inner p,
-  .chat-sidebar-inner li,
-  .chat-sidebar-inner td,
-  .chat-sidebar-inner pre,
-  .chat-sidebar-inner code {
-    font-size: 0.78rem !important;
-    line-height: 1.5;
-  }
-  .chat-sidebar-inner h1,
-  .chat-sidebar-inner h2,
-  .chat-sidebar-inner h3,
-  .chat-sidebar-inner h4 {
-    font-size: 0.82rem !important;
-    font-weight: 600;
-    margin: 5px 0 3px;
-  }
-  /* Match input textarea to chat body font size */
-  .chat-sidebar-inner textarea {
-    font-size: 0.78rem !important;
-  }
-
   /* ── Panel cards ── */
   .pcrd {
     background: white; border-radius: 4px;
@@ -460,7 +331,7 @@ app_css <- "
   .filt-row .selectize-input { font-size: 0.81rem; }
   .filt-disabled { opacity: 0.42; pointer-events: none; }
 
-  /* ── Active-filter badge (pie / division) ── */
+  /* ── Active-filter badge ── */
   .active-badge {
     text-align: center; margin-bottom: 7px;
   }
@@ -680,16 +551,6 @@ ui <- fluidPage(
         setTimeout(injectDecades, 300);
       });
 
-      // ── Chat sidebar toggle ──────────────────────────────────────────────────
-      $(document).on('click', '#btn_chat_toggle', function() {
-        var layout   = document.querySelector('.main-layout');
-        var isOpen   = layout.classList.toggle('chat-open');
-        var btn      = document.getElementById('btn_chat_toggle');
-        btn.innerHTML = isOpen ? 'Close chat' : 'Ask the data &#10022;';
-        btn.classList.toggle('is-open', isOpen);
-        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 260);
-      });
-
       // ── Map tab: trigger leaflet resize when tab becomes visible ─────────────
       $(document).on('shown.bs.tab', function() {
         setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
@@ -733,12 +594,18 @@ ui <- fluidPage(
         div(class = "ctrls-spacer"),
         actionButton("btn_sci",   "Science Category & Field Classification", class = "btn-dwr"),
         actionButton("btn_about", "About the Inventory",                     class = "btn-dwr"),
-        actionButton("btn_reset", "Reset",                                   class = "btn-dwr"),
-        tags$button(
-          id    = "btn_chat_toggle",
-          class = "btn-dwr btn-chat-toggle",
-          HTML("Ask the data &#10022;")
-        )
+        div(class = "dropdown",
+          tags$button(
+            type = "button", class = "btn-dwr dropdown-toggle",
+            `data-bs-toggle` = "dropdown", `aria-expanded` = "false",
+            "Download CSV"
+          ),
+          tags$ul(class = "dropdown-menu dropdown-menu-end",
+            tags$li(downloadLink("download_full", "Complete dataset", class = "dropdown-item")),
+            tags$li(downloadLink("download_filtered", "Current dashboard view", class = "dropdown-item"))
+          )
+        ),
+        actionButton("btn_reset", "Reset",                                   class = "btn-dwr")
       ),
 
       div(class = "main-wrap",
@@ -751,28 +618,20 @@ ui <- fluidPage(
               uiOutput("cat_filter_badge"),
               plotlyOutput("pie_category", height = "310px")
             ),
-            div(class = "pcrd",
-              div(class = "pcrd-title", "Articles by Division"),
-              plotlyOutput("bar_division", height = "500px")
-            )
           ),
 
           div(class = "panel-right",
             div(class = "pcrd filt-row",
               fluidRow(
-                column(3,
-                  selectInput("f_div", "Division",
-                    choices = division_choices, width = "100%")
-                ),
-                column(3,
+                column(4,
                   selectInput("f_field", "Science Field",
                     choices = field_choices, width = "100%")
                 ),
-                column(3,
+                column(4,
                   selectInput("f_contrib", "Contribution Type",
                     choices = c("All", CONTRIB_LEVELS), width = "100%")
                 ),
-                column(3,
+                column(4,
                   selectInput("f_affil", "Author Affiliation",
                     choices = c("All", all_affiliations), width = "100%")
                 )
@@ -792,26 +651,6 @@ ui <- fluidPage(
             ),
             div(class = "pcrd",
               DT::dataTableOutput("article_table")
-            )
-          ),
-
-          div(class = "chat-sidebar",
-            div(class = "chat-sidebar-inner",
-              div(class = "chat-sidebar-title",
-                div(
-                  "✶ Ask the data",
-                  tags$small("Search, filter, summarize, and analyze DWR publications")
-                ),
-                actionButton(
-                  "btn_chat_restart", "↺ New chat",
-                  class = "btn-chat-restart",
-                  title = "Clear conversation and start over"
-                )
-              ),
-              shinychat::chat_mod_ui(
-                "chat",
-                placeholder = "e.g. Show hydrology papers from 2015–2022…"
-              )
             )
           )
 
@@ -904,8 +743,6 @@ server <- function(input, output, session) {
 
   # Tracks which science category the user has clicked in the pie chart
   selected_category <- reactiveVal(NULL)
-  # Holds a vector of record_keys when the chat pins specific papers
-  selected_papers   <- reactiveVal(NULL)
 
   # ── Filtered dataset (core reactive) ──────────────────────────────────────
   # filtered_base: all dropdown/slider filters; used by the pie chart itself
@@ -944,23 +781,6 @@ server <- function(input, output, session) {
       df <- df[keep, ]
     }
 
-    # Division (matches author_division or funding_division)
-    if (!isTRUE(input$f_div == "All")) {
-      tgt <- input$f_div
-      keep_author <- vapply(df$author_division, function(d) {
-        if (is.na(d)) return(FALSE)
-        tgt %in% trimws(strsplit(d, ";")[[1L]])
-      }, logical(1L))
-      keep_funder <- !is.na(df$funding_division) &
-        trimws(df$funding_division) == tgt
-      df <- df[keep_author | keep_funder, ]
-    }
-
-    # Exact paper selection (set by filter_to_papers chat tool)
-    sp <- selected_papers()
-    if (!is.null(sp))
-      df <- df[df$record_key %in% sp, ]
-
     df
   })
 
@@ -971,6 +791,22 @@ server <- function(input, output, session) {
       df <- filter(df, str_to_title(pc_category) == cat)
     df
   })
+
+  output$download_full <- downloadHandler(
+    filename = function() paste0("dwr-publications-full-", Sys.Date(), ".csv"),
+    content = function(file) {
+      write.csv(format_dashboard_download(pubs, include_internal_fields = FALSE),
+                file, row.names = FALSE, na = "")
+    }
+  )
+
+  output$download_filtered <- downloadHandler(
+    filename = function() paste0("dwr-publications-current-view-", Sys.Date(), ".csv"),
+    content = function(file) {
+      write.csv(format_dashboard_download(filtered(), include_internal_fields = FALSE),
+                file, row.names = FALSE, na = "")
+    }
+  )
 
   # ── Header year subtitle ───────────────────────────────────────────────────
   output$hdr_years <- renderText({
@@ -1077,96 +913,6 @@ server <- function(input, output, session) {
       config(displayModeBar = FALSE)
   })
 
-  # ── Articles by Division horizontal bar ───────────────────────────────────
-  output$bar_division <- renderPlotly({
-    df <- filtered()
-
-    # Collect unique (record_key, div) pairs from author and funding columns
-    auth_pairs <- do.call(rbind, lapply(
-      which(!is.na(df$author_division)),
-      function(i) {
-        divs <- trimws(strsplit(df$author_division[i], ";")[[1L]])
-        divs <- divs[divs != "Unknown" & nchar(divs) > 0L]
-        if (length(divs) == 0L) return(NULL)
-        data.frame(record_key = df$record_key[i], div = divs,
-                   stringsAsFactors = FALSE)
-      }
-    ))
-    fund_rows <- df[!is.na(df$funding_division), ]
-    fund_pairs <- if (nrow(fund_rows) > 0L) {
-      dv <- trimws(fund_rows$funding_division)
-      ok <- dv != "Unknown" & nchar(dv) > 0L
-      data.frame(record_key = fund_rows$record_key[ok], div = dv[ok],
-                 stringsAsFactors = FALSE)
-    } else NULL
-
-    all_pairs <- unique(rbind(auth_pairs, fund_pairs))
-
-    if (is.null(all_pairs) || nrow(all_pairs) == 0L) {
-      return(plot_ly() |>
-        layout(
-          title         = list(text = "No division data for selection",
-                               font = list(size = 12)),
-          paper_bgcolor = "rgba(0,0,0,0)",
-          plot_bgcolor  = "rgba(0,0,0,0)"
-        ) |> config(displayModeBar = FALSE))
-    }
-
-    # Join contribution_type, then count by division × contribution type
-    all_pairs <- left_join(
-      all_pairs,
-      select(df, record_key, contribution_type),
-      by = "record_key"
-    )
-
-    # Division ordering: ascending total so largest ends at top
-    div_order <- all_pairs |>
-      count(div, name = "total") |>
-      arrange(total) |>
-      pull(div)
-
-    div_counts <- all_pairs |>
-      filter(!is.na(contribution_type)) |>
-      count(div, contribution_type, name = "n") |>
-      mutate(div = factor(div, levels = div_order))
-
-    fig <- plot_ly(source = "div_chart")
-    for (ct in CONTRIB_LEVELS) {
-      d <- filter(div_counts, contribution_type == ct)
-      if (nrow(d) == 0L) next
-      fig <- add_trace(fig,
-        data          = d,
-        x             = ~n,
-        y             = ~div,
-        type          = "bar",
-        orientation   = "h",
-        name          = ct,
-        marker        = list(color = CONTRIB_COLORS[[ct]]),
-        hovertemplate = paste0(ct, ": %{x}<extra></extra>")
-      )
-    }
-
-    fig |>
-      layout(
-        barmode       = "stack",
-        xaxis         = list(title = "", fixedrange = TRUE,
-                             automargin = TRUE, tickformat = "d",
-                             dtick = 20, tick0 = 0,
-                             gridcolor = "#ebebeb"),
-        yaxis         = list(title = "", fixedrange = TRUE, automargin = TRUE,
-                             tickfont = list(size = 9.5),
-                             ticklen = 8, tickcolor = "rgba(0,0,0,0)",
-                             dtick = 1),
-        legend        = list(orientation = "h", y = -0.06, x = 0.5,
-                             xanchor = "center", font = list(size = 10),
-                             itemsizing = "constant"),
-        margin        = list(t = 4, b = 40, l = 4, r = 4),
-        paper_bgcolor = "rgba(0,0,0,0)",
-        plot_bgcolor  = "rgba(0,0,0,0)"
-      ) |>
-      config(displayModeBar = FALSE)
-  })
-
   # ── Category badge (shows active pie selection; × clears it) ─────────────
   output$cat_filter_badge <- renderUI({
     cat <- selected_category()
@@ -1179,21 +925,6 @@ server <- function(input, output, session) {
   observeEvent(input$clear_cat, {
     selected_category(NULL)
     updateSelectInput(session, "f_field", choices = field_choices, selected = "All")
-  })
-
-  output$papers_filter_banner <- renderUI({
-    sp <- selected_papers()
-    if (is.null(sp)) return(NULL)
-    n <- length(sp)
-    div(class = "papers-banner",
-      tags$span(paste0(n, " specific paper", if (n == 1L) "" else "s",
-                       " pinned by chat filter")),
-      actionLink("clear_papers", "Clear ×")
-    )
-  })
-
-  observeEvent(input$clear_papers, {
-    selected_papers(NULL)
   })
 
   # ── Pie click → filter by science category ────────────────────────────────
@@ -1215,21 +946,6 @@ server <- function(input, output, session) {
           pull(pc_field) |> na.omit() |> unique() |> sort()
         updateSelectInput(session, "f_field",
           choices = c("All", fields), selected = "All")
-      }
-    }
-  )
-
-  # ── Division bar click → filter via the f_div dropdown ───────────────────
-  observeEvent(
-    event_data("plotly_click", source = "div_chart", priority = "event"),
-    {
-      click    <- event_data("plotly_click", source = "div_chart", priority = "event")
-      div_name <- as.character(click$y)
-      if (length(div_name) == 0L || is.na(div_name)) return()
-      if (input$f_div == div_name) {
-        updateSelectInput(session, "f_div", selected = "All")
-      } else {
-        updateSelectInput(session, "f_div", selected = div_name)
       }
     }
   )
@@ -1419,10 +1135,8 @@ server <- function(input, output, session) {
   # ── Reset ─────────────────────────────────────────────────────────────────
   observeEvent(input$btn_reset, {
     selected_category(NULL)
-    selected_papers(NULL)
     updateTextInput(  session, "keyword",    value    = "")
     updateSliderInput(session, "year_range", value    = YEAR_DEFAULT)
-    updateSelectInput(session, "f_div",      selected = "All")
     updateSelectInput(session, "f_field",
       choices  = field_choices,
       selected = "All"
@@ -1430,87 +1144,6 @@ server <- function(input, output, session) {
     updateSelectInput(session, "f_contrib", selected = "All")
     updateSelectInput(session, "f_affil",   selected = "All")
   })
-
-  # ── Chat ──────────────────────────────────────────────────────────────────
-
-  # Create one ellmer chat object per session with the system prompt.
-  # Dispatch on llm.provider since Claude deployments on Azure AI Foundry
-  # only speak the native Anthropic Messages API, not OpenAI-compatible routes.
-  llm_key <- Sys.getenv("PUBCLASSIFY_LLM_KEY", unset = "")
-  if (!nzchar(llm_key)) {
-    stop("Dashboard chat requires PUBCLASSIFY_LLM_KEY in the environment.", call. = FALSE)
-  }
-  chat_obj <- switch(
-    pipeline_config$llm$provider,
-    anthropic = ellmer::chat_anthropic(
-      base_url      = pipeline_config$llm$base_url,
-      system_prompt = chat_system_prompt,
-      credentials   = function() llm_key,
-      model         = pipeline_config$llm$model,
-      echo          = "none"
-    ),
-    `openai-compatible` = ellmer::chat_openai_compatible(
-      base_url      = pipeline_config$llm$base_url,
-      system_prompt = chat_system_prompt,
-      credentials   = NULL,
-      api_headers   = c(Authorization = paste("Bearer", llm_key)),
-      model         = pipeline_config$llm$model,
-      echo          = "none"
-    ),
-    stop(
-      "Unsupported llm.provider in pipeline.yml: ", pipeline_config$llm$provider,
-      call. = FALSE
-    )
-  )
-
-  register_chat_tools(
-    chat_obj          = chat_obj,
-    session           = session,
-    input             = input,
-    filtered          = filtered,
-    pubs              = pubs,
-    selected_category = selected_category,
-    selected_papers   = selected_papers,
-    field_choices     = field_choices,
-    YEAR_DEFAULT      = YEAR_DEFAULT,
-    all_categories    = all_categories
-  )
-
-  chat_welcome_msg <- paste0(
-    "**DWR Publication Inventory Assistant**\n\n",
-    "You can ask me to:\n\n",
-    "- **Filter the dashboard** — describe the papers you want to see ",
-    "(\"show lead-authored hydrology papers from 2018 to 2022\")\n",
-    "- **Find and pin specific papers** — \"find papers about groundwater recharge\", ",
-    "then \"filter the dashboard to those papers\"\n",
-    "- **Break down the data** — \"how many papers per division?\" or ",
-    "\"top journals in the current view\"\n",
-    "- **Summarize** — \"summarize the themes in the current selection\"\n",
-    "- **Compare periods** — \"compare output before and after 2020\"\n",
-    "- **Get paper details or citations** — ask for a specific abstract, ",
-    "or format the current selection as a reference list\n",
-    "- **Track collaborations** — \"which institutions does DWR co-author with most?\"\n\n",
-    "Type a question or description to get started."
-  )
-
-  # Hand off to shinychat, which handles streaming and the reactive input loop
-  shinychat::chat_mod_server("chat", chat_obj)
-
-  # Restart: clear chat UI + ellmer history, then re-inject welcome message
-  observeEvent(input$btn_chat_restart, {
-    shinychat::chat_clear("chat-chat", session = session)
-    chat_obj$set_turns(list())
-    shinychat::chat_append(
-      id = "chat-chat", role = "assistant",
-      response = chat_welcome_msg, session = session
-    )
-  })
-
-  # Welcome message — injected once per session; not LLM-generated.
-  shinychat::chat_append(
-    id = "chat-chat", role = "assistant",
-    response = chat_welcome_msg, session = session
-  )
 
   # ── Institution Map ──────────────────────────────────────────────────────────
 
@@ -1917,12 +1550,11 @@ server <- function(input, output, session) {
       nodes_df$x                         <- ifelse(is_dwr, 0, NA_real_)
       nodes_df$y                         <- ifelse(is_dwr, 0, NA_real_)
     } else {
-      is_dwr_auth <- nodes_df$id %in% dwr_author_names
-      nodes_df$color.background          <- ifelse(is_dwr_auth, "#1a2f4a", "#4da87a")
-      nodes_df$color.border              <- ifelse(is_dwr_auth, "#7dc3d0", "#d8e8d8")
-      nodes_df$color.highlight.background <- ifelse(is_dwr_auth, "#2e4d72", "#2d7a5f")
-      nodes_df$font.color                <- ifelse(is_dwr_auth, "white", "#1a2f4a")
-      nodes_df$borderWidth               <- ifelse(is_dwr_auth, 3L, 1L)
+      nodes_df$color.background          <- "#4da87a"
+      nodes_df$color.border              <- "#d8e8d8"
+      nodes_df$color.highlight.background <- "#2d7a5f"
+      nodes_df$font.color                <- "#1a2f4a"
+      nodes_df$borderWidth               <- 1L
     }
 
     # ── Edge data frame ────────────────────────────────────────────────────────
@@ -2029,10 +1661,10 @@ server <- function(input, output, session) {
           )
         } else {
           data.frame(
-            label            = c("DWR Author", "External Author"),
+            label            = "Author",
             shape            = "dot",
-            color.background = c("#1a2f4a", "#4da87a"),
-            color.border     = c("#7dc3d0", "#d8e8d8"),
+            color.background = "#4da87a",
+            color.border     = "#d8e8d8",
             size             = 12,
             stringsAsFactors = FALSE
           )
