@@ -1,12 +1,15 @@
 # Shiny Apps
 
-Five Shiny apps support the manual review and exploration steps of the pipeline. Each app reads from and writes to files in `data/` directly — they do not need a running API server.
+Six Shiny apps support the manual review and exploration steps of the pipeline. Each app reads from and writes to files in `data/` directly — they do not need a running API server.
 
 Launch any app from the project root:
 
 ```r
 shiny::runApp("shiny/<app_file>.R")
 ```
+
+The dashboards are launched with `shiny::runApp("shiny/dashboard_app_internal.R")`
+for DWR staff and `shiny::runApp("shiny/dashboard_app_external.R")` for public viewing.
 
 Or from inside the `shiny/` directory:
 
@@ -60,9 +63,11 @@ Only articles with new/unreviewed affiliations (`new == TRUE`) are shown by defa
 
 ---
 
-### 5. `dashboard_app.R` — Publication inventory dashboard
+### 5. `dashboard_app_internal.R` — Internal publication inventory dashboard
 
-**When to use:** Any time, for exploration. Displays the final accepted publications with filters by year, division, science category, and contribution type. Includes an LLM chat assistant for natural-language queries over the inventory, an Institution Map tab showing where co-author affiliated institutions are located, a Publishing Network tab for co-authorship relationships, and a Science Fields tab listing the taxonomy definitions used for publication classification.
+**Audience:** DWR staff
+
+**When to use:** Any time, for internal exploration. Displays the final accepted publications with filters by year, division, science category, and contribution type. Includes an LLM chat assistant for natural-language queries over the inventory, an Institution Map tab showing where co-author affiliated institutions are located, a Publishing Network tab for co-authorship relationships, and a Science Fields tab listing the taxonomy definitions used for publication classification.
 
 **Reads:** `data/generated/dwr_publications.parquet`, `data/lookups/institution_geo_lookup.csv`
 **Writes:** nothing
@@ -191,6 +196,19 @@ category, field, and definition used by the publication classifier. It reads the
 same `taxonomy/dwr_disciplines_taxonomy.csv` file used by the pipeline, title-
 cases category and field names for display, and bolds the leading definition
 sentence to make scanning easier.
+
+---
+
+### 6. `dashboard_app_external.R` — Public publication inventory dashboard
+
+**Audience:** Public
+
+**When to use:** Public exploration of the final accepted publications. It provides the same Dashboard, Institution Map, Publishing Network, and Science Fields tabs and the same non-division filters, charts, table, and interactions as the internal dashboard.
+
+**Reads:** `data/generated/dwr_publications.parquet`, `data/lookups/institution_geo_lookup.csv`
+**Writes:** nothing
+
+The public dashboard does not display DWR division information and does not include the LLM chat assistant.
 
 ---
 
