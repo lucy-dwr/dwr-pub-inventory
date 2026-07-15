@@ -24,6 +24,7 @@ if (basename(getwd()) == "shiny") setwd("..")
 
 source(file.path(.ROOT, "R", "load_pipeline_config.R"))
 source(file.path(.ROOT, "R", "dashboard_chat_tools.R"))
+source(file.path(.ROOT, "R", "dashboard_download.R"))
 pipeline_config <- load_pipeline_config(file.path(.ROOT, "config", "pipeline.yml"))
 
 # ── Load data ──────────────────────────────────────────────────────────────────
@@ -298,6 +299,8 @@ app_css <- "
     white-space: nowrap;
   }
   .btn-dwr:hover, .btn-dwr:focus { background: #2e4d72 !important; }
+  .ctrls-bar .dropdown-menu { font-size: 0.78rem; }
+  .ctrls-bar .dropdown-item { padding: 0.38rem 0.75rem; }
   .btn-chat-toggle { background: #2d7a5f !important; }
   .btn-chat-toggle:hover, .btn-chat-toggle:focus { background: #235f4a !important; }
   .btn-chat-toggle.is-open { background: #4a6080 !important; }
@@ -733,6 +736,17 @@ ui <- fluidPage(
         div(class = "ctrls-spacer"),
         actionButton("btn_sci",   "Science Category & Field Classification", class = "btn-dwr"),
         actionButton("btn_about", "About the Inventory",                     class = "btn-dwr"),
+        div(class = "dropdown",
+          tags$button(
+            type = "button", class = "btn-dwr dropdown-toggle",
+            `data-bs-toggle` = "dropdown", `aria-expanded` = "false",
+            "Download CSV"
+          ),
+          tags$ul(class = "dropdown-menu dropdown-menu-end",
+            tags$li(downloadLink("download_full", "Complete dataset", class = "dropdown-item")),
+            tags$li(downloadLink("download_filtered", "Current dashboard view", class = "dropdown-item"))
+          )
+        ),
         actionButton("btn_reset", "Reset",                                   class = "btn-dwr"),
         tags$button(
           id    = "btn_chat_toggle",
@@ -971,6 +985,22 @@ server <- function(input, output, session) {
       df <- filter(df, str_to_title(pc_category) == cat)
     df
   })
+
+  output$download_full <- downloadHandler(
+    filename = function() paste0("dwr-publications-full-", Sys.Date(), ".csv"),
+    content = function(file) {
+      write.csv(format_dashboard_download(pubs, include_internal_fields = TRUE),
+                file, row.names = FALSE, na = "")
+    }
+  )
+
+  output$download_filtered <- downloadHandler(
+    filename = function() paste0("dwr-publications-current-view-", Sys.Date(), ".csv"),
+    content = function(file) {
+      write.csv(format_dashboard_download(filtered(), include_internal_fields = TRUE),
+                file, row.names = FALSE, na = "")
+    }
+  )
 
   # ── Header year subtitle ───────────────────────────────────────────────────
   output$hdr_years <- renderText({

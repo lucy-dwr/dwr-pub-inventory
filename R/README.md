@@ -30,6 +30,7 @@ These functions are called directly from `_targets.R` as pipeline targets.
 | `append_accepted_publications.R` | `append_accepted_publications()` | Appends newly accepted records to `data/generated/accepted_publications.parquet` |
 | `join_author_division.R` | `join_author_division()` | Adds `author_division` using HR lookup and manual division decisions |
 | `join_funding_division.R` | `join_funding_division()` | Adds `funding_division` from the funding division lookup |
+| `dashboard_download.R` | `format_dashboard_download()` | Formats viewer-facing dashboard CSV downloads, with optional internal division fields |
 | `update_funding_division_lookup.R` | `update_funding_division_lookup()` | Syncs accepted funder publications into `data/lookups/funding_division_lookup.csv` |
 | `load_pipeline_config.R` | `load_pipeline_config()` | Reads `config/pipeline.yml` into a named list |
 

@@ -295,6 +295,19 @@ these fields or division-derived controls and charts.
 
 ---
 
+## CSV Downloads
+
+Both dashboards provide a **Download CSV** menu in the Dashboard control bar.
+**Complete dataset** exports the full inventory, while **Current dashboard view**
+exports records matching the active Dashboard filters and selected science
+category. The viewer-facing CSV includes bibliographic metadata, science
+classification, DWR contribution type, affiliated organizations, affiliation
+countries, DOI, and DOI URL; it excludes pipeline identifiers and provenance
+fields. The internal dashboard additionally exports author and funding division
+columns. The public dashboard does not export division information.
+
+---
+
 ## R Packages Required
 
 | Package       | Use                                          |

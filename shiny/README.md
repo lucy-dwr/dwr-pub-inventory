@@ -210,6 +210,15 @@ sentence to make scanning easier.
 
 The public dashboard does not display DWR division information and does not include the LLM chat assistant.
 
+#### CSV downloads
+
+Both dashboards provide a **Download CSV** menu with **Complete dataset** and
+**Current dashboard view** options. The current-view download reflects the
+active Dashboard filters. Downloads use viewer-friendly publication metadata,
+including DOI and DOI URL, rather than pipeline provenance fields. The internal
+download also includes author and funding division columns; the public download
+does not.
+
 ---
 
 ## Prerequisites
