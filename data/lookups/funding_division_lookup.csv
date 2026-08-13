@@ -26,7 +26,7 @@ doi,doi_url,year,title,division,new
 10.1016/j.agrformet.2025.110735,https://doi.org/10.1016/j.agrformet.2025.110735,2025,Dynamic methane emissions in a restored wetland: Decadal insights into uncertain climate outcomes and critical science needs,Multibenefit Initiatives,FALSE
 10.1016/j.apsoil.2025.106419,https://doi.org/10.1016/j.apsoil.2025.106419,2025,Effects of grazing exclusion and pasture management on soil microbial communities in Californian irrigated pastures,Regional Assistance,FALSE
 10.1016/j.coche.2024.101078,https://doi.org/10.1016/j.coche.2024.101078,2025,Distributed water desalination and purification systems: perspective and future directions,,TRUE
-10.1016/j.ejrh.2025.102339,https://doi.org/10.1016/j.ejrh.2025.102339,2025,Enhancing the accuracy and generalizability of reference evapotranspiration forecasting in California using deep global learning,SWP - Model Support,FALSE
+10.1016/j.ejrh.2025.102339,https://doi.org/10.1016/j.ejrh.2025.102339,2025,Enhancing the accuracy and generalizability of reference evapotranspiration forecasting in California using deep global learning,SWP - Modeling Support Office,FALSE
 10.1016/j.envsoft.2025.106372,https://doi.org/10.1016/j.envsoft.2025.106372,2025,Texture2Par: A texture-driven tool for estimating subsurface hydraulic properties,Regional Assistance,FALSE
 10.1016/j.jhydrol.2025.133362,https://doi.org/10.1016/j.jhydrol.2025.133362,2025,A regional assessment of the operational National Water Model in the San Francisco Bay area for the 2018-2019 water year,,TRUE
 10.1016/j.jhydrol.2025.133401,https://doi.org/10.1016/j.jhydrol.2025.133401,2025,What is the current state and potential for hydrologic models to simulate vegetation dynamically?,Regional Assistance,FALSE
@@ -58,7 +58,7 @@ doi,doi_url,year,title,division,new
 10.1071/wf25136,https://doi.org/10.1071/wf25136,2025,Insights from a 25-year database of post-fire debris flows in California,Flood Operations,FALSE
 10.1088/1748-9326/ade45b,https://doi.org/10.1088/1748-9326/ade45b,2025,"Explaining hot spots of methane flux in a restored wetland: the role of water level, soil disturbance, and methanotrophy",,TRUE
 10.1088/2515-7620/add3cc,https://doi.org/10.1088/2515-7620/add3cc,2025,The 1991 California ‘Miracle March’: precipitation myth or miracle?,Flood Operations,FALSE
-10.1093/tafafs/vnae009,https://doi.org/10.1093/tafafs/vnae009,2025,Size mediates relative risk and anti-predation response in juvenile sturgeon,SWP - Model Support,FALSE
+10.1093/tafafs/vnae009,https://doi.org/10.1093/tafafs/vnae009,2025,Size mediates relative risk and anti-predation response in juvenile sturgeon,SWP - Modeling Support Office,FALSE
 10.1111/1755-0998.13777,https://doi.org/10.1111/1755-0998.13777,2025,Rapid CRISPR-Cas13a genetic identification enables new opportunities for listed Chinook salmon management,SWP - Integrated Science and Engineering,FALSE
 10.1111/eva.70168,https://doi.org/10.1111/eva.70168,2025,Population Genomic Insights Into Recent Nutria (Myocastor coypus) Invasion Dynamics,Flood Operations,FALSE
 10.1111/gwat.13474,https://doi.org/10.1111/gwat.13474,2025,ARCHI: A New R Package for Automated Imputation of Regionally Correlated Hydrologic Records,,TRUE
@@ -138,7 +138,7 @@ doi,doi_url,year,title,division,new
 10.15447/sfews.2024v22iss1art1,https://doi.org/10.15447/sfews.2024v22iss1art1,2024,The Anatomy of a Drought in the Upper San Francisco Estuary: Water Quality and Lower-Trophic Responses to Multi-Year Droughts,SWP - Integrated Science and Engineering,FALSE
 10.15447/sfews.2024v22iss2art2,https://doi.org/10.15447/sfews.2024v22iss2art2,2024,Spatial Patterns of Water Supply and Use in California,,TRUE
 10.15447/sfews.2024v22iss2art4,https://doi.org/10.15447/sfews.2024v22iss2art4,2024,Regional Diversity Trends of Nearshore Fish Assemblages of the Upper San Francisco Estuary,,TRUE
-10.15447/sfews.2024v22iss4art4,https://doi.org/10.15447/sfews.2024v22iss4art4,2024,Individual-Based Ecological Particle-Tracking Model (ECO-PTM) for Simulating Juvenile Chinook Salmon Migration and Survival Through the Sacramento-San Joaquin Delta,SWP - Model Support,FALSE
+10.15447/sfews.2024v22iss4art4,https://doi.org/10.15447/sfews.2024v22iss4art4,2024,Individual-Based Ecological Particle-Tracking Model (ECO-PTM) for Simulating Juvenile Chinook Salmon Migration and Survival Through the Sacramento-San Joaquin Delta,SWP - Modeling Support Office,FALSE
 10.3389/frwa.2024.1445722,https://doi.org/10.3389/frwa.2024.1445722,2024,Reconstructing 169 years of historical atmospheric and hydrologic conditions in the American River Watershed through the Watershed Environmental Hydrology Hydro-Climate Model system,Flood Operations,FALSE
 10.3390/hydrology11120211,https://doi.org/10.3390/hydrology11120211,2024,Characterizing Soil and Bedrock Water Use of Native California Vegetation,Sustainable Groundwater Management,FALSE
 10.5194/hess-28-3079-2024,https://doi.org/10.5194/hess-28-3079-2024,2024,Improving runoff simulation in the Western United States with Noah-MP and variable infiltration capacity,Flood Operations,FALSE
@@ -215,8 +215,8 @@ doi,doi_url,year,title,division,new
 10.3390/atmos14121832,https://doi.org/10.3390/atmos14121832,2023,Performance of the PERSIANN Family of Products over the Mekong River Basin and Their Application for the Analysis of Trends in Extreme Precipitation Indices,Flood Operations,FALSE
 10.3390/w15040762,https://doi.org/10.3390/w15040762,2023,Post-Wildfire Debris Flow and Large Woody Debris Transport Modeling from the North Complex Fire to Lake Oroville,,TRUE
 10.3390/w15050847,https://doi.org/10.3390/w15050847,2023,Field Evaluation of UF Filtration Pretreatment Impact on RO Membrane Scaling,Regional Assistance,FALSE
-10.3390/w15132320,https://doi.org/10.3390/w15132320,2023,Physics-Informed Neural Networks-Based Salinity Modeling in the Sacramento-San Joaquin Delta of California,SWP - Model Support,FALSE
-10.3390/w15132482,https://doi.org/10.3390/w15132482,2023,Salinity Modeling Using Deep Learning with Data Augmentation and Transfer Learning,SWP - Model Support,FALSE
+10.3390/w15132320,https://doi.org/10.3390/w15132320,2023,Physics-Informed Neural Networks-Based Salinity Modeling in the Sacramento-San Joaquin Delta of California,SWP - Modeling Support Office,FALSE
+10.3390/w15132482,https://doi.org/10.3390/w15132482,2023,Salinity Modeling Using Deep Learning with Data Augmentation and Transfer Learning,SWP - Modeling Support Office,FALSE
 10.3733/ca.2023a0001,https://doi.org/10.3733/ca.2023a0001,2023,Long-term reduced tillage and winter cover crops can improve soil quality without depleting moisture,Regional Assistance,FALSE
 10.51492/cfwj.109.9,https://doi.org/10.51492/cfwj.109.9,2023,Ceratonova shasta infection in lower Feather River Chinook juveniles and trends in water-borne spore stages,SWP - Operations and Maintenance,FALSE
 10.1002/ece3.8541,https://doi.org/10.1002/ece3.8541,2022,A niche for null models in adaptive resource management,,TRUE
@@ -227,7 +227,7 @@ doi,doi_url,year,title,division,new
 10.1002/rra.4032,https://doi.org/10.1002/rra.4032,2022,Experimental evaluation of louver guidance efficiency for green sturgeon (Acipenser medirostris),SWP - Integrated Science and Engineering,FALSE
 10.1007/s00382-021-05944-0,https://doi.org/10.1007/s00382-021-05944-0,2022,Causal effect of the tropical Pacific sea surface temperature on the Upper Colorado River Basin spring precipitation,Flood Operations,FALSE
 10.1007/s10592-022-01446-6,https://doi.org/10.1007/s10592-022-01446-6,2022,Landscape genetics of an endangered salt marsh endemic: Identifying population continuity and barriers to dispersal,SWP - Integrated Science and Engineering,FALSE
-10.1007/s10641-022-01273-1,https://doi.org/10.1007/s10641-022-01273-1,2022,"Quantifying the effects of tides, river flow, and barriers on movements of Chinook Salmon smolts at junctions in the Sacramento - San Joaquin River Delta using multistate models",SWP - Model Support,FALSE
+10.1007/s10641-022-01273-1,https://doi.org/10.1007/s10641-022-01273-1,2022,"Quantifying the effects of tides, river flow, and barriers on movements of Chinook Salmon smolts at junctions in the Sacramento - San Joaquin River Delta using multistate models",SWP - Modeling Support Office,FALSE
 10.1007/s12237-021-00977-4,https://doi.org/10.1007/s12237-021-00977-4,2022,"Monitoring Vegetation Dynamics at a Tidal Marsh Restoration Site: Integrating Field Methods, Remote Sensing and Modeling",,TRUE
 10.1007/s12237-021-01024-y,https://doi.org/10.1007/s12237-021-01024-y,2022,"Spatial Heterogeneity in Prey Availability, Feeding Success, and Dietary Selectivity for the Threatened Longfin Smelt",SWP - Integrated Science and Engineering,FALSE
 10.1007/s12237-022-01079-5,https://doi.org/10.1007/s12237-022-01079-5,2022,Efficacy and Fate of Fluridone Applications for Control of Invasive Submersed Aquatic Vegetation in the Estuarine Environment of the Sacramento-San Joaquin Delta,SWP - Integrated Science and Engineering,FALSE
@@ -289,7 +289,7 @@ doi,doi_url,year,title,division,new
 10.3390/rs14153675,https://doi.org/10.3390/rs14153675,2022,The Application of PERSIANN Family Datasets for Hydrological Modeling,Flood Operations,FALSE
 10.3390/w14132030,https://doi.org/10.3390/w14132030,2022,Multi-Location Emulation of a Process-Based Salinity Model Using Machine Learning,,TRUE
 10.3390/w14152384,https://doi.org/10.3390/w14152384,2022,"Developing a Decision Support System for Regional Agricultural Nonpoint Salinity Pollution Management: Application to the San Joaquin River, California",,TRUE
-10.3390/w14223628,https://doi.org/10.3390/w14223628,2022,Novel Salinity Modeling Using Deep Learning for the Sacramento-San Joaquin Delta of California,SWP - Model Support,FALSE
+10.3390/w14223628,https://doi.org/10.3390/w14223628,2022,Novel Salinity Modeling Using Deep Learning for the Sacramento-San Joaquin Delta of California,SWP - Modeling Support Office,FALSE
 10.51492/cfwj.108.21,https://doi.org/10.51492/cfwj.108.21,2022,Incorporating expanded sampling into an alternative abundance index for the Fall Midwater Trawl survey,,TRUE
 10.5194/soil-8-177-2022,https://doi.org/10.5194/soil-8-177-2022,2022,Long-term impact of cover crop and reduced disturbance tillage on soil pore size distribution and soil water storage,,TRUE
 10.7589/jwd-d-21-00059,https://doi.org/10.7589/jwd-d-21-00059,2022,PARASITES OF AN ENDANGERED HARVEST MOUSE (REITHRODONTOMYS RAVIVENTRIS HALICOETES) IN A NORTHERN CALIFORNIA MARSH,SWP - Integrated Science and Engineering,FALSE
@@ -361,8 +361,8 @@ doi,doi_url,year,title,division,new
 10.15447/sfews.2021v19iss3art3,https://doi.org/10.15447/sfews.2021v19iss3art3,2021,Use of a Managed Flow Pulse as Food Web Support for Estuarine Habitat,SWP - Integrated Science and Engineering,FALSE
 10.15447/sfews.2021v19iss3art5,https://doi.org/10.15447/sfews.2021v19iss3art5,2021,Wetland Availability Salinity Concentrations for Breeding Waterfowl in Suisun Marsh California,SWP - Integrated Science and Engineering,FALSE
 10.15447/sfews.2021v19iss4art2,https://doi.org/10.15447/sfews.2021v19iss4art2,2021,Patterns of Water Use in California,Planning,FALSE
-10.15447/sfews.2021v19iss4art3,https://doi.org/10.15447/sfews.2021v19iss4art3,2021,A Survey of X2 Isohaline Empirical Models for the San Francisco Estuary,SWP - Model Support,FALSE
-10.15447/sfews.2021v19iss4art4,https://doi.org/10.15447/sfews.2021v19iss4art4,2021,Apparent Seasonal Bias in Delta Outflow Estimates as Revealed in the Historical Salinity Record of the San Francisco Estuary: Implications for Delta Net Channel Depletion Estimates,SWP - Model Support,FALSE
+10.15447/sfews.2021v19iss4art3,https://doi.org/10.15447/sfews.2021v19iss4art3,2021,A Survey of X2 Isohaline Empirical Models for the San Francisco Estuary,SWP - Modeling Support Office,FALSE
+10.15447/sfews.2021v19iss4art4,https://doi.org/10.15447/sfews.2021v19iss4art4,2021,Apparent Seasonal Bias in Delta Outflow Estimates as Revealed in the Historical Salinity Record of the San Francisco Estuary: Implications for Delta Net Channel Depletion Estimates,SWP - Modeling Support Office,FALSE
 10.2166/nh.2020.267,https://doi.org/10.2166/nh.2020.267,2021,Analysis of topographic controls on depletion curves derived from airborne lidar snow depth data,Flood Operations,FALSE
 10.3389/fenvs.2021.642906,https://doi.org/10.3389/fenvs.2021.642906,2021,UAV to Inform Restoration: A Case Study From a California Tidal Marsh,Regional Assistance,FALSE
 10.3389/fmicb.2021.632264,https://doi.org/10.3389/fmicb.2021.632264,2021,"Covariance of Phytoplankton, Bacteria, and Zooplankton Communities Within Microcystis Blooms in San Francisco Estuary",SWP - Integrated Science and Engineering,FALSE
