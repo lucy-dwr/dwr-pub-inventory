@@ -55,3 +55,6 @@ rsconnect/
 data/queues/*.parquet
 data/harvests/*.parquet
 data/lookups/author_division_lookup.csv
+
+# Generated presentation figures
+figures/output/
