@@ -568,8 +568,7 @@ ui <- fluidPage(
       )
     ),
     div(class = "hdr-center",
-      tags$h1("PEER-REVIEWED PUBLICATION INVENTORY"),
-      div(class = "yr-sub", textOutput("hdr_years", inline = TRUE))
+      tags$h1("PEER-REVIEWED PUBLICATION INVENTORY")
     ),
     div(class = "hdr-contact",
       tags$span(class = "ctlbl", "Contact"),
@@ -807,12 +806,6 @@ server <- function(input, output, session) {
                 file, row.names = FALSE, na = "")
     }
   )
-
-  # ── Header year subtitle ───────────────────────────────────────────────────
-  output$hdr_years <- renderText({
-    yr <- input$year_range
-    paste0(yr[1L], "\u2013", yr[2L])
-  })
 
   # ── Featured article (static — does not react to filters) ─────────────────
   output$featured_ui <- renderUI({
