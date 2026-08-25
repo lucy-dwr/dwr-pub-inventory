@@ -45,6 +45,7 @@ vignettes/*.pdf
 # pkgdown site
 docs/*
 !docs/*.md
+!docs/inventory_update_tutorial.R
 
 # translation temp files
 po/*~

@@ -19,6 +19,10 @@ and write publication datasets for downstream use.
 
 ## TL;DR
 
+For a runnable, step-by-step version of this workflow, use
+[`docs/inventory_update_tutorial.R`](docs/inventory_update_tutorial.R) from the
+repository root.
+
 To refresh the inventory:
 
 ```r
