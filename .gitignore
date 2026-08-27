@@ -52,6 +52,9 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
+# targets runtime cache
+_targets/
+
 data/queues/*.parquet
 data/harvests/*.parquet
 data/lookups/author_division_lookup.csv
