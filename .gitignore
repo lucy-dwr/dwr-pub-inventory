@@ -45,7 +45,6 @@ vignettes/*.pdf
 # pkgdown site
 docs/*
 !docs/*.md
-!docs/inventory_update_tutorial.R
 
 # translation temp files
 po/*~
@@ -56,6 +55,7 @@ rsconnect/
 data/queues/*.parquet
 data/harvests/*.parquet
 data/lookups/author_division_lookup.csv
+data/generated/llm_rate_limit.csv
 
 # Generated presentation figures
 figures/output/

@@ -20,7 +20,7 @@ and write publication datasets for downstream use.
 ## TL;DR
 
 For a runnable, step-by-step version of this workflow, use
-[`docs/inventory_update_tutorial.R`](docs/inventory_update_tutorial.R) from the
+[`scripts/inventory_update_tutorial.R`](scripts/inventory_update_tutorial.R) from the
 repository root.
 
 To refresh the inventory:
@@ -105,6 +105,9 @@ control:
   DWR authors whose division could not be resolved automatically.
 - `shiny/affiliation_review_app.R`: manual review of unresolved canonical
   institution assignments with DOI/title context and canonical-name browsing.
+
+For the shared evidence standard, decision definitions, score explanations, and
+review precedents, use the [Review Quality Control Guide](docs/REVIEW_QUALITY_CONTROL.md).
 
 Two dashboard applications provide views of the publication inventory:
 
@@ -331,19 +334,38 @@ parses the JSON response returned by the model, and adds classification fields
 such as `pc_field`. The pipeline then joins the corresponding top-level taxonomy
 category as `pc_category`.
 
-If the LLM returns a malformed response (e.g., a duplicate index or an
-unrecognized category), the classifier logs a warning and leaves `pc_field` and
-`pc_rationale` as `NA` for that batch. The retry logic in `pubclassify` retries
-failed batches up to three times, but persistent failures can still leave a small
-number of records unclassified. If `tar_meta(fields = warnings, complete_only = TRUE)`
-shows classification warnings after a pipeline run, use the recovery script:
+If the LLM returns a malformed response, a rate limit response, or an
+unrecognized category, the pipeline retries the affected batch after a delayed
+backoff. If it still cannot classify the batch, the target stops **before** new
+records are appended; it does not silently accept missing taxonomy labels.
+
+### LLM rate limits
+
+The active Azure Foundry endpoint has an effective per-user/model limit of
+2,000 output tokens per minute. `config/pipeline.yml` records that constraint
+under `llm.rate_limit`. The pipeline uses a shared on-disk rolling-window ledger
+(`data/generated/llm_rate_limit.csv`) across affiliation labeling, geocoding,
+and classification, so one LLM phase cannot immediately exhaust capacity needed
+by the next.
+
+When changing to another endpoint or deployment, update these settings based on
+the provider's documented **output token** limit: `output_tokens_per_minute`,
+`safety_fraction`, the per-task batch sizes, and maximum output token budgets.
+Keep the safety margin unless the limit is exclusive to this pipeline. The
+pipeline stops after `max_attempts` delayed retries rather than writing partial
+classifications. At the default 2,000-output-token/minute limit, large refreshes
+will intentionally pause between LLM batches; that is expected behavior.
+
+`scripts/patch_classify_na.R` remains available to repair records accepted by
+older pipeline versions that already have missing classification fields:
 
 ```r
 Rscript scripts/patch_classify_na.R
 ```
 
-This classifies any `accepted_publications.parquet` rows with `NA` `pc_field` and
-patches the file in place. Afterwards, run
+This classifies any `accepted_publications.parquet` rows with missing or literal
+`"NA"` `pc_field` values and patches the file in place using the same rate-limit
+settings. Afterwards, run
 `targets::tar_make(names = c(dashboard_csv, dashboard_parquet))` to refresh the
 dashboard exports.
 
