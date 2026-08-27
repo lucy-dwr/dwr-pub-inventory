@@ -75,6 +75,28 @@ test_that("column sets are aligned when new records have extra columns", {
   expect_true("extra_col" %in% names(result))
 })
 
+test_that("flattens nested list columns before appending", {
+  path <- tempfile(fileext = ".parquet")
+  on.exit(unlink(path))
+
+  pubs_first <- dplyr::mutate(
+    make_accepted_pubs("eid:001"),
+    affiliations = list(c("California Department of Water Resources"))
+  )
+  pubs_second <- dplyr::mutate(
+    make_accepted_pubs("eid:002"),
+    affiliations = list(list(c("University of California", "Davis")))
+  )
+
+  append_accepted_publications(pubs_first, "2026-06-01", accepted_path = path)
+  expect_no_error(
+    append_accepted_publications(pubs_second, "2026-06-02", accepted_path = path)
+  )
+
+  result <- arrow::read_parquet(path)
+  expect_equal(result$affiliations[[2L]], c("University of California", "Davis"))
+})
+
 test_that("returns the accepted_path file path", {
   path <- tempfile(fileext = ".parquet")
   on.exit(unlink(path))

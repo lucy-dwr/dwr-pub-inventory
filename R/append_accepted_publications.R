@@ -51,8 +51,21 @@ append_accepted_publications <- function(
       # Align column sets before binding (across() can't add new columns)
       only_in_existing  <- setdiff(names(existing),  names(to_append))
       only_in_new       <- setdiff(names(to_append), names(existing))
-      for (col in only_in_new)      existing[[col]]  <- NA
-      for (col in only_in_existing) to_append[[col]] <- NA
+      for (col in only_in_new) {
+        existing[[col]] <- .missing_column_like(to_append[[col]], nrow(existing))
+      }
+      for (col in only_in_existing) {
+        to_append[[col]] <- .missing_column_like(existing[[col]], nrow(to_append))
+      }
+
+      # Arrow restores Parquet list columns as base lists, while upstream APIs
+      # can supply nested lists for the same fields. Normalize both sides at
+      # this durable-table boundary so vctrs can bind them consistently.
+      list_cols <- names(existing)[vapply(existing, is.list, logical(1L))]
+      for (col in list_cols) {
+        existing[[col]] <- lapply(existing[[col]], .flatten_character_list)
+        to_append[[col]] <- lapply(to_append[[col]], .flatten_character_list)
+      }
       combined <- dplyr::bind_rows(existing, to_append)
     } else {
       combined <- existing
@@ -68,4 +81,18 @@ append_accepted_publications <- function(
 
   arrow::write_parquet(combined, accepted_path)
   accepted_path
+}
+
+#' Flatten one list-column element to a character vector
+#'
+#' @noRd
+.flatten_character_list <- function(x) {
+  as.character(unlist(x, recursive = TRUE, use.names = FALSE))
+}
+
+#' Create missing values compatible with an existing column
+#'
+#' @noRd
+.missing_column_like <- function(x, n) {
+  if (is.list(x)) rep(list(character(0L)), n) else rep(NA, n)
 }
