@@ -249,4 +249,3 @@ See [`docs/DASHBOARD.md`](DASHBOARD.md) for the dashboard design reference.
 - `refresh_log_completed` currently records funder-oriented review counts; it
   does not separately record author review counts.
 - The funder review app does not capture acknowledgments text.
-- The dashboard still has placeholder modal text.
