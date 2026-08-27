@@ -52,7 +52,19 @@ If you are new to GitHub contributions, the usual workflow is:
 3. Make focused edits, commit them with a clear message, and push the branch to
    your fork.
 4. Open a pull request back to this repository's `main` branch.
-5. Respond to review comments by pushing additional commits to the same branch.
+5. Wait for the R tests and Secrets scan checks to complete successfully, then
+   respond to any review comments by pushing additional commits to the same
+   branch.
+
+The `main` branch is protected by an active GitHub ruleset. It requires the
+current commit to pass the `testthat` and `betterleaks` checks, prevents branch
+deletion, prevents non-fast-forward updates, and requires a pull request for
+all changes. Contributors must wait for a successful CI run before merging.
+
+The repository's default code owner is currently `@lucy-dwr`. This repository
+does not require code owner review, but maintainers should update
+`.github/CODEOWNERS` when ownership changes so review requests reach the
+appropriate people.
 
 GitHub's documentation has more step-by-step detail:
 
@@ -140,6 +152,10 @@ If your change affects refresh logic, review queues, decision files, or dashboar
 exports, include tests that cover the changed behavior where practical, and
 ensure that any test changes prove that no regression has occurred.
 
+GitHub Actions also runs this same test suite in the **R tests** workflow on
+every push and pull request. The workflow restores the project with `renv` on
+Ubuntu before running `testthat::test_dir("tests/testthat")`.
+
 ## Pipeline Safety
 
 Scopus API calls are disabled by default in `config/pipeline.yml`. Only set
@@ -154,12 +170,12 @@ review step in the pull request.
 
 ### Secrets scanning
 
-All pull requests and pushes to `main` are scanned for accidentally committed
-secrets by a [betterleaks](https://github.com/betterleaks/betterleaks) workflow
-in GitHub Actions. The `betterleaks` check is a required status check — pull
-requests cannot be merged unless it passes. The workflow uses a committed
-baseline (`betterleaks-baseline.json`) so it only fails on findings that are
-new relative to that baseline.
+All pushes and pull requests are scanned for accidentally committed secrets by
+the [betterleaks](https://github.com/betterleaks/betterleaks) **Secrets scan**
+workflow in GitHub Actions. The workflow uses a committed baseline
+(`betterleaks-baseline.json`) so it only fails on findings that are new relative
+to that baseline. The `betterleaks` check is required by the active `main`
+ruleset; do not merge until it passes.
 
 A local pre-commit hook is also available and strongly recommended. It catches
 secrets before they are pushed, saving a round-trip to CI. It is not a

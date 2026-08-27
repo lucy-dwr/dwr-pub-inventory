@@ -1,5 +1,5 @@
 llm:
-  base_url: https://cog-hrl-ai-prod-qul4qo.services.ai.azure.com/anthropic/v1
+  base_url: https://cog-dwr-science-ai-prod-9m4k2q.services.ai.azure.com/anthropic/v1
   provider: anthropic
   model: claude-sonnet-5
   rate_limit:
@@ -18,7 +18,8 @@ llm:
     retry_wait_seconds: 65
 
 scopus:
-  allow_api_calls: true
+  # Toggle this to enable/disable Scopus calls
+  allow_api_calls: false
   doc_types:
     - article
     - review
@@ -33,6 +34,8 @@ scopus:
       field: affiliation
 
 refresh:
+  # Change the ID to the date you want to refresh up to
+  # This date will also be recorded as metadata in the refresh log
   id: 2026-08-25
   default_mode: new_records_only
 

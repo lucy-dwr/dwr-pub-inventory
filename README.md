@@ -14,7 +14,7 @@ updated data products.
 
 The repository uses a [`targets`](https://books.ropensci.org/targets/) pipeline
 to retrieve records from Scopus, support efficient manual review of funder and
-author matches, classify publications into a custom scientific taxonomy with the accompanying [`pubclassify`](https://github.com/lucy-dwr/pubclassify) R package,
+author matches, classify publications into a custom scientific taxonomy with the accompanying [`pubclassify`](https://github.com/DWR-Open-Science/pubclassify) R package,
 and write publication datasets for downstream use.
 
 ## TL;DR
@@ -78,7 +78,7 @@ GitHub dependency, so `renv::restore()` should install it automatically. If you
 need to install or update it manually, use `pak`:
 
 ```r
-pak::pak("lucy-dwr/pubclassify")
+pak::pak("DWR-Open-Science/pubclassify")
 ```
 
 The refresh workflow also requires API credentials in environment variables. Set
