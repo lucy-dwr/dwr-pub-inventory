@@ -35,6 +35,7 @@ if (length(missing_environment_variables) > 0L) {
 # In config/pipeline.yml, set:
 #   scopus.allow_api_calls: true
 # Optionally set refresh.id; leave it blank to use today's date.
+# If there is a 504 (server) error, simply re-run.
 targets::tar_make(names = c(
   funder_review_queue_file,
   author_review_queue_file

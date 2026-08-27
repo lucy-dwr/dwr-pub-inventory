@@ -6,7 +6,11 @@ classify_publications <- function(pubs,
                                   api_key = NULL,
                                   system_prompt = NULL,
                                   classify_instructions = NULL,
-                                  batch_size = 10L,
+                                  batch_size = 2L,
+                                  max_output_tokens = 600L,
+                                  rate_limit = NULL,
+                                  max_attempts = 3L,
+                                  retry_wait_seconds = 65L,
                                   ...) {
   if (!inherits(taxonomy, "pc_taxonomy")) {
     stop("`taxonomy` must be a `pc_taxonomy` object. See pubclassify::pc_taxonomy().", call. = FALSE)
@@ -59,14 +63,42 @@ classify_publications <- function(pubs,
   for (batch_idx in batches) {
     batch <- pubs[batch_idx, ]
     texts <- build_classify_text(batch$title, batch$abstract)
-    chat_fn <- function() make_chat(provider, model, api_key, base_url, sys_msg, ...)
-    classified <- pc_classify_with_retry(
-      texts = texts,
-      taxonomy_prompt = full_taxonomy_prompt,
-      classify_instructions = classify_instructions,
-      chat_fn = chat_fn,
-      valid_fields = taxonomy$field
+    chat_fn <- function() make_chat(
+      provider, model, api_key, base_url, sys_msg,
+      params = list(max_tokens = max_output_tokens), ...
     )
+    classified <- NULL
+    for (attempt in seq_len(max_attempts)) {
+      .llm_reserve_output_tokens(max_output_tokens, rate_limit)
+      classified <- pc_classify_with_retry(
+        texts = texts,
+        taxonomy_prompt = full_taxonomy_prompt,
+        classify_instructions = classify_instructions,
+        chat_fn = chat_fn,
+        valid_fields = taxonomy$field,
+        max_retries = 1L
+      )
+      incomplete <- is.na(classified$field) | !nzchar(trimws(classified$field)) |
+        trimws(classified$field) == "NA"
+      if (!any(incomplete)) break
+
+      if (attempt < max_attempts) {
+        message(sprintf(
+          "Classification batch %d-%d incomplete after attempt %d/%d; waiting %ds before retrying.",
+          batch_idx[[1L]], tail(batch_idx, 1L), attempt, max_attempts, retry_wait_seconds
+        ))
+        Sys.sleep(retry_wait_seconds)
+      }
+    }
+
+    incomplete <- is.na(classified$field) | !nzchar(trimws(classified$field)) |
+      trimws(classified$field) == "NA"
+    if (any(incomplete)) {
+      stop(sprintf(
+        "Classification failed after %d delayed attempt(s) for publication row(s): %s. No records were appended.",
+        max_attempts, paste(batch_idx[incomplete], collapse = ", ")
+      ), call. = FALSE)
+    }
 
     pubs$pc_field[batch_idx] <- classified$field
     pubs$pc_rationale[batch_idx] <- classified$rationale

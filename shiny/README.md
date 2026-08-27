@@ -2,6 +2,9 @@
 
 Six Shiny apps support the manual review and exploration steps of the pipeline. Each app reads from and writes to files in `data/` directly — they do not need a running API server.
 
+For how to make and document funder and author/affiliation review decisions, see
+the [Review Quality Control Guide](../docs/REVIEW_QUALITY_CONTROL.md).
+
 Launch any app from the project root:
 
 ```r
