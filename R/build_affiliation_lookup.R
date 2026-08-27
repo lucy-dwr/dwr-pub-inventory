@@ -47,7 +47,9 @@
 #' @param model LLM model name passed to the API. Defaults to `llm.model` in
 #'   `config/pipeline.yml`.
 #' @param api_key API key (reads `PUBCLASSIFY_LLM_KEY` by default).
-#' @param base_url OpenAI-compatible base URL. Defaults to `llm.base_url` in
+#' @param base_url LLM base URL. Defaults to `llm.base_url` in
+#'   `config/pipeline.yml`.
+#' @param provider LLM API protocol. Defaults to `llm.provider` in
 #'   `config/pipeline.yml`.
 #'
 #' @return Invisibly, the occurrence-level lookup data frame.
@@ -62,11 +64,15 @@ build_affiliation_lookup <- function(
   threshold      = NULL,
   model = NULL,
   api_key  = Sys.getenv("PUBCLASSIFY_LLM_KEY"),
-  base_url = NULL
+  base_url = NULL,
+  provider = NULL,
+  max_output_tokens = 600L,
+  rate_limit = NULL
 ) {
   llm_defaults <- .affiliation_llm_defaults()
   if (is.null(model) || !nzchar(as.character(model))) model <- llm_defaults$model
   if (is.null(base_url) || !nzchar(as.character(base_url))) base_url <- llm_defaults$base_url
+  if (is.null(provider) || !nzchar(as.character(provider))) provider <- llm_defaults$provider
 
   existing_lookup <- .read_existing_lookup(output_path)
   reference <- .combined_reference(reference_path, existing_lookup)
@@ -162,14 +168,17 @@ build_affiliation_lookup <- function(
         b, n_batches, idx_start, idx_end, n_clusters
       ))
 
+      .llm_reserve_output_tokens(max_output_tokens, rate_limit)
       results <- .label_clusters_llm(
         batch,
         model,
         api_key,
         base_url,
+        provider,
         reference,
         system_prompt_template,
-        user_prompt_template
+        user_prompt_template,
+        max_output_tokens
       )
       canonical_by_cid[as.character(batch_cids)] <- results
     }
@@ -204,7 +213,7 @@ build_affiliation_lookup <- function(
 
 #' Read default LLM settings from pipeline config
 #'
-#' @return List with `model` and `base_url`.
+#' @return List with `model`, `base_url`, and `provider`.
 #'
 #' @noRd
 .affiliation_llm_defaults <- function() {
@@ -217,7 +226,15 @@ build_affiliation_lookup <- function(
   if (is.null(base_url) || !nzchar(as.character(base_url))) {
     stop("config/pipeline.yml must define llm.base_url.", call. = FALSE)
   }
-  list(model = as.character(model), base_url = as.character(base_url))
+  provider <- cfg$llm$provider
+  if (is.null(provider) || !nzchar(as.character(provider))) {
+    provider <- "openai-compatible"
+  }
+  list(
+    model = as.character(model),
+    base_url = as.character(base_url),
+    provider = as.character(provider)
+  )
 }
 
 #' Read the existing affiliation lookup
@@ -603,7 +620,8 @@ build_affiliation_lookup <- function(
 #' @param clusters Named list of character vectors (cluster ID → member strings).
 #' @param model LLM model name.
 #' @param api_key API key.
-#' @param base_url OpenAI-compatible base URL.
+#' @param base_url LLM base URL.
+#' @param provider LLM API protocol.
 #' @param reference Character vector of known canonical institution names.
 #' @param system_prompt_template System prompt template text.
 #' @param user_prompt_template User prompt template text.
@@ -616,29 +634,47 @@ build_affiliation_lookup <- function(
   model,
   api_key,
   base_url,
+  provider,
   reference,
   system_prompt_template,
-  user_prompt_template
+  user_prompt_template,
+  max_output_tokens = 600L
 ) {
   user_msg   <- .build_user_message(clusters, user_prompt_template)
   system_msg <- .affiliation_system_prompt(reference, system_prompt_template)
 
-  endpoint <- paste0(gsub("/$", "", base_url), "/chat/completions")
+  is_anthropic <- identical(provider, "anthropic")
+  endpoint <- paste0(gsub("/$", "", base_url), if (is_anthropic) "/messages" else "/chat/completions")
 
-  resp <- tryCatch(
-    httr2::request(endpoint) |>
-      httr2::req_headers(
-        Authorization = paste("Bearer", api_key),
-        `Content-Type` = "application/json"
-      ) |>
+  request <- httr2::request(endpoint) |>
+    httr2::req_headers(`Content-Type` = "application/json")
+  if (is_anthropic) {
+    request <- request |>
+      httr2::req_headers(`x-api-key` = api_key, `anthropic-version` = "2023-06-01") |>
       httr2::req_body_json(list(
-        model    = model,
+        model = model,
+        max_tokens = max_output_tokens,
+        system = system_msg,
+        messages = list(list(role = "user", content = user_msg))
+      ))
+  } else if (identical(provider, "openai-compatible")) {
+    request <- request |>
+      httr2::req_headers(Authorization = paste("Bearer", api_key)) |>
+      httr2::req_body_json(list(
+        model = model,
+        max_tokens = max_output_tokens,
         messages = list(
           list(role = "system", content = system_msg),
-          list(role = "user",   content = user_msg)
+          list(role = "user", content = user_msg)
         ),
         temperature = 0
-      )) |>
+      ))
+  } else {
+    stop(sprintf("Unsupported LLM provider: %s", provider), call. = FALSE)
+  }
+
+  resp <- tryCatch(
+    request |>
       httr2::req_error(is_error = \(r) FALSE) |>
       httr2::req_perform(),
     error = function(e) {
@@ -658,8 +694,13 @@ build_affiliation_lookup <- function(
     return(rep("Unknown", length(clusters)))
   }
 
-  body     <- httr2::resp_body_json(resp)
-  raw_text <- body$choices[[1L]]$message$content
+  body <- httr2::resp_body_json(resp)
+  raw_text <- if (is_anthropic) {
+    text_blocks <- Filter(function(block) identical(block$type, "text"), body$content)
+    paste(vapply(text_blocks, function(block) block$text, character(1L)), collapse = "\n")
+  } else {
+    body$choices[[1L]]$message$content
+  }
 
   # Strip markdown code fences the model may wrap around the JSON
   raw_text <- gsub("^```(?:json)?\\s*|\\s*```$", "", trimws(raw_text), perl = TRUE)

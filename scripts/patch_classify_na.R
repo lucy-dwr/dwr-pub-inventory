@@ -18,6 +18,7 @@ suppressPackageStartupMessages({
 })
 
 source("R/load_pipeline_config.R")
+source("R/llm_rate_limit.R")
 source("R/classify_publications.R")
 
 cfg <- load_pipeline_config()
@@ -37,7 +38,11 @@ category_lookup <- dplyr::select(taxonomy_raw, pc_category = category, pc_field 
 # ── Find unclassified pubs ────────────────────────────────────────────────────
 
 accepted <- arrow::read_parquet(cfg$paths$accepted_publications)
-na_rows  <- dplyr::filter(accepted, is.na(.data$pc_field))
+na_rows  <- dplyr::filter(
+  accepted,
+  is.na(.data$pc_field) | !nzchar(trimws(.data$pc_field)) |
+    trimws(.data$pc_field) == "NA"
+)
 
 if (nrow(na_rows) == 0L) {
   message("No unclassified publications found. Nothing to do.")
@@ -58,7 +63,12 @@ classified <- classify_publications(
   model                 = cfg$llm$model,
   base_url              = cfg$llm$base_url,
   system_prompt         = system_prompt,
-  classify_instructions = classify_instr
+  classify_instructions = classify_instr,
+  batch_size            = cfg$llm$rate_limit$classification_batch_size,
+  max_output_tokens     = cfg$llm$rate_limit$classification_max_output_tokens,
+  rate_limit            = cfg$llm$rate_limit,
+  max_attempts          = cfg$llm$rate_limit$max_attempts,
+  retry_wait_seconds    = cfg$llm$rate_limit$retry_wait_seconds
 )
 
 classified <- classified |>
@@ -77,7 +87,10 @@ patched <- dplyr::rows_update(accepted, updates, by = "record_key", unmatched = 
 
 arrow::write_parquet(patched, cfg$paths$accepted_publications)
 
-still_na <- sum(is.na(patched$pc_field))
+still_na <- sum(
+  is.na(patched$pc_field) | !nzchar(trimws(patched$pc_field)) |
+    trimws(patched$pc_field) == "NA"
+)
 message(sprintf(
   "Done. Patched %d/%d record(s). %d still NA.",
   nrow(na_rows) - still_na, nrow(na_rows), still_na

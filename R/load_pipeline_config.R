@@ -29,5 +29,21 @@ load_pipeline_config <- function(path = "config/pipeline.yml") {
     cfg$scopus$allow_api_calls <- FALSE
   }
 
+  defaults <- list(
+    output_tokens_per_minute = 2000,
+    safety_fraction = 0.8,
+    state_path = "data/generated/llm_rate_limit.csv",
+    classification_batch_size = 2L,
+    classification_max_output_tokens = 600L,
+    geo_batch_size = 20L,
+    geo_max_output_tokens = 600L,
+    affiliation_batch_size = 10L,
+    affiliation_max_output_tokens = 600L,
+    max_attempts = 3L,
+    retry_wait_seconds = 65L
+  )
+  if (is.null(cfg$llm$rate_limit)) cfg$llm$rate_limit <- list()
+  cfg$llm$rate_limit <- utils::modifyList(defaults, cfg$llm$rate_limit)
+
   cfg
 }

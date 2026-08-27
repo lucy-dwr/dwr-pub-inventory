@@ -373,7 +373,11 @@ list(
         system_prompt_path = affiliation_system_prompt_file,
         user_template_path = affiliation_user_template_file,
         model = pipeline_config$llm$model,
-        base_url = pipeline_config$llm$base_url
+        base_url = pipeline_config$llm$base_url,
+        provider = pipeline_config$llm$provider,
+        batch_size = pipeline_config$llm$rate_limit$affiliation_batch_size,
+        max_output_tokens = pipeline_config$llm$rate_limit$affiliation_max_output_tokens,
+        rate_limit = pipeline_config$llm$rate_limit
       )
       pipeline_config$paths$affiliation_lookup
     },
@@ -401,7 +405,13 @@ list(
         system_prompt_path      = geo_system_prompt_file,
         user_template_path      = geo_user_template_file,
         model                   = pipeline_config$llm$model,
-        base_url                = pipeline_config$llm$base_url
+        base_url                = pipeline_config$llm$base_url,
+        provider                = pipeline_config$llm$provider,
+        batch_size              = pipeline_config$llm$rate_limit$geo_batch_size,
+        max_output_tokens       = pipeline_config$llm$rate_limit$geo_max_output_tokens,
+        rate_limit              = pipeline_config$llm$rate_limit,
+        max_attempts            = pipeline_config$llm$rate_limit$max_attempts,
+        retry_wait_seconds      = pipeline_config$llm$rate_limit$retry_wait_seconds
       )
       pipeline_config$paths$institution_geo_lookup
     },
@@ -447,7 +457,12 @@ list(
         model                 = pipeline_config$llm$model,
         base_url              = pipeline_config$llm$base_url,
         system_prompt         = system_prompt,
-        classify_instructions = classify_instr
+        classify_instructions = classify_instr,
+        batch_size           = pipeline_config$llm$rate_limit$classification_batch_size,
+        max_output_tokens    = pipeline_config$llm$rate_limit$classification_max_output_tokens,
+        rate_limit           = pipeline_config$llm$rate_limit,
+        max_attempts         = pipeline_config$llm$rate_limit$max_attempts,
+        retry_wait_seconds   = pipeline_config$llm$rate_limit$retry_wait_seconds
       )
     }
   ),

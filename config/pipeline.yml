@@ -2,9 +2,23 @@ llm:
   base_url: https://cog-hrl-ai-prod-qul4qo.services.ai.azure.com/anthropic/v1
   provider: anthropic
   model: claude-sonnet-5
+  rate_limit:
+    # This is the effective per-user/model output-token limit for the current
+    # Azure Foundry endpoint. Keep a safety margin for other interactive use.
+    output_tokens_per_minute: 2000
+    safety_fraction: 0.8
+    state_path: data/generated/llm_rate_limit.csv
+    classification_batch_size: 2
+    classification_max_output_tokens: 600
+    geo_batch_size: 20
+    geo_max_output_tokens: 600
+    affiliation_batch_size: 10
+    affiliation_max_output_tokens: 600
+    max_attempts: 3
+    retry_wait_seconds: 65
 
 scopus:
-  allow_api_calls: false
+  allow_api_calls: true
   doc_types:
     - article
     - review
@@ -19,7 +33,7 @@ scopus:
       field: affiliation
 
 refresh:
-  id: 2026-06-17
+  id: 2026-08-25
   default_mode: new_records_only
 
 paths:
