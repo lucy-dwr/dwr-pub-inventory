@@ -21,6 +21,7 @@ options(shinychat.tool_display = "none")
 # ── Paths ──────────────────────────────────────────────────────────────────────
 if (basename(getwd()) == "shiny") setwd("..")
 .ROOT <- getwd()
+shiny::addResourcePath("assets", file.path(.ROOT, "shiny", "www"))
 
 source(file.path(.ROOT, "R", "load_pipeline_config.R"))
 source(file.path(.ROOT, "R", "dashboard_chat_tools.R"))
@@ -703,7 +704,7 @@ ui <- fluidPage(
   # ── Header ──────────────────────────────────────────────────────────────────
   div(class = "dwr-header",
     div(class = "hdr-brand",
-      tags$img(src = "dwr-logo-new.png", height = "48px", alt = "DWR logo"),
+      tags$img(src = "assets/dwr-logo-new.png", height = "48px", alt = "DWR logo"),
       div(class = "hdr-brand-text",
         tags$small("California Department of"),
         tags$strong("WATER RESOURCES")

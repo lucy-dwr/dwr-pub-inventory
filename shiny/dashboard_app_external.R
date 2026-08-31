@@ -15,6 +15,7 @@ library(visNetwork)
 # ── Paths ──────────────────────────────────────────────────────────────────────
 if (basename(getwd()) == "shiny") setwd("..")
 .ROOT <- getwd()
+shiny::addResourcePath("assets", file.path(.ROOT, "shiny", "www"))
 
 source(file.path(.ROOT, "R", "dashboard_download.R"))
 
@@ -561,7 +562,7 @@ ui <- fluidPage(
   # ── Header ──────────────────────────────────────────────────────────────────
   div(class = "dwr-header",
     div(class = "hdr-brand",
-      tags$img(src = "dwr-logo-new.png", height = "48px", alt = "DWR logo"),
+      tags$img(src = "assets/dwr-logo-new.png", height = "48px", alt = "DWR logo"),
       div(class = "hdr-brand-text",
         tags$small("California Department of"),
         tags$strong("WATER RESOURCES")
